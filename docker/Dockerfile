@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /workspace
 
 # Copy project files
-COPY . .
+COPY .. /workspace
 
 # Build the project
 RUN ./build.sh

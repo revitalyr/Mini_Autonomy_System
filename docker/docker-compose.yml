@@ -3,10 +3,10 @@ version: '3.8'
 services:
   perception-build:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
     volumes:
-      - .:/workspace
+      - ..:/workspace
     working_dir: /workspace
     command: ./build.sh
     profiles:
@@ -14,10 +14,10 @@ services:
 
   perception-demo:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
     volumes:
-      - .:/workspace
+      - ..:/workspace
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     environment:
       - DISPLAY=${DISPLAY}
