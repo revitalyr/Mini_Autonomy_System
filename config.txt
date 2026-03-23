@@ -1,0 +1,65 @@
+# Mini Autonomy System Configuration
+# This file contains all tunable parameters for the perception system
+
+# Video Input Configuration
+video.source = demo_video.mp4
+video.width = 640
+video.height = 480
+video.fps = 30
+
+# Detector Configuration
+detector.model_path = 
+detector.confidence_threshold = 0.5
+detector.nms_threshold = 0.4
+detector.input_width = 640
+detector.input_height = 640
+detector.enable_tensorrt = false
+
+# Tracker Configuration
+tracker.max_age = 30
+tracker.max_consecutive_misses = 10
+tracker.min_confidence = 0.3
+tracker.process_noise = 0.1
+tracker.measurement_noise = 0.1
+
+# Fusion Configuration
+fusion.process_noise_pos = 0.01
+fusion.process_noise_vel = 0.1
+fusion.process_noise_angle = 0.01
+fusion.measurement_noise_pos = 0.1
+fusion.measurement_noise_vel = 0.5
+fusion.measurement_noise_angle = 0.1
+
+# IMU Simulator Configuration
+imu.noise_std = 0.01
+imu.motion_amplitude = 0.5
+imu.motion_frequency = 0.1
+imu.accel_bias_x = 0.0
+imu.accel_bias_y = 0.0
+imu.accel_bias_z = 0.0
+imu.gyro_bias_x = 0.0
+imu.gyro_bias_y = 0.0
+imu.gyro_bias_z = 0.0
+
+# Performance Configuration
+performance.enable_profiling = true
+performance.print_fps = true
+performance.print_latency = true
+performance.target_fps = 30
+
+# Visualization Configuration
+visualization.show_detection = true
+visualization.show_trajectories = true
+visualization.show_fps = true
+visualization.show_latency = true
+visualization.trajectory_length = 100
+
+# Logging Configuration
+logging.level = INFO
+logging.file = perception.log
+logging.console = true
+
+# System Configuration
+system.num_threads = 4
+system.queue_size = 100
+system.timeout_ms = 100

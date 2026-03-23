@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  perception-build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: ./build.sh
+    profiles:
+      - build
+
+  perception-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/workspace
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    environment:
+      - DISPLAY=${DISPLAY}
+    working_dir: /workspace
+    command: ./run_demo.sh
+    depends_on:
+      - perception-build
+    profiles:
+      - demo
+    runtime: nvidia  # Remove this line if not using NVIDIA GPU
