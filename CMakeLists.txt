@@ -1,9 +1,19 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.28)
 project(MiniAutonomySystem LANGUAGES CXX)
 
-# Using C++17 for broader compatibility (can be upgraded to C++23 when available)
-set(CMAKE_CXX_STANDARD 17)
+# Using C++23 with modules support for modern features
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Enable C++20 modules support
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
+    set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+    set(CMAKE_CXX_MODULE_STD ON)
+endif()
+
+# Add modules directory
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/modules ${CMAKE_MODULE_PATH})
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -19,6 +29,29 @@ endif()
 
 # Optional: Find TensorRT for high-performance inference
 find_package(TensorRT QUIET)
+
+# C++20 Modules for modern perception system
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
+    # Core modules
+    add_library(perception_concepts MODULE modules/perception.concepts.cppm)
+    add_library(perception_queue MODULE modules/perception.queue.cppm)
+    add_library(perception_pipeline MODULE modules/perception.pipeline.cppm)
+    add_library(perception_result MODULE modules/perception.result.cppm)
+    add_library(perception_metrics MODULE modules/perception.metrics.cppm)
+    add_library(perception_detector MODULE modules/perception.detector.cppm)
+    add_library(perception_async MODULE modules/perception.async.cppm)
+    add_library(perception_image_loader MODULE modules/perception.image_loader.cppm)
+    
+    # Set module properties
+    target_compile_features(perception_concepts PUBLIC cxx_std_23)
+    target_compile_features(perception_queue PUBLIC cxx_std_23)
+    target_compile_features(perception_pipeline PUBLIC cxx_std_23)
+    target_compile_features(perception_result PUBLIC cxx_std_23)
+    target_compile_features(perception_metrics PUBLIC cxx_std_23)
+    target_compile_features(perception_detector PUBLIC cxx_std_23)
+    target_compile_features(perception_async PUBLIC cxx_std_23)
+    target_compile_features(perception_image_loader PUBLIC cxx_std_23)
+endif()
 
 # Core library for perception system
 add_library(perception_core
@@ -111,6 +144,28 @@ target_link_libraries(perception_demo PRIVATE
     Threads::Threads
     ${OpenCV_LIBS}
 )
+
+# Modern C++23 demo with modules
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
+    add_executable(perception_modern_demo
+        src/main_modern.cpp
+    )
+    
+    target_link_libraries(perception_modern_demo PRIVATE 
+        perception_concepts
+        perception_queue
+        perception_pipeline
+        perception_result
+        perception_metrics
+        perception_detector
+        perception_async
+        perception_image_loader
+        Threads::Threads
+        ${OpenCV_LIBS}
+    )
+    
+    target_compile_features(perception_modern_demo PRIVATE cxx_std_23)
+endif()
 
 # Benchmark application
 add_executable(perception_benchmark
