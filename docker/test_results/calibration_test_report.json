@@ -1,0 +1,84 @@
+{
+  "summary": {
+    "total_datasets": 3,
+    "overall_success_rate": 0.0,
+    "average_score": 0.25
+  },
+  "datasets": {
+    "cam_april": {
+      "dataset": "cam_april",
+      "tests": {
+        "config_load": {
+          "status": "PASSED",
+          "config": {
+            "target_type": "aprilgrid",
+            "tagCols": 6,
+            "tagRows": 6,
+            "tagSize": 0.088,
+            "tagSpacing": 0.3
+          }
+        },
+        "target_detection": {
+          "status": "FAILED",
+          "total_frames": 10,
+          "successful_detections": 0,
+          "detection_rate": 0.0,
+          "avg_detection_time": 43.811,
+          "target_type": "aprilgrid",
+          "error": "Low detection rate: 0.00%"
+        }
+      },
+      "overall_score": 0.25
+    },
+    "cam_checkerboard": {
+      "dataset": "cam_checkerboard",
+      "tests": {
+        "config_load": {
+          "status": "PASSED",
+          "config": {
+            "target_type": "checkerboard",
+            "targetCols": 6,
+            "targetRows": 7,
+            "rowSpacingMeters": 0.06,
+            "colSpacingMeters": 0.06
+          }
+        },
+        "target_detection": {
+          "status": "FAILED",
+          "total_frames": 10,
+          "successful_detections": 0,
+          "detection_rate": 0.0,
+          "avg_detection_time": 545.21443,
+          "target_type": "checkerboard",
+          "error": "Low detection rate: 0.00%"
+        }
+      },
+      "overall_score": 0.25
+    },
+    "imu_april": {
+      "dataset": "imu_april",
+      "tests": {
+        "config_load": {
+          "status": "PASSED",
+          "config": {
+            "target_type": "aprilgrid",
+            "tagCols": 6,
+            "tagRows": 6,
+            "tagSize": 0.088,
+            "tagSpacing": 0.3
+          }
+        },
+        "target_detection": {
+          "status": "FAILED",
+          "error": "No extracted frames found"
+        }
+      },
+      "overall_score": 0.25
+    }
+  },
+  "recommendations": [
+    "Dataset cam_april needs significant improvement",
+    "Dataset cam_checkerboard needs significant improvement",
+    "Dataset imu_april needs significant improvement"
+  ]
+}
