@@ -5,6 +5,10 @@
 #include <string>
 #include <map>
 #include <functional>
+#include <cmath>
+#include <iostream>
+#include <fstream>
+#include <iomanip>
 
 class Benchmark {
 private:

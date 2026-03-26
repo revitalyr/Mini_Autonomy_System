@@ -6,14 +6,32 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Enable C++20 modules support
+# Enable C++20 modules support (only when generator supports it)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
-    set(CMAKE_CXX_SCAN_FOR_MODULES ON)
-    set(CMAKE_CXX_MODULE_STD ON)
+    if(CMAKE_GENERATOR MATCHES "Ninja|Ninja Multi-Config|Visual Studio")
+        set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+        set(CMAKE_CXX_MODULE_STD ON)
+        set(MODULES_SUPPORT ON)
+    else()
+        # Unix Makefiles does not support module-enabled scan mode
+        set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+        set(MODULES_SUPPORT OFF)
+    endif()
+else()
+    set(MODULES_SUPPORT OFF)
 endif()
 
 # Add modules directory
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/modules ${CMAKE_MODULE_PATH})
+
+# Project include directories
+set(PROJECT_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/io
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/vision
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -31,26 +49,18 @@ endif()
 find_package(TensorRT QUIET)
 
 # C++20 Modules for modern perception system
-if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
-    # Core modules
-    add_library(perception_concepts MODULE modules/perception.concepts.cppm)
-    add_library(perception_queue MODULE modules/perception.queue.cppm)
-    add_library(perception_pipeline MODULE modules/perception.pipeline.cppm)
-    add_library(perception_result MODULE modules/perception.result.cppm)
-    add_library(perception_metrics MODULE modules/perception.metrics.cppm)
-    add_library(perception_detector MODULE modules/perception.detector.cppm)
-    add_library(perception_async MODULE modules/perception.async.cppm)
-    add_library(perception_image_loader MODULE modules/perception.image_loader.cppm)
-    
-    # Set module properties
-    target_compile_features(perception_concepts PUBLIC cxx_std_23)
-    target_compile_features(perception_queue PUBLIC cxx_std_23)
-    target_compile_features(perception_pipeline PUBLIC cxx_std_23)
-    target_compile_features(perception_result PUBLIC cxx_std_23)
-    target_compile_features(perception_metrics PUBLIC cxx_std_23)
-    target_compile_features(perception_detector PUBLIC cxx_std_23)
-    target_compile_features(perception_async PUBLIC cxx_std_23)
-    target_compile_features(perception_image_loader PUBLIC cxx_std_23)
+if(MODULES_SUPPORT)
+    add_library(perception_modules STATIC
+        modules/perception.concepts.cppm
+        modules/perception.queue.cppm
+        modules/perception.pipeline.cppm
+        modules/perception.result.cppm
+        modules/perception.metrics.cppm
+        modules/perception.detector.cppm
+        modules/perception.async.cppm
+        modules/perception.image_loader.cppm
+    )
+    target_compile_features(perception_modules PUBLIC cxx_std_23)
 endif()
 
 # Core library for perception system
@@ -63,8 +73,7 @@ add_library(perception_core
 )
 
 target_include_directories(perception_core PUBLIC 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${PROJECT_INCLUDE_DIRS}
 )
 
 target_link_libraries(perception_core PUBLIC 
@@ -90,8 +99,7 @@ add_library(perception_io
 )
 
 target_include_directories(perception_io PUBLIC 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${PROJECT_INCLUDE_DIRS}
 )
 
 target_link_libraries(perception_io PUBLIC 
@@ -112,8 +120,7 @@ add_library(perception_vision
 )
 
 target_include_directories(perception_vision PUBLIC 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${PROJECT_INCLUDE_DIRS}
 )
 
 target_link_libraries(perception_vision PUBLIC 
@@ -133,8 +140,7 @@ add_executable(perception_demo
 )
 
 target_include_directories(perception_demo PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${PROJECT_INCLUDE_DIRS}
 )
 
 target_link_libraries(perception_demo PRIVATE 
@@ -146,20 +152,13 @@ target_link_libraries(perception_demo PRIVATE
 )
 
 # Modern C++23 demo with modules
-if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
+if(MODULES_SUPPORT)
     add_executable(perception_modern_demo
         src/main_modern.cpp
     )
     
     target_link_libraries(perception_modern_demo PRIVATE 
-        perception_concepts
-        perception_queue
-        perception_pipeline
-        perception_result
-        perception_metrics
-        perception_detector
-        perception_async
-        perception_image_loader
+        perception_modules
         Threads::Threads
         ${OpenCV_LIBS}
     )
@@ -173,8 +172,7 @@ add_executable(perception_benchmark
 )
 
 target_include_directories(perception_benchmark PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${PROJECT_INCLUDE_DIRS}
 )
 
 target_link_libraries(perception_benchmark PRIVATE 

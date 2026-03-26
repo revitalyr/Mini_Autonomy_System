@@ -20,6 +20,14 @@ if [[ ! -f "docker-compose.yml" ]]; then
     exit 1
 fi
 
+# Если передан URL, скачиваем его, иначе используем аргументы как есть
+if [[ $1 == http* ]]; then
+    export DEMO_ARGS="demo_video.mp4"
+    # В фоновом режиме или перед запуском можно добавить wget, 
+    # но для тестов лучше использовать локальные файлы
+fi
+export DEMO_ARGS=${1:-"demo_video.mp4"}
+
 echo "📦 Building the perception system..."
 docker-compose --profile build build
 

@@ -7,6 +7,9 @@ set -e
 
 echo "=== Mini Autonomy System Demo Runner ==="
 
+# Change to the script's directory to ensure relative paths work
+cd "$(dirname "$0")"
+
 # Check if executable exists
 EXECUTABLE="./build/perception_demo"
 if [ ! -f "$EXECUTABLE" ]; then
@@ -26,8 +29,20 @@ elif [ ! -f "$VIDEO_FILE" ]; then
     echo "  2. Specify a video file as argument: ./run_demo.sh path/to/video.mp4"
     echo "  3. Use a camera: ./run_demo.sh 0"
     echo ""
-    echo "For now, trying to use camera..."
-    VIDEO_FILE="0"
+    echo "Using sample online video (Big Buck Bunny)..."
+    VIDEO_FILE="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+fi
+
+# Check if the input is a URL and download it if necessary
+if [[ "$VIDEO_FILE" == http* ]]; then
+    echo "URL detected. Downloading video to local file..."
+    if command -v wget &> /dev/null; then
+        wget -O downloaded_video.mp4 "$VIDEO_FILE"
+        VIDEO_FILE="downloaded_video.mp4"
+    elif command -v curl &> /dev/null; then
+        curl -L -o downloaded_video.mp4 "$VIDEO_FILE"
+        VIDEO_FILE="downloaded_video.mp4"
+    fi
 fi
 
 echo "Starting demo with video source: $VIDEO_FILE"

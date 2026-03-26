@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   perception-build:
     build:
@@ -8,7 +6,7 @@ services:
     volumes:
       - ..:/workspace
     working_dir: /workspace
-    command: ./build.sh
+    command: /bin/bash -c "sed -i 's/\r$//' build.sh && bash build.sh"
     profiles:
       - build
 
@@ -19,12 +17,20 @@ services:
     volumes:
       - ..:/workspace
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # Монтируем локальные датасеты и конфиги
+      - ./datasets:/workspace/docker/datasets:ro
+      - ./test_configs:/workspace/docker/test_configs:ro
+    shm_size: 2gb  # increased from default 64m to prevent video processing crashes
     environment:
       - DISPLAY=${DISPLAY}
+      - DEMO_ARGS=${DEMO_ARGS}
     working_dir: /workspace
-    command: ./run_demo.sh
-    depends_on:
-      - perception-build
+    # Теперь команда запускает бинарник с переданными аргументами
+    command: /bin/bash -c "exec ./build/perception_demo $${DEMO_ARGS}"
     profiles:
       - demo
     runtime: nvidia  # Remove this line if not using NVIDIA GPU
+    deploy:
+      resources:
+        limits:
+          memory: 4G  # Limit memory to prevent WSL crash

@@ -4,6 +4,8 @@
 #include <map>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
+#include <iostream>
 
 class Config {
 private:

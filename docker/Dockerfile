@@ -1,9 +1,11 @@
 FROM ubuntu:22.04
 
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
 # Install dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
-    cmake \
     pkg-config \
     libopencv-dev \
     libgstreamer1.0-dev \
@@ -19,14 +21,20 @@ RUN apt-get update && apt-get install -y \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
+# Install CMake 3.28+
+RUN wget -q https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3-linux-x86_64.sh && \
+    chmod +x cmake-3.28.3-linux-x86_64.sh && \
+    ./cmake-3.28.3-linux-x86_64.sh --prefix=/usr/local --skip-license && \
+    rm cmake-3.28.3-linux-x86_64.sh
+
 # Set working directory
 WORKDIR /workspace
 
 # Copy project files
-COPY .. /workspace
+COPY . /workspace
 
 # Build the project
-RUN ./build.sh
-
-# Set the entrypoint
-ENTRYPOINT ["./run_demo.sh"]
+RUN sed -i 's/\r$//' build.sh && \
+    chmod +x build.sh && \
+    sed -i '1i #include <iomanip>' include/core/benchmark.hpp && \
+    ./build.sh
