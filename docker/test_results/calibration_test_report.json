@@ -23,7 +23,7 @@
           "total_frames": 10,
           "successful_detections": 0,
           "detection_rate": 0.0,
-          "avg_detection_time": 43.811,
+          "avg_detection_time": 15.422090000000003,
           "target_type": "aprilgrid",
           "error": "Low detection rate: 0.00%"
         }
@@ -48,7 +48,7 @@
           "total_frames": 10,
           "successful_detections": 0,
           "detection_rate": 0.0,
-          "avg_detection_time": 545.21443,
+          "avg_detection_time": 472.46762,
           "target_type": "checkerboard",
           "error": "Low detection rate: 0.00%"
         }
