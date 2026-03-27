@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <div class="mermaid">
+        graph TD
+            A[Module A] --> B[Module B]
+            B --> C[Module C]
+            C --> A
+    </div>
+    
+    <div class="mermaid">
+        graph LR
+            A[Class A] --> B[Class B]
+            B --> C[Class C]
+    </div>
+    
+    <div class="mermaid">
+        classDiagram
+            class Animal
+            class Dog
+            Animal <|-- Dog
+    </div>
+
+    <script>
+        mermaid.initialize({startOnLoad: true});
+    </script>
+</body>
+</html>
