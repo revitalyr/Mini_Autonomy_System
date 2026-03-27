@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Autonomy System - Interactive Architecture Visualization</title>
+    <title>Mini Autonomy System - Architecture Visualization</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
     <style>
         body {
@@ -12,8 +12,8 @@
             padding: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #333;
+            min-height: 100vh;
         }
-        
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -22,841 +22,258 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             overflow: hidden;
         }
-        
         .header {
             background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
             color: white;
             padding: 30px;
             text-align: center;
         }
-        
-        .header h1 {
-            margin: 0;
-            font-size: 2.5em;
-            font-weight: 300;
-        }
-        
-        .header p {
-            margin: 10px 0 0 0;
-            opacity: 0.9;
-            font-size: 1.1em;
-        }
-        
         .nav-tabs {
             display: flex;
             background: #f8f9fa;
-            border-bottom: 2px solid #e9ecef;
+            border-bottom: 1px solid #dee2e6;
             overflow-x: auto;
         }
-        
         .nav-tab {
             padding: 15px 25px;
-            background: none;
-            border: none;
             cursor: pointer;
-            font-size: 1em;
+            border: none;
+            background: none;
+            outline: none;
+            transition: 0.3s;
             font-weight: 500;
-            color: #6c757d;
-            transition: all 0.3s ease;
             white-space: nowrap;
         }
-        
-        .nav-tab:hover {
-            background: #e9ecef;
-            color: #495057;
-        }
-        
+        .nav-tab:hover { background: #e9ecef; }
         .nav-tab.active {
             background: white;
             color: #4a90e2;
             border-bottom: 3px solid #4a90e2;
-            margin-bottom: -2px;
         }
-        
-        .tab-content {
-            padding: 30px;
-            min-height: 600px;
-        }
-        
-        .tab-pane {
-            display: none;
-        }
-        
-        .tab-pane.active {
-            display: block;
-        }
-        
-        .diagram-container {
-            background: #fafbfc;
-            border: 1px solid #e1e4e8;
-            border-radius: 10px;
+        .content { padding: 40px; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        .mermaid { 
+            display: flex; 
+            justify-content: center; 
+            background: #fff;
             padding: 20px;
-            margin: 20px 0;
-            overflow: auto;
-        }
-        
-        .diagram-title {
-            font-size: 1.5em;
-            font-weight: 600;
-            color: #24292e;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .diagram-title::before {
-            content: "📊";
-            margin-right: 10px;
-        }
-        
-        .info-box {
-            background: #f1f8ff;
-            border-left: 4px solid #4a90e2;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
-        }
-        
-        .info-box h3 {
-            margin: 0 0 10px 0;
-            color: #4a90e2;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        
-        .stat-card {
-            background: white;
-            border: 1px solid #e1e4e8;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            color: #4a90e2;
-        }
-        
-        .stat-label {
-            color: #6c757d;
-            margin-top: 5px;
-        }
-        
-        .mermaid {
-            font-family: 'Courier New', monospace;
-        }
-        
-        .mermaid-container {
-            width: 100%;
-            overflow-x: auto;
-            overflow-y: hidden;
-            padding: 20px;
-            background: #f9f9f9;
-            border-radius: 8px;
-            border: 1px solid #eee;
-        }
-        
-        .mermaid svg {
-            min-width: 800px;
-            height: auto;
-        }
-        
-        .controls {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .controls button {
-            background: #4a90e2;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 10px;
-            transition: background 0.3s ease;
-        }
-        
-        .controls button:hover {
-            background: #357abd;
-        }
-        
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin: 20px 0;
-            padding: 15px;
-            background: #f8f9fa;
             border-radius: 8px;
         }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-        
-        .source-links {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        
-        .source-links h4 {
-            margin: 0 0 10px 0;
-            color: #495057;
-        }
-        
-        .source-link {
-            display: inline-block;
-            background: #e9ecef;
-            color: #495057;
-            padding: 8px 12px;
-            margin: 4px;
-            border-radius: 4px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-        
-        .source-link:hover {
-            background: #4a90e2;
-            color: white;
-            transform: translateY(-2px);
-        }
-        
-        .clickable-node {
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .clickable-node:hover {
-            filter: brightness(1.2);
-        }
+        h2 { color: #4a90e2; margin-top: 0; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 Mini Autonomy System</h1>
-            <p>Interactive C++20 Modules Architecture Visualization</p>
-        </div>
-        
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('modules')">Module Dependencies</button>
-            <button class="nav-tab" onclick="showTab('classes')">Class Dependencies</button>
-            <button class="nav-tab" onclick="showTab('dataflow')">Data Flow</button>
-            <button class="nav-tab" onclick="showTab('threads')">Thread Architecture</button>
-            <button class="nav-tab" onclick="showTab('interfaces')">Module Interfaces</button>
-            <button class="nav-tab" onclick="showTab('system')">System Overview</button>
-            <button class="nav-tab" onclick="showTab('performance')">Performance Architecture</button>
-        </div>
-        
-        <div class="tab-content">
-            <!-- Module Dependencies Tab -->
-            <div id="modules" class="tab-pane active">
-                <div class="diagram-title">Module Dependency Diagram</div>
-                <div class="info-box">
-                    <h3>Module Architecture Overview</h3>
-                    <p>The system is organized into C++20 modules with clean interfaces. Click on any module to view its source code.</p>
-                </div>
-                <div class="diagram-container">
-                    <div class="mermaid">
-                        graph TD
-                            %% C++20 Modules
-                            subgraph Core["Core Modules"]
-                                A[perception.concepts<br/>Core Concepts]
-                                B[perception.result<br/>Error Handling]
-                                C[perception.async<br/>Async Operations]
-                                D[perception.queue<br/>Thread-Safe Queue]
-                                E[perception.metrics<br/>Performance Metrics]
-                            end
-                            
-                            subgraph Vision["Vision Modules"]
-                                F[perception.detector.simple<br/>Object Detection]
-                                G[perception.image_loader.simple<br/>Image Loading]
-                                H[perception.pipeline<br/>Processing Pipeline]
-                            end
-                            
-                            %% Main Application
-                            I[main.cpp<br/>Demo Application]
-                            
-                            %% Dependencies
-                            A --> B
-                            A --> C
-                            A --> D
-                            A --> E
-                            A --> F
-                            A --> G
-                            A --> H
-                            
-                            B --> C
-                            B --> D
-                            B --> E
-                            
-                            C --> D
-                            C --> F
-                            C --> G
-                            
-                            D --> F
-                            D --> G
-                            D --> H
-                            
-                            E --> F
-                            E --> G
-                            E --> H
-                            
-                            F --> G
-                            F --> H
-                            
-                            G --> H
-                            
-                            I --> A
-                            I --> B
-                            I --> C
-                            I --> D
-                            I --> E
-                            I --> F
-                            I --> G
-                            I --> H
-                            
-                            %% Style
-                            classDef core fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-                            classDef vision fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
-                            classDef main fill:#fce4ec,stroke:#880e4f,stroke-width:2px
-                            
-                            class A,B,C,D,E core
-                            class F,G,H vision
-                            class I main
-                    </div>
-                </div>
-                <div class="source-links">
-                    <h4>📁 Quick Access to Module Source Code</h4>
-                    <a href="../modules/perception.concepts.cppm" class="source-link" target="_blank">🧠 perception.concepts.cppm</a>
-                    <a href="../modules/perception.result.cppm" class="source-link" target="_blank">⚠️ perception.result.cppm</a>
-                    <a href="../modules/perception.async.cppm" class="source-link" target="_blank">⚡ perception.async.cppm</a>
-                    <a href="../modules/perception.queue.cppm" class="source-link" target="_blank">🔄 perception.queue.cppm</a>
-                    <a href="../modules/perception.metrics.cppm" class="source-link" target="_blank">📊 perception.metrics.cppm</a>
-                    <a href="../modules/perception.detector.simple.cppm" class="source-link" target="_blank">👁️ perception.detector.simple.cppm</a>
-                    <a href="../modules/perception.image_loader.simple.cppm" class="source-link" target="_blank">🖼️ perception.image_loader.simple.cppm</a>
-                    <a href="../modules/perception.pipeline.cppm" class="source-link" target="_blank">⚙️ perception.pipeline.cppm</a>
-                    <a href="../src/main.cpp" class="source-link" target="_blank">🚀 main.cpp</a>
-                </div>
-            </div>
-            
-            <!-- Class Dependencies Tab -->
-            <div id="classes" class="tab-pane">
-                <div class="diagram-title">Class Dependency Diagram</div>
-                <div class="info-box">
-                    <h3>Interactive Class Relationships</h3>
-                    <p>Click on any class to navigate to its implementation in the source code.</p>
-                </div>
-                <div class="diagram-container">
-                    <div class="mermaid">
-                        classDiagram
-                            %% Core Classes
-                            class Result {
-                                -m_value: variant
-                                +Result()
-                                +has_value() bool
-                                +value() T
-                                +error() error_code
-                                +operator bool() bool
-                            }
-                            
-                            class ThreadSafeQueue {
-                                -queue_: queue
-                                -mutex_: mutex
-                                -condition_: condition_variable
-                                +push(value)
-                                +pop() optional
-                                +try_pop() optional
-                                +empty() bool
-                                +size() size_t
-                            }
-                            
-                            class ThreadPool {
-                                -workers_: vector
-                                -tasks_: queue
-                                -mutex_: mutex
-                                +ThreadPool(num_threads)
-                                +enqueue(f)
-                                +submit(f) future
-                            }
-                            
-                            class Task {
-                                +operator co_await()
-                            }
-                            
-                            class PerformanceMetrics {
-                                -start_time_: time_point
-                                -frame_count_: atomic
-                                +record_frame_latency(latency)
-                                +get_snapshot() MetricsSnapshot
-                                +get_fps() double
-                            }
-                            
-                            class MockDetector {
-                                +detect(frame) vector
-                            }
-                            
-                            class Detection {
-                                +bbox: Rect
-                                +class_name: string
-                                +confidence: float
-                            }
-                            
-                            class Image {
-                                -mat_: Mat
-                                +Image()
-                                +empty() bool
-                                +rows() int
-                                +cols() int
-                            }
-                            
-                            %% Relationships
-                            Result --> Detection
-                            ThreadSafeQueue --> Result
-                            ThreadPool --> ThreadSafeQueue
-                            Task --> ThreadPool
-                            PerformanceMetrics --> Result
-                            MockDetector --> Detection
-                            MockDetector --> Image
-                            Detection --> Image
-                    </div>
-                </div>
-                <div class="source-links">
-                    <h4>🔗 Navigate to Class Implementations</h4>
-                    <a href="../modules/perception.result.cppm" class="source-link" target="_blank">📄 Result class</a>
-                    <a href="../modules/perception.queue.cppm" class="source-link" target="_blank">🔄 ThreadSafeQueue</a>
-                    <a href="../modules/perception.async.cppm" class="source-link" target="_blank">⚡ ThreadPool & Task</a>
-                    <a href="../modules/perception.metrics.cppm" class="source-link" target="_blank">📊 PerformanceMetrics</a>
-                    <a href="../modules/perception.detector.simple.cppm" class="source-link" target="_blank">👁️ MockDetector & Detection</a>
-                    <a href="../modules/perception.image_loader.simple.cppm" class="source-link" target="_blank">🖼️ Image class</a>
-                </div>
-            </div>
-            
-            <!-- Data Flow Tab -->
-            <div id="dataflow" class="tab-pane">
-                <div class="diagram-title">Data Flow Architecture</div>
-                <div class="info-box">
-                    <h3>Interactive System Data Flow</h3>
-                    <p>Click on components to navigate to their implementation and understand data transformations.</p>
-                </div>
-                <div class="diagram-container">
-                    <div class="mermaid">
-                        graph TD
-                            %% Data Sources
-                            subgraph Input["Input Sources"]
-                                A[Camera Frames<br/>cv::Mat input]
-                                B[Image Loader<br/>Async loading]
-                            end
-                            
-                            %% Processing Pipeline
-                            subgraph Processing["Processing Pipeline"]
-                                C[Object Detector<br/>Mock detection]
-                                D[Performance Metrics<br/>FPS tracking]
-                            end
-                            
-                            %% Async Operations
-                            subgraph Async["Async Operations"]
-                                E[Thread Pool<br/>Task execution]
-                                F[Thread-Safe Queue<br/>Data buffering]
-                            end
-                            
-                            %% Output
-                            subgraph Output["Output"]
-                                G[Console Output<br/>Results display]
-                                H[Performance Stats<br/>Metrics snapshot]
-                            end
-                            
-                            %% Data Flow
-                            A --> C
-                            B --> C
-                            C --> D
-                            C --> E
-                            D --> F
-                            E --> F
-                            F --> G
-                            F --> H
-                            
-                            %% Style
-                            classDef input fill:#fff3e0,stroke:#e65100,stroke-width:2px
-                            classDef processing fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
-                            classDef async fill:#fbbf24,stroke:#f59e0b,stroke-width:2px
-                            classDef output fill:#fce4ec,stroke:#880e4f,stroke-width:2px
-                            
-                            class A,B input
-                            class C,D processing
-                            class E,F async
-                            class G,H output
-                    </div>
-                </div>
-                <div class="source-links">
-                    <h4>🔄 Follow Data Flow in Code</h4>
-                    <a href="../src/main.cpp#L92" class="source-link" target="_blank">📷 Camera Input (main.cpp:92)</a>
-                    <a href="../modules/perception.detector.simple.cppm" class="source-link" target="_blank">👁️ Detection Implementation</a>
-                    <a href="../modules/perception.metrics.cppm" class="source-link" target="_blank">📊 Metrics Recording</a>
-                    <a href="../modules/perception.async.cppm" class="source-link" target="_blank">⚡ Async Processing</a>
-                    <a href="../modules/perception.queue.cppm" class="source-link" target="_blank">🔄 Queue Operations</a>
-                    <a href="../src/main.cpp#L120" class="source-link" target="_blank">📈 Output Generation</a>
-                </div>
-            </div>
-            
-            <!-- Thread Architecture Tab -->
-            <div id="threads" class="tab-pane">
-                <div class="diagram-title">Thread Architecture</div>
-                <div class="info-box">
-                    <h3>Multi-threading Design</h3>
-                    <p>Shows the threading model with main thread, processing threads, worker threads, and shared resources with thread-safe queues.</p>
-                </div>
-                <div class="diagram-container">
-                    <div class="mermaid">
-                        graph TB
-                            %% Main Thread
-                            subgraph Main["Main Thread"]
-                                MT[Main Application Thread<br/>Coordinates system<br/>initialization]
-                            end
-                            
-                            %% Processing Threads
-                            subgraph Processing["Processing Threads"]
-                                PT1[Processing Thread 1<br/>ThreadPool workers]
-                                PT2[Processing Thread 2<br/>Object detection]
-                                PT3[Processing Thread 3<br/>Image loading]
-                            end
-                            
-                            %% Data Queues
-                            subgraph Queues["Thread-Safe Queues"]
-                                Q1[Detection Queue<br/>ThreadSafeQueue]
-                                Q2[Image Queue<br/>ThreadSafeQueue]
-                                Q3[Result Queue<br/>ThreadSafeQueue]
-                            end
-                            
-                            %% Shared Resources
-                            subgraph Shared["Shared Resources"]
-                                SR1[PerformanceMetrics<br/>Thread-safe metrics]
-                            end
-                            
-                            %% Connections
-                            MT --> PT1
-                            MT --> PT2
-                            MT --> PT3
-                            
-                            PT1 --> Q1
-                            PT2 --> Q2
-                            PT3 --> Q3
-                            
-                            Q1 --> SR1
-                            Q2 --> SR1
-                            Q3 --> SR1
-                            
-                            %% Style
-                            classDef main fill:#ffecb3,stroke:#ff6f00,stroke-width:2px
-                            classDef processing fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-                            classDef queue fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
-                            classDef shared fill:#fff3e0,stroke:#e65100,stroke-width:2px
-                            
-                            class MT main
-                            class PT1,PT2,PT3 processing
-                            class Q1,Q2,Q3 queue
-                            class SR1 shared
-                    </div>
-                </div>
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #ffecb3;"></div>
-                        <span>Main Thread</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #e1f5fe;"></div>
-                        <span>Processing Threads</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #e8f5e8;"></div>
-                        <span>Thread-Safe Queues</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Module Interfaces Tab -->
-            <div id="interfaces" class="tab-pane">
-                <div class="diagram-title">Module Interface Diagram</div>
-                <div class="info-box">
-                    <h3>C++20 Module Interfaces</h3>
-                    <p>Shows how modules export and import functionality, demonstrating the module system architecture.</p>
-                </div>
-                <div class="diagram-container">
-                    <div class="mermaid">
-                        graph LR
-                            %% Module Interfaces
-                            subgraph Core["Core Module Interfaces"]
-                                M1[perception.concepts.cppm<br/>Export: Concepts<br/>Import: concepts, ranges]
-                                M2[perception.result.cppm<br/>Export: Result<br/>Import: variant, system_error]
-                                M3[perception.async.cppm<br/>Export: Task, ThreadPool<br/>Import: coroutine, future, thread]
-                                M4[perception.queue.cppm<br/>Export: ThreadSafeQueue<br/>Import: queue, mutex, chrono]
-                                M5[perception.metrics.cppm<br/>Export: PerformanceMetrics<br/>Import: chrono, atomic]
-                            end
-                            
-                            subgraph Vision["Vision Module Interfaces"]
-                                M6[perception.detector.simple.cppm<br/>Export: MockDetector, Detection<br/>Import: opencv2/opencv.hpp]
-                                M7[perception.image_loader.simple.cppm<br/>Export: Image, ImageLoader<br/>Import: opencv2/opencv.hpp, coroutine]
-                                M8[perception.pipeline.cppm<br/>Export: ProcessingPipeline<br/>Import: async, queue, detector]
-                            end
-                            
-                            %% Dependencies
-                            M2 --> M1
-                            M3 --> M1
-                            M3 --> M2
-                            M3 --> M4
-                            M4 --> M1
-                            M5 --> M1
-                            
-                            M6 --> M1
-                            M6 --> M2
-                            M6 --> M5
-                            
-                            M7 --> M1
-                            M7 --> M2
-                            M7 --> M3
-                            M7 --> M5
-                            
-                            M8 --> M3
-                            M8 --> M4
-                            M8 --> M6
-                            M8 --> M7
-                            
-                            %% Style
-                            classDef core fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-                            classDef vision fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
-                            
-                            class M1,M2,M3,M4,M5 core
-                            class M6,M7,M8 vision
-                    </div>
-                </div>
-            </div>
-            
-            <!-- System Overview Tab -->
-            <div id="system" class="tab-pane">
-                <div class="diagram-title">System Overview</div>
-                <div class="info-box">
-                    <h3>Complete System Architecture</h3>
-                    <p>High-level overview of the entire perception system with all components and their interactions.</p>
-                </div>
-                <div class="diagram-container">
-                    <div class="mermaid">
-                        graph TB
-                            %% Input Layer
-                            subgraph Input["Input Layer"]
-                                INPUT[Input Sources<br/>Camera, Images]
-                            end
-                            
-                            %% Processing Layer
-                            subgraph Processing["Processing Layer"]
-                                PROCESS[Processing Pipeline<br/>Detection & Tracking]
-                                ASYNC[Async Operations<br/>ThreadPool & Coroutines]
-                            end
-                            
-                            %% Core Services Layer
-                            subgraph Services["Core Services"]
-                                QUEUE[Data Management<br/>ThreadSafeQueue]
-                                METRICS[Performance<br/>Metrics & Monitoring]
-                                ERROR[Error Handling<br/>Result Type]
-                            end
-                            
-                            %% Foundation Layer
-                            subgraph Foundation["Foundation Layer"]
-                                CONCEPTS[C++20 Concepts<br/>Type Constraints]
-                            end
-                            
-                            %% Output Layer
-                            subgraph Output["Output Layer"]
-                                OUTPUT[Output<br/>Console, Results]
-                            end
-                            
-                            %% Connections
-                            INPUT --> PROCESS
-                            INPUT --> ASYNC
-                            
-                            PROCESS --> QUEUE
-                            PROCESS --> METRICS
-                            PROCESS --> ERROR
-                            
-                            ASYNC --> QUEUE
-                            ASYNC --> METRICS
-                            ASYNC --> ERROR
-                            
-                            QUEUE --> CONCEPTS
-                            METRICS --> CONCEPTS
-                            ERROR --> CONCEPTS
-                            
-                            QUEUE --> OUTPUT
-                            METRICS --> OUTPUT
-                            ERROR --> OUTPUT
-                            
-                            %% Style
-                            classDef input fill:#fff3e0,stroke:#e65100,stroke-width:2px
-                            classDef processing fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
-                            classDef services fill:#f1f8e9,stroke:#33691e,stroke-width:2px
-                            classDef foundation fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-                            classDef output fill:#fce4ec,stroke:#880e4f,stroke-width:2px
-                            
-                            class INPUT input
-                            class PROCESS,ASYNC processing
-                            class QUEUE,METRICS,ERROR services
-                            class CONCEPTS foundation
-                            class OUTPUT output
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Performance Architecture Tab -->
-            <div id="performance" class="tab-pane">
-                <div class="diagram-title">Performance Architecture</div>
-                <div class="info-box">
-                    <h3>Performance Optimization Features</h3>
-                    <p>Shows the performance-critical components and optimization strategies used throughout the system.</p>
-                </div>
-                <div class="diagram-container">
-                    <div class="mermaid">
-                        graph LR
-                            %% Performance Components
-                            subgraph Async["Async Processing"]
-                                A[ThreadPool<br/>Parallel execution]
-                                B[Coroutines<br/>Non-blocking operations]
-                            end
-                            
-                            subgraph Memory["Memory Management"]
-                                C[Lock-free Queue<br/>Atomic operations]
-                                D[Zero-cost Abstractions<br/>Result]
-                            end
-                            
-                            subgraph Monitor["Monitoring"]
-                                E[Real-time Metrics<br/>Atomic counters]
-                                F[Performance Profiling<br/>FPS & Latency]
-                            end
-                            
-                            %% Connections
-                            A --> C
-                            B --> D
-                            C --> E
-                            D --> F
-                            E --> F
-                            
-                            %% Style
-                            classDef async fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
-                            classDef memory fill:#f1f8e9,stroke:#33691e,stroke-width:2px
-                            classDef monitor fill:#fce4ec,stroke:#880e4f,stroke-width:2px
-                            
-                            class A,B async
-                            class C,D memory
-                            class E,F monitor
-                    </div>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number">~60 FPS</div>
-                        <div class="stat-label">Target Performance</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">~16ms</div>
-                        <div class="stat-label">Frame Processing Time</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">8</div>
-                        <div class="stat-label">ThreadPool Size</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">0</div>
-                        <div class="stat-label">Memory Leaks</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="controls">
-            <button onclick="resetZoom()">🔄 Reset Zoom</button>
-            <button onclick="exportSVG()">📷 Export as SVG</button>
-            <button onclick="toggleDarkMode()">🌙 Toggle Dark Mode</button>
-        </div>
+
+<div class="container">
+    <div class="header">
+        <h1>Система Мини-Автономии</h1>
+        <p>Архитектура модулей и потоков данных</p>
     </div>
 
-    <script>
-        // Initialize Mermaid with basic configuration
-        mermaid.initialize({
-            startOnLoad: true,
-            theme: 'default',
-            securityLevel: 'loose'
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showTab('modules', this)">Зависимости модулей</button>
+        <button class="nav-tab" onclick="showTab('pipeline', this)">Конвейер (Pipeline)</button>
+        <button class="nav-tab" onclick="showTab('async', this)">Асинхронная модель</button>
+        <button class="nav-tab" onclick="showTab('classes', this)">Классы</button>
+        <button class="nav-tab" onclick="showTab('dataflow', this)">Поток данных</button>
+        <button class="nav-tab" onclick="showTab('threads', this)">Потоки</button>
+        <button class="nav-tab" onclick="showTab('performance', this)">Производительность</button>
+    </div>
+
+    <div class="content">
+        <div id="modules" class="tab-pane active">
+            <h2>Иерархия модулей</h2>
+            <div class="mermaid">
+                graph TD
+                    Main[main.cpp] --> Pipeline[perception.pipeline]
+                    Pipeline --> Async[perception.async]
+                    Pipeline --> Concepts[perception.concepts]
+                    Loader[perception.image_loader] --> Async
+                    Loader --> Result[perception.result]
+            </div>
+        </div>
+
+        <div id="pipeline" class="tab-pane">
+            <h2>Архитектура Pipeline</h2>
+            <div class="mermaid">
+                graph LR
+                    Input((Камера)) --> Loader[Image Loader]
+                    Loader --> Pre[Pre-processing]
+                    Pre --> Detect[Detector Stage]
+                    Detect --> Track[Tracker Stage]
+                    Track --> UI((Визуализация))
+            </div>
+        </div>
+
+        <div id="async" class="tab-pane">
+            <h2>Модель выполнения Coroutines</h2>
+            <div class="mermaid">
+                sequenceDiagram
+                    participant P as Pipeline
+                    participant TP as ThreadPool
+                    participant C as Coroutine
+                    P->>TP: schedule_on(pool)
+                    TP-->>C: resume()
+                    C->>C: выполнение задачи
+                    C-->>P: co_return result
+            </div>
+        </div>
+
+        <div id="classes" class="tab-pane">
+            <h2>Диаграмма классов</h2>
+            <div class="mermaid">
+                classDiagram
+                    class Result {
+                        +has_value() bool
+                        +value() T
+                        +error() error_code
+                    }
+                    class ThreadSafeQueue {
+                        +push(value)
+                        +pop() optional
+                        +empty() bool
+                    }
+                    class ThreadPool {
+                        +enqueue(f)
+                        +submit(f) future
+                    }
+                    class PerformanceMetrics {
+                        +record_frame_latency(latency)
+                        +get_fps() double
+                    }
+                    Result --> ThreadSafeQueue
+                    ThreadPool --> ThreadSafeQueue
+                    PerformanceMetrics --> Result
+            </div>
+        </div>
+
+        <div id="dataflow" class="tab-pane">
+            <h2>Поток данных</h2>
+            <div class="mermaid">
+                graph LR
+                    A[Камера] --> B[Обработка]
+                    B --> C[Очередь]
+                    C --> D[Детекция]
+                    D --> E[Результат]
+                    
+                    classDef input fill:#fff3e0,stroke:#e65100,stroke-width:2px
+                    classDef processing fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+                    classDef output fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+                    
+                    class A input
+                    class B,C,D processing
+                    class E output
+            </div>
+        </div>
+
+        <div id="threads" class="tab-pane">
+            <h2>Архитектура потоков</h2>
+            <div class="mermaid">
+                graph TB
+                    Main[Главный поток] --> Worker1[Рабочий поток 1]
+                    Main --> Worker2[Рабочий поток 2]
+                    Main --> Worker3[Рабочий поток 3]
+                    
+                    Worker1 --> Queue1[Очередь 1]
+                    Worker2 --> Queue2[Очередь 2]
+                    Worker3 --> Queue3[Очередь 3]
+                    
+                    Queue1 --> Result[Результат]
+                    Queue2 --> Result
+                    Queue3 --> Result
+                    
+                    classDef main fill:#ffecb3,stroke:#ff6f00,stroke-width:2px
+                    classDef worker fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+                    classDef queue fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+                    
+                    class Main main
+                    class Worker1,Worker2,Worker3 worker
+                    class Queue1,Queue2,Queue3 queue
+                    class Result output
+            </div>
+        </div>
+
+        <div id="performance" class="tab-pane">
+            <h2>Метрики производительности</h2>
+            <div class="mermaid">
+                graph LR
+                    Input[Входные данные] --> Process[Обработка]
+                    Process --> Metrics[Сбор метрик]
+                    Metrics --> Output[Вывод]
+                    
+                    subgraph "Оптимизации"
+                        A[ThreadPool]
+                        B[Lock-free Queue]
+                        C[Zero-cost Abstractions]
+                    end
+                    
+                    Process --> A
+                    Process --> B
+                    Process --> C
+                    
+                    classDef process fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+                    classDef opt fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+                    
+                    class Input,Process,Output process
+                    class A,B,C opt
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Настройка Mermaid: отключаем автозапуск при загрузке, чтобы не было "толстых углов"
+    mermaid.initialize({
+        startOnLoad: false,
+        theme: 'neutral',
+        flowchart: { 
+            useMaxWidth: true, 
+            htmlLabels: true,
+            curve: 'basis' 
+        }
+    });
+
+    // Функция для рендеринга диаграмм в конкретном контейнере
+    function renderMermaidInElement(container) {
+        const elements = container.querySelectorAll('.mermaid');
+        elements.forEach((el, index) => {
+            // Если диаграмма еще не была обработана
+            if (!el.getAttribute('data-processed')) {
+                mermaid.init(undefined, el);
+            }
         });
-        
-        // Simple tab switching without complex re-rendering
-        function showTab(tabName) {
-            // Hide all tabs
-            const tabs = document.querySelectorAll('.tab-pane');
-            tabs.forEach(tab => tab.classList.remove('active'));
-            
-            // Remove active class from all nav tabs
-            const navTabs = document.querySelectorAll('.nav-tab');
-            navTabs.forEach(tab => tab.classList.remove('active'));
-            
-            // Show selected tab
-            document.getElementById(tabName).classList.add('active');
-            
-            // Add active class to clicked nav tab
-            if (event && event.target) {
-                event.target.classList.add('active');
-            }
-        }
-        
-        // Basic control functions
-        function resetZoom() {
-            const svgs = document.querySelectorAll('.mermaid svg');
-            svgs.forEach(svg => {
-                svg.style.transform = 'scale(1)';
-                svg.style.transformOrigin = 'center';
-            });
-        }
-        
-        function exportSVG() {
-            const svg = document.querySelector('.tab-pane.active .mermaid svg');
-            if (svg) {
-                const svgData = new XMLSerializer().serializeToString(svg);
-                const blob = new Blob([svgData], {type: 'image/svg+xml'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'architecture_diagram.svg';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-        }
-        
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-        }
-    </script>
+    }
+
+    // Инициализация первой вкладки при загрузке
+    window.onload = function() {
+        const activeTab = document.querySelector('.tab-pane.active');
+        renderMermaidInElement(activeTab);
+    };
+
+    // 2. Исправленная функция переключения вкладок
+    function showTab(tabId, button) {
+        // Скрываем все вкладки
+        const panes = document.querySelectorAll('.tab-pane');
+        panes.forEach(p => p.classList.remove('active'));
+
+        // Убираем активный класс у кнопок
+        const tabs = document.querySelectorAll('.nav-tab');
+        tabs.forEach(t => t.classList.remove('active'));
+
+        // Активируем нужную
+        const targetPane = document.getElementById(tabId);
+        targetPane.classList.add('active');
+        button.classList.add('active');
+
+        // 3. Критически важный момент: 
+        // Даем браузеру 50мс, чтобы отрисовать блок (display: block),
+        // и только ПОТОМ просим Mermaid рассчитать размеры текста.
+        setTimeout(() => {
+            renderMermaidInElement(targetPane);
+        }, 50);
+    }
+</script>
+
 </body>
 </html>
