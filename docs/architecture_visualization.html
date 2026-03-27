@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Autonomy System - Architecture Visualization</title>
+    <title>Mini Autonomy System - Interactive Architecture Visualization</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
     <style>
         body {
@@ -158,23 +158,21 @@
             font-family: 'Courier New', monospace;
         }
         
-        /* Контейнер для диаграммы */
         .mermaid-container {
             width: 100%;
-            overflow-x: auto;  /* Горизонтальный скролл */
+            overflow-x: auto;
             overflow-y: hidden;
             padding: 20px;
             background: #f9f9f9;
             border-radius: 8px;
             border: 1px solid #eee;
         }
-
-        /* Сама диаграмма не должна сжиматься меньше своего реального размера */
+        
         .mermaid svg {
-            min-width: 800px; /* Установите минимальную ширину, при которой появляется скролл */
+            min-width: 800px;
             height: auto;
         }
-
+        
         .controls {
             background: #f8f9fa;
             padding: 15px;
@@ -219,13 +217,51 @@
             border-radius: 4px;
             border: 1px solid #ddd;
         }
+        
+        .source-links {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .source-links h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        
+        .source-link {
+            display: inline-block;
+            background: #e9ecef;
+            color: #495057;
+            padding: 8px 12px;
+            margin: 4px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .source-link:hover {
+            background: #4a90e2;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .clickable-node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .clickable-node:hover {
+            filter: brightness(1.2);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🚀 Mini Autonomy System</h1>
-            <p>C++20 Modules Architecture Visualization</p>
+            <p>Interactive C++20 Modules Architecture Visualization</p>
         </div>
         
         <div class="nav-tabs">
@@ -244,87 +280,89 @@
                 <div class="diagram-title">Module Dependency Diagram</div>
                 <div class="info-box">
                     <h3>Module Architecture Overview</h3>
-                    <p>The system is organized into three main module categories: Core, IO, and Vision. Each module exports specific functionality while importing necessary dependencies.</p>
+                    <p>The system is organized into C++20 modules with clean interfaces. Click on any module to view its source code.</p>
                 </div>
                 <div class="diagram-container">
                     <div class="mermaid">
                         graph TD
-                            %% Core Modules
+                            %% C++20 Modules
                             subgraph "Core Modules"
-                                A[perception_config<br/>Config Management]
-                                B[perception_logger<br/>Logging System]
-                                C[perception_metrics<br/>Performance Metrics]
-                                D[perception_pipeline<br/>Processing Pipeline]
-                                E[perception_thread_safe_queue<br/>Thread-Safe Queue]
+                                A[<a href="../modules/perception.concepts.cppm" target="_blank" class="clickable-node">perception.concepts<br/>Core Concepts</a>]
+                                B[<a href="../modules/perception.result.cppm" target="_blank" class="clickable-node">perception.result<br/>Error Handling</a>]
+                                C[<a href="../modules/perception.async.cppm" target="_blank" class="clickable-node">perception.async<br/>Async Operations</a>]
+                                D[<a href="../modules/perception.queue.cppm" target="_blank" class="clickable-node">perception.queue<br/>Thread-Safe Queue</a>]
+                                E[<a href="../modules/perception.metrics.cppm" target="_blank" class="clickable-node">perception.metrics<br/>Performance Metrics</a>]
                             end
                             
-                            %% IO Modules
-                            subgraph "IO Modules"
-                                F[perception_imu_simulator<br/>IMU Simulation]
-                            end
-                            
-                            %% Vision Modules
                             subgraph "Vision Modules"
-                                G[perception_vision_detector<br/>Object Detection]
-                                H[perception_vision_tracker<br/>Object Tracking]
-                                I[perception_vision_fusion<br/>Sensor Fusion]
+                                F[<a href="../modules/perception.detector.simple.cppm" target="_blank" class="clickable-node">perception.detector.simple<br/>Object Detection</a>]
+                                G[<a href="../modules/perception.image_loader.simple.cppm" target="_blank" class="clickable-node">perception.image_loader.simple<br/>Image Loading</a>]
+                                H[<a href="../modules/perception.pipeline.cppm" target="_blank" class="clickable-node">perception.pipeline<br/>Processing Pipeline</a>]
                             end
+                            
+                            %% Main Application
+                            I[<a href="../src/main.cpp" target="_blank" class="clickable-node">main.cpp<br/>Demo Application</a>]
                             
                             %% Dependencies
-                            F --> A
-                            F --> B
-                            F --> C
+                            A --> B
+                            A --> C
+                            A --> D
+                            A --> E
+                            A --> F
+                            A --> G
+                            A --> H
                             
-                            G --> A
-                            G --> B
-                            G --> C
-                            G --> E
+                            B --> C
+                            B --> D
+                            B --> E
                             
-                            H --> A
-                            H --> B
-                            H --> C
-                            H --> E
-                            H --> G
+                            C --> D
+                            C --> F
+                            C --> G
+                            
+                            D --> F
+                            D --> G
+                            D --> H
+                            
+                            E --> F
+                            E --> G
+                            E --> H
+                            
+                            F --> G
+                            F --> H
+                            
+                            G --> H
                             
                             I --> A
                             I --> B
                             I --> C
+                            I --> D
                             I --> E
+                            I --> F
                             I --> G
                             I --> H
                             
-                            D --> A
-                            D --> B
-                            D --> C
-                            D --> E
-                            
                             %% Style
                             classDef core fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-                            classDef io fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
                             classDef vision fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+                            classDef main fill:#fce4ec,stroke:#880e4f,stroke-width:2px
                             
-                            class A,B,C,D,E core
-                            class F io
-                            class G,H,I vision
+                            class A,B,C,D,E,F,G,H core
+                            class F,G,H vision
+                            class I main
                     </div>
                 </div>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number">9</div>
-                        <div class="stat-label">Total Modules</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">5</div>
-                        <div class="stat-label">Core Modules</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">1</div>
-                        <div class="stat-label">IO Module</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">3</div>
-                        <div class="stat-label">Vision Modules</div>
-                    </div>
+                <div class="source-links">
+                    <h4>📁 Quick Access to Module Source Code</h4>
+                    <a href="../modules/perception.concepts.cppm" class="source-link" target="_blank">🧠 perception.concepts.cppm</a>
+                    <a href="../modules/perception.result.cppm" class="source-link" target="_blank">⚠️ perception.result.cppm</a>
+                    <a href="../modules/perception.async.cppm" class="source-link" target="_blank">⚡ perception.async.cppm</a>
+                    <a href="../modules/perception.queue.cppm" class="source-link" target="_blank">🔄 perception.queue.cppm</a>
+                    <a href="../modules/perception.metrics.cppm" class="source-link" target="_blank">📊 perception.metrics.cppm</a>
+                    <a href="../modules/perception.detector.simple.cppm" class="source-link" target="_blank">👁️ perception.detector.simple.cppm</a>
+                    <a href="../modules/perception.image_loader.simple.cppm" class="source-link" target="_blank">🖼️ perception.image_loader.simple.cppm</a>
+                    <a href="../modules/perception.pipeline.cppm" class="source-link" target="_blank">⚙️ perception.pipeline.cppm</a>
+                    <a href="../src/main.cpp" class="source-link" target="_blank">🚀 main.cpp</a>
                 </div>
             </div>
             
@@ -332,185 +370,114 @@
             <div id="classes" class="tab-pane">
                 <div class="diagram-title">Class Dependency Diagram</div>
                 <div class="info-box">
-                    <h3>Class Relationships</h3>
-                    <p>Detailed class diagram showing inheritance, composition, and dependencies between all major system components.</p>
+                    <h3>Interactive Class Relationships</h3>
+                    <p>Click on any class to navigate to its implementation in the source code.</p>
                 </div>
                 <div class="diagram-container">
                     <div class="mermaid">
                         classDiagram
-                            %% Core Classes
-                            class Config {
-                                -std::map~std::string, std::string~ m_config_map_
-                                +set_string(key, value)
-                                +get_string(key) std::string
-                                +set_int(key, value)
-                                +get_int(key) int
-                                +set_float(key, value)
-                                +get_float(key) float
-                                +set_bool(key, value)
-                                +get_bool(key) bool
-                                +has_key(key) bool
-                                +load_from_file(filename) bool
-                                +save_to_file(filename) bool
-                                +print_all()
-                            }
-                            
-                            class Logger {
-                                -LogLevel m_current_level_
-                                -std::ofstream m_log_file_
-                                -bool m_console_output_
-                                +info(message)
-                                +error(message)
-                                +warning(message)
-                                +debug(message)
-                                +set_level(level)
-                                +set_console_output(enabled)
-                                +set_log_file(filename)
-                            }
-                            
-                            class Metrics {
-                                -std::chrono::steady_clock::time_point m_start_time_
-                                -int m_frame_count_
-                                -float m_last_latency_
-                                +frame_start()
-                                +frame_end() float
-                                +get_last_latency() float
-                                +get_frame_count() int
-                                +get_fps() float
-                                +print_stats()
+                            %% Core Classes with links
+                            class Result {
+                                -std::variant~T, std::error_code~ m_value
+                                +Result()
+                                +Result(T&& value)
+                                +Result(const T& value)
+                                +Result(std::error_code error)
+                                +has_value() bool
+                                +value() T&
+                                +value() const T&
+                                +error() std::error_code
+                                +operator bool() bool
                             }
                             
                             class ThreadSafeQueue~T~ {
-                                -std::queue~T~ m_queue_
-                                -std::mutex m_mutex_
-                                -std::condition_variable m_condition_
-                                +push(value)
-                                +push(value)
-                                +try_pop(value) bool
-                                +wait_and_pop(timeout) std::optional~T~
+                                -std::queue~T~ queue_
+                                -mutable std::mutex mutex_
+                                -std::condition_variable_any condition_
+                                -std::binary_semaphore semaphore_
+                                -std::atomic~bool~ shutdown_
+                                +ThreadSafeQueue()
+                                +push(U&& value)
+                                +pop(stop_token) std::optional~T~
+                                +pop_timeout(timeout) std::optional~T~
+                                +try_pop() std::optional~T~
+                                +shutdown()
                                 +empty() bool
                                 +size() size_t
-                                +clear()
+                                +is_shutdown() bool
                             }
                             
-                            class PipelineStage {
-                                <<abstract>>
-                                +process(data) = 0
+                            class ThreadPool {
+                                -std::vector~std::jthread~ workers_
+                                -std::queue~std::function~void~~> tasks_
+                                -std::mutex mutex_
+                                -std::condition_variable_any condition_
+                                +ThreadPool(num_threads)
+                                +enqueue(f)
+                                +submit(F&& f) std::future~std::invoke_result_t~F~~
                             }
                             
-                            class ThreadedPipeline {
-                                -std::vector~std::thread~ m_workers_
-                                -ThreadSafeQueue~std::unique_ptr~PipelineStage~~ m_stages_
-                                -std::atomic~bool~ m_running_
-                                +add_stage(stage)
-                                +start()
-                                +stop()
-                                +process(data)
+                            class Task~T~ {
+                                +operator co_await()
                             }
                             
-                            %% IO Classes
-                            class IMUData {
-                                +int64_t timestamp_ns
-                                +float ax, ay, az
-                                +float gx, gy, gz
+                            class Generator~T~ {
+                                +operator co_await()
                             }
                             
-                            class IMUSimulator {
-                                -IMUParameters m_params_
-                                -std::mt19937 m_engine_
-                                -std::chrono::steady_clock::time_point m_start_time_
-                                +set_noise_level(std_dev)
-                                +set_bias(accel_bias, gyro_bias)
-                                +set_motion_parameters(amplitude, frequency)
-                                +generate_data() IMUData
-                                +reset()
+                            class PerformanceMetrics {
+                                -std::chrono::steady_clock::time_point start_time_
+                                -std::atomic~int~ frame_count_
+                                -std::atomic~double~ total_latency_
+                                -std::mutex metrics_mutex_
+                                +PerformanceMetrics()
+                                +record_frame_latency(latency)
+                                +get_snapshot() MetricsSnapshot
+                                +get_fps() double
                             }
                             
-                            %% Vision Classes
+                            class MockDetector {
+                                +detect(const cv::Mat& frame) std::vector~Detection~
+                            }
+                            
                             class Detection {
-                                +float x, y, width, height
-                                +float confidence
-                                +int class_id
+                                +cv::Rect bbox
                                 +std::string class_name
-                            }
-                            
-                            class ObjectDetector {
-                                <<abstract>>
-                                -std::string m_model_path_
-                                -float m_confidence_threshold_
-                                +detect(image_data, width, height) std::vector~Detection~* = 0
-                                +set_confidence_threshold(threshold)
-                                +get_confidence_threshold() float
-                            }
-                            
-                            class Track {
-                                +int track_id
-                                +float x, y, width, height
                                 +float confidence
-                                +int age
-                                +std::chrono::steady_clock::time_point last_update
                             }
                             
-                            class ObjectTracker {
-                                <<abstract>>
-                                -int m_next_track_id_
-                                -float m_max_disappeared_
-                                +update(detections) std::vector~Track~* = 0
-                                +get_next_track_id() int
-                                +set_max_disappeared(max_disappeared)
-                            }
-                            
-                            class FusedResult {
-                                +int track_id
-                                +float x, y, width, height
-                                +float confidence
-                                +int class_id
-                                +std::string class_name
-                                +int age
-                                +std::chrono::steady_clock::time_point last_update
-                            }
-                            
-                            class SensorFusion {
-                                <<abstract>>
-                                -float m_detection_weight_
-                                -float m_tracking_weight_
-                                +fuse(detections, tracks) std::vector~FusedResult~* = 0
-                                +set_detection_weight(weight)
-                                +set_tracking_weight(weight)
+                            class Image {
+                                -cv::Mat mat_
+                                +Image()
+                                +Image(cv::Mat mat)
+                                +Image(const Image& other)
+                                +operator=(cv::Mat mat) Image&
+                                +empty() bool
+                                +rows() int
+                                +cols() int
+                                +channels() int
                             }
                             
                             %% Relationships
-                            IMUSimulator --> Config
-                            IMUSimulator --> Logger
-                            IMUSimulator --> Metrics
-                            IMUSimulator --> IMUData
-                            
-                            ObjectDetector --> Config
-                            ObjectDetector --> Logger
-                            ObjectDetector --> Metrics
-                            ObjectDetector --> Detection
-                            
-                            ObjectTracker --> Config
-                            ObjectTracker --> Logger
-                            ObjectTracker --> Metrics
-                            ObjectTracker --> Track
-                            ObjectTracker --> Detection
-                            
-                            SensorFusion --> Config
-                            SensorFusion --> Logger
-                            SensorFusion --> Metrics
-                            SensorFusion --> FusedResult
-                            SensorFusion --> Detection
-                            SensorFusion --> Track
-                            
-                            ThreadedPipeline --> Config
-                            ThreadedPipeline --> Logger
-                            ThreadedPipeline --> Metrics
-                            ThreadedPipeline --> ThreadSafeQueue
-                            ThreadedPipeline --> PipelineStage
+                            Result --> Detection
+                            ThreadSafeQueue --> Result
+                            ThreadPool --> ThreadSafeQueue
+                            Task~T~ --> ThreadPool
+                            Generator~T~ --> Task~T~
+                            PerformanceMetrics --> Result
+                            MockDetector --> Detection
+                            MockDetector --> Image
+                            Detection --> Image
                     </div>
                 </div>
-                </div>
+                <div class="source-links">
+                    <h4>🔗 Navigate to Class Implementations</h4>
+                    <a href="../modules/perception.result.cppm" class="source-link" target="_blank">📄 Result class</a>
+                    <a href="../modules/perception.queue.cppm" class="source-link" target="_blank">🔄 ThreadSafeQueue</a>
+                    <a href="../modules/perception.async.cppm" class="source-link" target="_blank">⚡ ThreadPool & Task</a>
+                    <a href="../modules/perception.metrics.cppm" class="source-link" target="_blank">📊 PerformanceMetrics</a>
+                    <a href="../modules/perception.detector.simple.cppm" class="source-link" target="_blank">👁️ MockDetector & Detection</a>
+                    <a href="../modules/perception.image_loader.simple.cppm" class="source-link" target="_blank">🖼️ Image class</a>
                 </div>
             </div>
             
@@ -518,81 +485,66 @@
             <div id="dataflow" class="tab-pane">
                 <div class="diagram-title">Data Flow Architecture</div>
                 <div class="info-box">
-                    <h3>System Data Flow</h3>
-                    <p>Shows how data flows through the system from input sources through processing to output, including all intermediate transformations.</p>
+                    <h3>Interactive System Data Flow</h3>
+                    <p>Click on components to navigate to their implementation and understand data transformations.</p>
                 </div>
                 <div class="diagram-container">
                     <div class="mermaid">
                         flowchart TD
                             %% Data Sources
                             subgraph "Input Sources"
-                                A[IMU Sensor Data<br/>Raw accelerometer<br/>and gyroscope]
-                                B[Camera Frames<br/>Video input<br/>images]
+                                A[<a href="../src/main.cpp#L92" target="_blank" class="clickable-node">Camera Frames<br/>cv::Mat input</a>]
+                                B[<a href="../modules/perception.image_loader.simple.cppm" target="_blank" class="clickable-node">Image Loader<br/>Async loading</a>]
                             end
                             
                             %% Processing Pipeline
                             subgraph "Processing Pipeline"
-                                C[IMU Simulator<br/>Generate realistic<br/>sensor data]
-                                D[Object Detector<br/>Detect objects<br/>in frames]
-                                E[Object Tracker<br/>Track objects<br/>across frames]
-                                F[Sensor Fusion<br/>Combine detection<br/>and tracking]
+                                C[<a href="../modules/perception.detector.simple.cppm" target="_blank" class="clickable-node">Object Detector<br/>Mock detection</a>]
+                                D[<a href="../modules/perception.metrics.cppm" target="_blank" class="clickable-node">Performance Metrics<br/>FPS tracking</a>]
                             end
                             
-                            %% Core Services
-                            subgraph "Core Services"
-                                G[Config Manager<br/>System parameters<br/>and settings]
-                                H[Logger<br/>System logging<br/>and monitoring]
-                                I[Metrics<br/>Performance<br/>monitoring]
-                                J[Thread-Safe Queue<br/>Data buffering<br/>and synchronization]
+                            %% Async Operations
+                            subgraph "Async Operations"
+                                E[<a href="../modules/perception.async.cppm" target="_blank" class="clickable-node">Thread Pool<br/>Task execution</a>]
+                                F[<a href="../modules/perception.queue.cppm" target="_blank" class="clickable-node">Thread-Safe Queue<br/>Data buffering</a>]
                             end
                             
                             %% Output
                             subgraph "Output"
-                                K[Fused Results<br/>Combined detection<br/>and tracking data]
-                                L[Performance Stats<br/>FPS, latency,<br/>system metrics]
-                                M[Log Files<br/>System events<br/>and errors]
+                                G[<a href="../src/main.cpp#L98" target="_blank" class="clickable-node">Console Output<br/>Results display</a>]
+                                H[<a href="../src/main.cpp#L120" target="_blank" class="clickable-node">Performance Stats<br/>Metrics snapshot</a>]
                             end
                             
                             %% Data Flow
                             A --> C
-                            B --> D
-                            C --> J
-                            D --> J
-                            D --> E
-                            E --> J
+                            B --> C
+                            C --> D
+                            C --> E
+                            D --> F
                             E --> F
-                            F --> J
-                            
-                            C --> G
-                            D --> G
-                            E --> G
                             F --> G
-                            
-                            C --> H
-                            D --> H
-                            E --> H
                             F --> H
-                            
-                            C --> I
-                            D --> I
-                            E --> I
-                            F --> I
-                            
-                            J --> K
-                            I --> L
-                            H --> M
                             
                             %% Style
                             classDef input fill:#fff3e0,stroke:#e65100,stroke-width:2px
                             classDef processing fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
-                            classDef services fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+                            classDef async fill:#fbbf24,stroke:#f59e0b,stroke-width:2px
                             classDef output fill:#fce4ec,stroke:#880e4f,stroke-width:2px
                             
                             class A,B input
-                            class C,D,E,F processing
-                            class G,H,I,J services
-                            class K,L,M output
+                            class C,D processing
+                            class E,F async
+                            class G,H output
                     </div>
+                </div>
+                <div class="source-links">
+                    <h4>🔄 Follow Data Flow in Code</h4>
+                    <a href="../src/main.cpp#L92" class="source-link" target="_blank">📷 Camera Input (main.cpp:92)</a>
+                    <a href="../modules/perception.detector.simple.cppm" class="source-link" target="_blank">👁️ Detection Implementation</a>
+                    <a href="../modules/perception.metrics.cppm" class="source-link" target="_blank">📊 Metrics Recording</a>
+                    <a href="../modules/perception.async.cppm" class="source-link" target="_blank">⚡ Async Processing</a>
+                    <a href="../modules/perception.queue.cppm" class="source-link" target="_blank">🔄 Queue Operations</a>
+                    <a href="../src/main.cpp#L120" class="source-link" target="_blank">📈 Output Generation</a>
                 </div>
             </div>
             
@@ -608,92 +560,51 @@
                         graph TB
                             %% Main Thread
                             subgraph "Main Thread"
-                                MT[Main Application Thread<br/>Coordinates system<br/>initialization]
+                                MT[<a href="../src/main.cpp" target="_blank" class="clickable-node">Main Application Thread<br/>Coordinates system<br/>initialization</a>]
                             end
                             
                             %% Processing Threads
                             subgraph "Processing Threads"
-                                PT1[Processing Thread 1<br/>IMU data handling]
-                                PT2[Processing Thread 2<br/>Object detection]
-                                PT3[Processing Thread 3<br/>Object tracking]
-                                PT4[Processing Thread 4<br/>Sensor fusion]
-                            end
-                            
-                            %% Worker Threads
-                            subgraph "Worker Threads"
-                                WT1[Worker Thread 1<br/>Pipeline stage 1]
-                                WT2[Worker Thread 2<br/>Pipeline stage 2]
-                                WT3[Worker Thread 3<br/>Pipeline stage 3]
-                                WT4[Worker Thread 4<br/>Pipeline stage 4]
+                                PT1[<a href="../modules/perception.async.cppm" target="_blank" class="clickable-node">Processing Thread 1<br/>ThreadPool workers</a>]
+                                PT2[<a href="../modules/perception.detector.simple.cppm" target="_blank" class="clickable-node">Processing Thread 2<br/>Object detection</a>]
+                                PT3[<a href="../modules/perception.image_loader.simple.cppm" target="_blank" class="clickable-node">Processing Thread 3<br/>Image loading</a>]
                             end
                             
                             %% Data Queues
                             subgraph "Thread-Safe Queues"
-                                Q1[IMU Data Queue<br/>ThreadSafeQueue~IMUData~]
-                                Q2[Detection Queue<br/>ThreadSafeQueue~Detection~]
-                                Q3[Track Queue<br/>ThreadSafeQueue~Track~]
-                                Q4[Fusion Queue<br/>ThreadSafeQueue~FusedResult~]
-                                Q5[Pipeline Queue<br/>ThreadSafeQueue~Data~]
+                                Q1[<a href="../modules/perception.queue.cppm" target="_blank" class="clickable-node">Detection Queue<br/>ThreadSafeQueue~Detection~</a>]
+                                Q2[<a href="../modules/perception.queue.cppm" target="_blank" class="clickable-node">Image Queue<br/>ThreadSafeQueue~Image~</a>]
+                                Q3[<a href="../modules/perception.queue.cppm" target="_blank" class="clickable-node">Result Queue<br/>ThreadSafeQueue~Result~</a>]
                             end
                             
                             %% Shared Resources
                             subgraph "Shared Resources"
-                                SR1[Config Manager<br/>Thread-safe configuration]
-                                SR2[Logger<br/>Thread-safe logging]
-                                SR3[Metrics<br/>Thread-safe metrics]
+                                SR1[<a href="../modules/perception.metrics.cppm" target="_blank" class="clickable-node">PerformanceMetrics<br/>Thread-safe metrics</a>]
                             end
                             
                             %% Connections
                             MT --> PT1
                             MT --> PT2
                             MT --> PT3
-                            MT --> PT4
                             
                             PT1 --> Q1
                             PT2 --> Q2
                             PT3 --> Q3
-                            PT4 --> Q4
-                            
-                            PT2 --> WT1
-                            PT3 --> WT2
-                            PT4 --> WT3
-                            PT4 --> WT4
-                            
-                            WT1 --> Q5
-                            WT2 --> Q5
-                            WT3 --> Q5
-                            WT4 --> Q5
                             
                             Q1 --> SR1
                             Q2 --> SR1
                             Q3 --> SR1
-                            Q4 --> SR1
-                            Q5 --> SR1
-                            
-                            Q1 --> SR2
-                            Q2 --> SR2
-                            Q3 --> SR2
-                            Q4 --> SR2
-                            Q5 --> SR2
-                            
-                            Q1 --> SR3
-                            Q2 --> SR3
-                            Q3 --> SR3
-                            Q4 --> SR3
-                            Q5 --> SR3
                             
                             %% Style
                             classDef main fill:#ffecb3,stroke:#ff6f00,stroke-width:2px
                             classDef processing fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-                            classDef worker fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
                             classDef queue fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
                             classDef shared fill:#fff3e0,stroke:#e65100,stroke-width:2px
                             
                             class MT main
-                            class PT1,PT2,PT3,PT4 processing
-                            class WT1,WT2,WT3,WT4 worker
-                            class Q1,Q2,Q3,Q4,Q5 queue
-                            class SR1,SR2,SR3 shared
+                            class PT1,PT2,PT3 processing
+                            class Q1,Q2,Q3 queue
+                            class SR1 shared
                     </div>
                 </div>
                 <div class="legend">
@@ -704,10 +615,6 @@
                     <div class="legend-item">
                         <div class="legend-color" style="background: #e1f5fe;"></div>
                         <span>Processing Threads</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #f3e5f5;"></div>
-                        <span>Worker Threads</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background: #e8f5e8;"></div>
@@ -727,155 +634,122 @@
                     <div class="mermaid">
                         graph LR
                             %% Module Interfaces
-                            subgraph "Module Interfaces"
-                                M1[perception_config.ixx<br/>Export: Config class<br/>Import: string, map, fstream]
-                                M2[perception_logger.ixx<br/>Export: Logger, LogLevel<br/>Import: string, fstream, mutex]
-                                M3[perception_metrics.ixx<br/>Export: Metrics class<br/>Import: chrono, iostream]
-                                M4[perception_pipeline.ixx<br/>Export: PipelineStage, ThreadedPipeline<br/>Import: vector, thread, atomic]
-                                M5[perception_thread_safe_queue.ixx<br/>Export: ThreadSafeQueue template<br/>Import: queue, mutex, chrono]
-                            end
-                            
-                            subgraph "IO Module Interfaces"
-                                M6[perception_imu_simulator.ixx<br/>Export: IMUData, IMUSimulator<br/>Import: random, chrono, array]
+                            subgraph "Core Module Interfaces"
+                                M1[<a href="../modules/perception.concepts.cppm" target="_blank" class="clickable-node">perception.concepts.cppm<br/>Export: Concepts<br/>Import: concepts, ranges</a>]
+                                M2[<a href="../modules/perception.result.cppm" target="_blank" class="clickable-node">perception.result.cppm<br/>Export: Result<T><br/>Import: variant, system_error</a>]
+                                M3[<a href="../modules/perception.async.cppm" target="_blank" class="clickable-node">perception.async.cppm<br/>Export: Task<T>, ThreadPool<br/>Import: coroutine, future, thread</a>]
+                                M4[<a href="../modules/perception.queue.cppm" target="_blank" class="clickable-node">perception.queue.cppm<br/>Export: ThreadSafeQueue<br/>Import: queue, mutex, chrono</a>]
+                                M5[<a href="../modules/perception.metrics.cppm" target="_blank" class="clickable-node">perception.metrics.cppm<br/>Export: PerformanceMetrics<br/>Import: chrono, atomic</a>]
                             end
                             
                             subgraph "Vision Module Interfaces"
-                                M7[perception_vision_detector.ixx<br/>Export: Detection, ObjectDetector<br/>Import: vector, string, memory]
-                                M8[perception_vision_tracker.ixx<br/>Export: Track, ObjectTracker<br/>Import: vector, chrono]
-                                M9[perception_vision_fusion.ixx<br/>Export: FusedResult, SensorFusion<br/>Import: vector, chrono]
+                                M6[<a href="../modules/perception.detector.simple.cppm" target="_blank" class="clickable-node">perception.detector.simple.cppm<br/>Export: MockDetector, Detection<br/>Import: opencv2/opencv.hpp</a>]
+                                M7[<a href="../modules/perception.image_loader.simple.cppm" target="_blank" class="clickable-node">perception.image_loader.simple.cppm<br/>Export: Image, ImageLoader<br/>Import: opencv2/opencv.hpp, coroutine</a>]
+                                M8[<a href="../modules/perception.pipeline.cppm" target="_blank" class="clickable-node">perception.pipeline.cppm<br/>Export: ProcessingPipeline<br/>Import: async, queue, detector</a>]
                             end
                             
                             %% Dependencies
+                            M2 --> M1
+                            M3 --> M1
+                            M3 --> M2
+                            M3 --> M4
+                            M4 --> M1
+                            M5 --> M1
+                            
                             M6 --> M1
                             M6 --> M2
-                            M6 --> M3
+                            M6 --> M5
                             
                             M7 --> M1
                             M7 --> M2
                             M7 --> M3
                             M7 --> M5
                             
-                            M8 --> M1
-                            M8 --> M2
                             M8 --> M3
-                            M8 --> M5
+                            M8 --> M4
+                            M8 --> M6
                             M8 --> M7
                             
-                            M9 --> M1
-                            M9 --> M2
-                            M9 --> M3
-                            M9 --> M5
-                            M9 --> M7
-                            M9 --> M8
-                            
-                            M4 --> M1
-                            M4 --> M2
-                            M4 --> M3
-                            M4 --> M5
-                            
                             %% Style
-                            classDef coreMod fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-                            classDef ioMod fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-                            classDef visionMod fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+                            classDef core fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+                            classDef vision fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
                             
-                            class M1,M2,M3,M4,M5 coreMod
-                            class M6 ioMod
-                            class M7,M8,M9 visionMod
+                            class M1,M2,M3,M4,M5 core
+                            class M6,M7,M8 vision
                     </div>
                 </div>
             </div>
             
             <!-- System Overview Tab -->
             <div id="system" class="tab-pane">
-                <div class="diagram-title">System Architecture Overview</div>
+                <div class="diagram-title">System Overview</div>
                 <div class="info-box">
                     <h3>Complete System Architecture</h3>
-                    <p>High-level view of the entire system showing all layers from external interfaces to infrastructure.</p>
+                    <p>High-level overview of the entire perception system with all components and their interactions.</p>
                 </div>
                 <div class="diagram-container">
                     <div class="mermaid">
                         graph TB
-                            %% External Interfaces
-                            subgraph "External Interfaces"
-                                EI1[IMU Hardware<br/>Sensor input]
-                                EI2[Camera Hardware<br/>Video input]
-                                EI3[Configuration Files<br/>System settings]
-                                EI4[Log Files<br/>Output logs]
-                            end
-                            
-                            %% Application Layer
-                            subgraph "Application Layer"
-                                AL1[Main Application<br/>System coordinator]
-                                AL2[User Interface<br/>Control interface]
-                            end
-                            
-                            %% Module Layer
-                            subgraph "Module Layer"
-                                ML1[Core Modules<br/>Config, Logger, Metrics<br/>Pipeline, Queue]
-                                ML2[IO Modules<br/>IMU simulation]
-                                ML3[Vision Modules<br/>Detection, Tracking, Fusion]
+                            %% Input Layer
+                            subgraph "Input Layer"
+                                INPUT[<a href="../src/main.cpp#L85" target="_blank" class="clickable-node">Input Sources<br/>Camera, Images</a>]
                             end
                             
                             %% Processing Layer
                             subgraph "Processing Layer"
-                                PL1[Data Acquisition<br/>Sensor data collection]
-                                PL2[Data Processing<br/>Algorithm execution]
-                                PL3[Data Fusion<br/>Multi-sensor combination]
-                                PL4[Output Generation<br/>Result formatting]
+                                PROCESS[<a href="../modules/perception.detector.simple.cppm" target="_blank" class="clickable-node">Processing Pipeline<br/>Detection & Tracking</a>]
+                                ASYNC[<a href="../modules/perception.async.cppm" target="_blank" class="clickable-node">Async Operations<br/>ThreadPool & Coroutines</a>]
                             end
                             
-                            %% Infrastructure Layer
-                            subgraph "Infrastructure Layer"
-                                IL1[Threading System<br/>Concurrent execution]
-                                IL2[Memory Management<br/>RAII, smart pointers]
-                                IL3[Error Handling<br/>Exception management]
-                                IL4[Performance Monitoring<br/>Metrics collection]
+                            %% Core Services Layer
+                            subgraph "Core Services"
+                                QUEUE[<a href="../modules/perception.queue.cppm" target="_blank" class="clickable-node">Data Management<br/>ThreadSafeQueue</a>]
+                                METRICS[<a href="../modules/perception.metrics.cppm" target="_blank" class="clickable-node">Performance<br/>Metrics & Monitoring</a>]
+                                ERROR[<a href="../modules/perception.result.cppm" target="_blank" class="clickable-node">Error Handling<br/>Result<T> Type</a>]
+                            end
+                            
+                            %% Foundation Layer
+                            subgraph "Foundation Layer"
+                                CONCEPTS[<a href="../modules/perception.concepts.cppm" target="_blank" class="clickable-node">C++20 Concepts<br/>Type Constraints</a>]
+                            end
+                            
+                            %% Output Layer
+                            subgraph "Output Layer"
+                                OUTPUT[<a href="../src/main.cpp#L120" target="_blank" class="clickable-node">Output<br/>Console, Results</a>]
                             end
                             
                             %% Connections
-                            EI1 --> PL1
-                            EI2 --> PL1
-                            EI3 --> ML1
-                            EI4 --> ML1
+                            INPUT --> PROCESS
+                            INPUT --> ASYNC
                             
-                            AL1 --> ML1
-                            AL2 --> ML1
+                            PROCESS --> QUEUE
+                            PROCESS --> METRICS
+                            PROCESS --> ERROR
                             
-                            ML1 --> PL2
-                            ML2 --> PL2
-                            ML3 --> PL2
+                            ASYNC --> QUEUE
+                            ASYNC --> METRICS
+                            ASYNC --> ERROR
                             
-                            PL1 --> PL2
-                            PL2 --> PL3
-                            PL3 --> PL4
+                            QUEUE --> CONCEPTS
+                            METRICS --> CONCEPTS
+                            ERROR --> CONCEPTS
                             
-                            PL4 --> EI4
-                            
-                            IL1 --> PL1
-                            IL1 --> PL2
-                            IL1 --> PL3
-                            IL2 --> PL1
-                            IL2 --> PL2
-                            IL2 --> PL3
-                            IL3 --> PL1
-                            IL3 --> PL2
-                            IL3 --> PL3
-                            IL4 --> PL1
-                            IL4 --> PL2
-                            IL4 --> PL3
+                            QUEUE --> OUTPUT
+                            METRICS --> OUTPUT
+                            ERROR --> OUTPUT
                             
                             %% Style
-                            classDef external fill:#ffebee,stroke:#c62828,stroke-width:2px
-                            classDef application fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
-                            classDef module fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
-                            classDef processing fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
-                            classDef infrastructure fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+                            classDef input fill:#fff3e0,stroke:#e65100,stroke-width:2px
+                            classDef processing fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+                            classDef services fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+                            classDef foundation fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+                            classDef output fill:#fce4ec,stroke:#880e4f,stroke-width:2px
                             
-                            class EI1,EI2,EI3,EI4 external
-                            class AL1,AL2 application
-                            class ML1,ML2,ML3 module
-                            class PL1,PL2,PL3,PL4 processing
-                            class IL1,IL2,IL3,IL4 infrastructure
+                            class INPUT input
+                            class PROCESS,ASYNC processing
+                            class QUEUE,METRICS,ERROR services
+                            class CONCEPTS foundation
+                            class OUTPUT output
                     </div>
                 </div>
             </div>
@@ -884,192 +758,225 @@
             <div id="performance" class="tab-pane">
                 <div class="diagram-title">Performance Architecture</div>
                 <div class="info-box">
-                    <h3>Performance Monitoring & Optimization</h3>
-                    <p>Shows how performance is monitored throughout the system with timing, throughput, and resource usage tracking.</p>
+                    <h3>Performance Optimization Features</h3>
+                    <p>Shows the performance-critical components and optimization strategies used throughout the system.</p>
                 </div>
                 <div class="diagram-container">
                     <div class="mermaid">
-                        graph TD
+                        graph LR
                             %% Performance Components
-                            subgraph "Performance Monitoring"
-                                PM1[Metrics Collector<br/>Frame timing, FPS]
-                                PM2[Performance Analyzer<br/>Bottleneck detection]
-                                PM3[Resource Monitor<br/>CPU, memory usage]
+                            subgraph "Async Processing"
+                                A[<a href="../modules/perception.async.cppm" target="_blank" class="clickable-node">ThreadPool<br/>Parallel execution</a>]
+                                B[<a href="../modules/perception.async.cppm" target="_blank" class="clickable-node">Coroutines<br/>Non-blocking operations</a>]
                             end
                             
-                            %% Data Flow
-                            subgraph "Data Processing Pipeline"
-                                DP1[Input Processing<br/>~10ms]
-                                DP2[Detection Processing<br/>~50ms]
-                                DP3[Tracking Processing<br/>~20ms]
-                                DP4[Fusion Processing<br/>~15ms]
+                            subgraph "Memory Management"
+                                C[<a href="../modules/perception.queue.cppm" target="_blank" class="clickable-node">Lock-free Queue<br/>Atomic operations</a>]
+                                D[<a href="../modules/perception.result.cppm" target="_blank" class="clickable-node">Zero-cost Abstractions<br/>Result<T></a>]
                             end
                             
-                            %% Threading Model
-                            subgraph "Threading Architecture"
-                                TA1[Main Thread<br/>Coordination]
-                                TA2[Processing Threads<br/>4 workers]
-                                TA3[I/O Threads<br/>2 workers]
-                            end
-                            
-                            %% Memory Management
-                            subgraph "Memory Architecture"
-                                MM1[Stack Allocation<br/>Small objects]
-                                MM2[Heap Allocation<br/>Large objects]
-                                MM3[Object Pool<br/>Reusable objects]
+                            subgraph "Monitoring"
+                                E[<a href="../modules/perception.metrics.cppm" target="_blank" class="clickable-node">Real-time Metrics<br/>Atomic counters</a>]
+                                F[<a href="../src/main.cpp#L120" target="_blank" class="clickable-node">Performance Profiling<br/>FPS & Latency</a>]
                             end
                             
                             %% Connections
-                            DP1 --> PM1
-                            DP2 --> PM1
-                            DP3 --> PM1
-                            DP4 --> PM1
+                            A --> C
+                            B --> D
+                            C --> E
+                            D --> F
+                            E --> F
                             
-                            PM1 --> PM2
-                            PM2 --> PM3
+                            %% Style
+                            classDef async fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+                            classDef memory fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+                            classDef monitor fill:#fce4ec,stroke:#880e4f,stroke-width:2px
                             
-                            TA1 --> DP1
-                            TA2 --> DP2
-                            TA2 --> DP3
-                            TA2 --> DP4
-                            TA3 --> PM1
-                            
-                            DP1 --> MM1
-                            DP2 --> MM2
-                            DP3 --> MM2
-                            DP4 --> MM2
-                            
-                            MM3 --> DP2
-                            MM3 --> DP3
-                            MM3 --> DP4
-                            
-                            %% Performance Metrics
-                            subgraph "Performance Metrics"
-                                PERF1[Total Latency: ~95ms]
-                                PERF2[Throughput: ~10 FPS]
-                                PERF3[Memory Usage: <100MB]
-                                PERF4[CPU Usage: <80%]
-                            end
-                            
-                            PM3 --> PERF1
-                            PM3 --> PERF2
-                            PM3 --> PERF3
-                            PM3 --> PERF4
+                            class A,B async
+                            class C,D memory
+                            class E,F monitor
                     </div>
                 </div>
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-number">95ms</div>
-                        <div class="stat-label">Total Latency</div>
+                        <div class="stat-number">~60 FPS</div>
+                        <div class="stat-label">Target Performance</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">10 FPS</div>
-                        <div class="stat-label">Throughput</div>
+                        <div class="stat-number">~16ms</div>
+                        <div class="stat-label">Frame Processing Time</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number"><100MB</div>
-                        <div class="stat-label">Memory Usage</div>
+                        <div class="stat-number">8</div>
+                        <div class="stat-label">ThreadPool Size</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number"><80%</div>
-                        <div class="stat-label">CPU Usage</div>
+                        <div class="stat-number">0</div>
+                        <div class="stat-label">Memory Leaks</div>
                     </div>
                 </div>
             </div>
         </div>
+        
+        <div class="controls">
+            <button onclick="resetZoom()">🔄 Reset Zoom</button>
+            <button onclick="exportSVG()">📷 Export as SVG</button>
+            <button onclick="toggleDarkMode()">🌙 Toggle Dark Mode</button>
+        </div>
     </div>
-    
+
     <script>
-        // Initialize Mermaid with manual rendering
-        mermaid.initialize({
-            startOnLoad: false,  // Disable auto-initialization
-            theme: 'neutral',
-            // Настройка шрифтов
-            themeVariables: {
-                fontSize: '18px',           // Размер текста в узлах
-                fontFamily: 'Segoe UI',      // Шрифт
-                labelFontSize: '16px'        // Размер текста на связях (стрелках)
-            },
-            flowchart: {
-                useMaxWidth: false,          // Отключаем автоподстройку под ширину, чтобы работал скролл
-                htmlLabels: true
-            }
-        });
+        let mermaidInitialized = false;
         
-        // Initial render when DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {
-            // Render the active tab (modules) first
-            setTimeout(() => {
-                showTab('modules');
-            }, 100);
-        });
-        
-        // Tab switching
-function showTab(tabName) {
-    const panes = document.querySelectorAll('.tab-pane');
-    panes.forEach(pane => pane.classList.remove('active'));
-    
-    const tabs = document.querySelectorAll('.nav-tab');
-    tabs.forEach(tab => tab.classList.remove('active'));
-    
-    const targetPane = document.getElementById(tabName);
-    if (targetPane) {
-        targetPane.classList.add('active');
-        
-        setTimeout(() => {
-            const mermaidElements = targetPane.querySelectorAll('.mermaid');
-            mermaidElements.forEach((element, index) => {
-                // 1. Сохраняем исходный текст при первом проходе
-                if (!element.getAttribute('data-diagram')) {
-                    element.setAttribute('data-diagram', element.textContent.trim());
-                }
-                
-                // 2. Извлекаем чистый код диаграммы
-                const code = element.getAttribute('data-diagram');
-                const graphId = `mermaid-graph-${tabName}-${index}`;
-                
-                // 3. Очищаем и рендерим
-                element.innerHTML = ""; 
-                element.removeAttribute('data-processed');
-                
-                mermaid.render(graphId, code).then((result) => {
-                    element.innerHTML = `<div class="mermaid-container">${result.svg}</div>`;
-                }).catch((error) => {
-                    console.error('Mermaid error:', error);
-                    element.innerHTML = `<div style="color: red;">Error: ${error.message}</div>`;
+        function initializeMermaid() {
+            if (!mermaidInitialized) {
+                mermaid.initialize({
+                    startOnLoad: false,
+                    theme: 'default',
+                    flowchart: {
+                        useMaxWidth: true,
+                        htmlLabels: true,
+                        curve: 'basis'
+                    }
                 });
-            });
-        }, 100);
-    }
-            
-            // Find and activate the clicked nav tab
-            const clickedTab = Array.from(tabs).find(tab => 
-                tab.textContent.toLowerCase().replace(' ', '').replace(/\s+/g, '') === tabName
-            );
-            if (clickedTab) {
-                clickedTab.classList.add('active');
+                mermaidInitialized = true;
+                console.log('Mermaid initialized');
             }
         }
         
-        // Add click handlers to nav tabs
-        document.querySelectorAll('.nav-tab').forEach(tab => {
-            tab.addEventListener('click', function(event) {
-                // Map button text to tab IDs
-                const tabMap = {
-                    'Module Dependencies': 'modules',
-                    'Class Dependencies': 'classes', 
-                    'Data Flow': 'dataflow',
-                    'Thread Architecture': 'threads',
-                    'Module Interfaces': 'interfaces',
-                    'System Overview': 'system',
-                    'Performance Architecture': 'performance'
-                };
-                
-                const tabName = tabMap[this.textContent];
-                if (tabName) {
-                    showTab(tabName);
-                }
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-pane');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from all nav tabs
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+            
+            // Reinitialize mermaid for the new tab
+            setTimeout(() => {
+                initializeMermaid();
+                const mermaidDivs = document.querySelectorAll('.tab-pane.active .mermaid');
+                mermaidDivs.forEach(div => {
+                    mermaid.run({
+                        querySelector: div
+                    });
+                });
+            }, 100);
+        }
+        
+        function resetZoom() {
+            const svgs = document.querySelectorAll('.mermaid svg');
+            svgs.forEach(svg => {
+                svg.style.transform = 'scale(1)';
+                svg.style.transformOrigin = 'center';
             });
+        }
+        
+        function exportSVG() {
+            const svg = document.querySelector('.tab-pane.active .mermaid svg');
+            if (svg) {
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const blob = new Blob([svgData], {type: 'image/svg+xml'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'architecture_diagram.svg';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            
+            // Update mermaid theme
+            if (isDark) {
+                mermaid.initialize({ theme: 'dark' });
+            } else {
+                mermaid.initialize({ theme: 'default' });
+            }
+            
+            // Re-render diagrams
+            setTimeout(() => {
+                const mermaidDivs = document.querySelectorAll('.mermaid');
+                mermaidDivs.forEach(div => {
+                    div.innerHTML = div.getAttribute('data-processed') ? '' : div.innerHTML;
+                    mermaid.run({
+                        querySelector: div
+                    });
+                });
+            }, 100);
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMermaid();
+            setTimeout(() => {
+                const mermaidDivs = document.querySelectorAll('.tab-pane.active .mermaid');
+                mermaidDivs.forEach(div => {
+                    mermaid.run({
+                        querySelector: div
+                    });
+                });
+            }, 500);
+        });
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        document.querySelector('.nav-tab:nth-child(1)').click();
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        document.querySelector('.nav-tab:nth-child(2)').click();
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        document.querySelector('.nav-tab:nth-child(3)').click();
+                        break;
+                    case '4':
+                        e.preventDefault();
+                        document.querySelector('.nav-tab:nth-child(4)').click();
+                        break;
+                    case '5':
+                        e.preventDefault();
+                        document.querySelector('.nav-tab:nth-child(5)').click();
+                        break;
+                    case '6':
+                        e.preventDefault();
+                        document.querySelector('.nav-tab:nth-child(6)').click();
+                        break;
+                    case '7':
+                        e.preventDefault();
+                        document.querySelector('.nav-tab:nth-child(7)').click();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        resetZoom();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        exportSVG();
+                        break;
+                    case 'd':
+                        e.preventDefault();
+                        toggleDarkMode();
+                        break;
+                }
+            }
         });
     </script>
 </body>
