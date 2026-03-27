@@ -4,6 +4,9 @@ module;
 #include <string>
 #include <system_error>
 #include <variant>
+#include <future>
+#include <optional>
+#include <chrono>
 
 export module perception.result;
 
