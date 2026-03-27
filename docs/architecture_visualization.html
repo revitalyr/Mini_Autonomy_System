@@ -59,6 +59,9 @@
             background: #fff;
             padding: 20px;
             border-radius: 8px;
+            overflow: auto;
+            transform: scale(1.2);
+            transform-origin: top left;
         }
         h2 { color: #4a90e2; margin-top: 0; }
     </style>
@@ -142,12 +145,11 @@
                     }
                     
                     class <a href="../modules/perception.result.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Result</a> {
-                        -m_value: variant~T, PerceptionError~
+                        -m_value: variant
                         +Result()
-                        +Result(T&& value)
+                        +Result(T value)
                         +has_value() bool
-                        +value() T&
-                        +value() const T&
+                        +value() T
                         +error() PerceptionError
                         +operator bool() bool
                     }
@@ -161,9 +163,9 @@
                     }
                     
                     class <a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">MockDetector</a> {
-                        -m_class_names: vector~string~
+                        -m_class_names: vector
                         +MockDetector()
-                        +detect(frame) vector~Detection~
+                        +detect(frame) vector
                     }
                     
                     class <a href="../modules/perception.image_loader.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Image</a> {
@@ -177,7 +179,7 @@
                     }
                     
                     class <a href="../modules/perception.image_loader.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Generator</a> {
-                        <<template~T~>>
+                        <<template T>>
                         +get_return_object()
                         +initial_suspend()
                         +final_suspend()
@@ -185,8 +187,8 @@
                     }
                     
                     class <a href="../modules/perception.async.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">ThreadPool</a> {
-                        -workers_: vector~jthread~
-                        -tasks_: queue~function~
+                        -workers_: vector
+                        -tasks_: queue
                         -mutex_: mutex
                         +ThreadPool(num_threads)
                         +enqueue(f)
@@ -194,15 +196,15 @@
                     }
                     
                     class <a href="../modules/perception.queue.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">ThreadSafeQueue</a> {
-                        -queue_: queue~T~
+                        -queue_: queue
                         -mutex_: mutex
                         -condition_: condition_variable_any
                         -semaphore_: binary_semaphore
-                        -shutdown_: atomic~bool~
+                        -shutdown_: atomic
                         +ThreadSafeQueue()
-                        +push(U&& value)
-                        +pop(stop_token) optional~T~
-                        +try_pop() optional~T~
+                        +push(U value)
+                        +pop(stop_token) optional
+                        +try_pop() optional
                         +shutdown()
                         +empty() bool
                         +size() size_t
@@ -210,13 +212,13 @@
                     }
                     
                     class <a href="../modules/perception.metrics.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">PerformanceMetrics</a> {
-                        -frame_count_: atomic~uint64_t~
-                        -total_latency_ms_: atomic~double~
-                        -min_latency_ms_: atomic~double~
-                        -max_latency_ms_: atomic~double~
+                        -frame_count_: atomic
+                        -total_latency_ms_: atomic
+                        -min_latency_ms_: atomic
+                        -max_latency_ms_: atomic
                         -start_time_: time_point
                         -recent_latencies_mutex_: mutex
-                        -recent_latencies_: vector~double~
+                        -recent_latencies_: vector
                         +record_frame_latency(latency_ms)
                         +get_snapshot() MetricsSnapshot
                         +get_fps() double
