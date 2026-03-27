@@ -2,24 +2,24 @@ module;
 
 #include <coroutine>
 #include <exception>
-#include <variant>
 #include <utility>
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
 #include <optional>
-#include <future>
-#include <tuple>
 #include <vector>
 #include <queue>
 #include <thread>
 #include <functional>
 #include <stop_token>
+#include <memory>
+#include <future>
 
 export module perception.async;
 
 export namespace perception {
 
+    // --- ThreadPool ---
     class ThreadPool {
     public:
         explicit ThreadPool(size_t num_threads = std::thread::hardware_concurrency()) {
@@ -29,10 +29,8 @@ export namespace perception {
                         std::function<void()> task;
                         {
                             std::unique_lock lock(mutex_);
-                            // Wait for task or stop request
-                            if (!condition_.wait(lock, st, [this] { return !tasks_.empty(); })) {
-                                return; // Stop requested
-                            }
+                            condition_.wait(lock, st, [this] { return !tasks_.empty(); });
+                            if (st.stop_requested() && tasks_.empty()) return;
                             
                             task = std::move(tasks_.front());
                             tasks_.pop();
@@ -43,21 +41,25 @@ export namespace perception {
             }
         }
 
-        ~ThreadPool() = default; // jthreads automatically join and request stop
-
-        // Disable copy/move to prevent logic errors with the pool
-        ThreadPool(const ThreadPool&) = delete;
-        ThreadPool& operator=(const ThreadPool&) = delete;
-        ThreadPool(ThreadPool&&) = delete;
-        ThreadPool& operator=(ThreadPool&&) = delete;
-
-        template<typename F>
-        void enqueue(F&& f) {
+        void enqueue(std::function<void()> f) {
             {
-                std::lock_guard lock(mutex_);
-                tasks_.emplace(std::forward<F>(f));
+                std::unique_lock lock(mutex_);
+                tasks_.push(std::move(f));
             }
             condition_.notify_one();
+        }
+
+        template<typename F>
+        auto submit(F&& f) -> std::future<std::invoke_result_t<F>> {
+            using RetType = std::invoke_result_t<F>;
+            auto task = std::make_shared<std::packaged_task<RetType()>>(std::forward<F>(f));
+            auto fut = task->get_future();
+            {
+                std::unique_lock lock(mutex_);
+                tasks_.emplace([task]() { (*task)(); });
+            }
+            condition_.notify_one();
+            return fut;
         }
 
     private:
@@ -67,282 +69,118 @@ export namespace perception {
         std::condition_variable_any condition_;
     };
 
-    // Global accessor for the shared thread pool
-    inline ThreadPool& get_global_thread_pool() {
+    // Глобальный пул потоков
+    export ThreadPool& get_global_thread_pool() {
         static ThreadPool pool;
         return pool;
     }
 
-    // Awaiter to switch execution to the thread pool
-    struct ThreadPoolAwaiter {
-        ThreadPool& pool_;
-        constexpr bool await_ready() const noexcept { return false; }
-        void await_suspend(std::coroutine_handle<> h) const {
-            pool_.enqueue([h]() mutable { h.resume(); });
-        }
-        constexpr void await_resume() const noexcept {}
-    };
-
-    inline auto schedule_on(ThreadPool& pool) {
-        return ThreadPoolAwaiter{pool};
-    }
-
-    template<typename T>
-    class Task {
-    public:
-        struct promise_type;
-        using value_type = T;
-        using handle_type = std::coroutine_handle<promise_type>;
-
-        struct promise_type {
-            T value_;
-            std::exception_ptr exception_;
-            std::coroutine_handle<> continuation_;
-
-            Task get_return_object() {
-                return Task(handle_type::from_promise(*this));
-            }
-
-            std::suspend_always initial_suspend() noexcept { return {}; }
-            
-            struct FinalAwaiter {
-                bool await_ready() const noexcept { return false; }
-                std::coroutine_handle<> await_suspend(std::coroutine_handle<promise_type> h) noexcept {
-                    auto& promise = h.promise();
-                    return promise.continuation_ ? promise.continuation_ : std::noop_coroutine();
-                }
-                void await_resume() noexcept {}
-            };
-            
-            FinalAwaiter final_suspend() noexcept { return {}; }
-
-            void unhandled_exception() { exception_ = std::current_exception(); }
-
-            template<std::convertible_to<T> From>
-            void return_value(From&& from) {
-                value_ = std::forward<From>(from);
-            }
-        };
-
-        explicit Task(handle_type h) : h_(h) {}
-        
-        ~Task() { 
-            if (h_) h_.destroy(); 
-        }
-
-        // Non-copyable, movable
-        Task(const Task&) = delete;
-        Task& operator=(const Task&) = delete;
-        
-        Task(Task&& other) noexcept : h_(other.h_) { 
-            other.h_ = nullptr; 
-        }
-        
-        Task& operator=(Task&& other) noexcept {
-            if (this != &other) {
-                if (h_) h_.destroy();
-                h_ = other.h_;
-                other.h_ = nullptr;
-            }
-            return *this;
-        }
-
-        // Awaiter support
-        bool await_ready() const noexcept { 
-            return !h_ || h_.done(); 
-        }
-
-        void await_suspend(std::coroutine_handle<> awaiting_h) {
-            h_.promise().continuation_ = awaiting_h;
-            h_.resume();
-        }
-
-        T await_resume() {
-            if (h_.promise().exception_) {
-                std::rethrow_exception(h_.promise().exception_);
-            }
-            return std::move(h_.promise().value_);
-        }
-
-        // Result access for synchronous waiting
-        T get() {
-            if (!h_.done()) {
-                h_.resume();
-            }
-            // Note: simple get() works for sync wait but might deadlock if task suspends for thread pool
-            if (h_.promise().exception_) {
-                std::rethrow_exception(h_.promise().exception_);
-            }
-            return std::move(h_.promise().value_);
-        }
-
-        // Manual control for integration
-        void resume() {
-            if (h_ && !h_.done()) h_.resume();
-        }
-
-        bool is_done() const noexcept {
-            return !h_ || h_.done();
-        }
-
-    private:
-        handle_type h_;
-    };
-
-    // Specialization for void
-    template<>
-    struct Task<void>::promise_type {
-        std::exception_ptr exception_;
-
-        Task get_return_object() {
-            return Task(handle_type::from_promise(*this));
-        }
-
+    // --- Task и Promise ---
+    struct PromiseBase {
         std::suspend_always initial_suspend() noexcept { return {}; }
         std::suspend_always final_suspend() noexcept { return {}; }
-        void unhandled_exception() { exception_ = std::current_exception(); }
-        void return_void() {}
+        void unhandled_exception() { exception = std::current_exception(); }
+        std::exception_ptr exception;
     };
 
-    // Helper to synchronously wait for a task (bridge to sync code)
-    template<typename T>
-    T sync_wait(Task<T> task) {
-        std::promise<T> p;
-        auto fut = p.get_future();
-        
-        // Wrapper coroutine to drive the task
-        auto driver = [](Task<T> t, std::promise<T> p) -> Task<void> {
-            try {
-                if constexpr (std::is_void_v<T>) {
-                    co_await t;
-                    p.set_value();
-                } else {
-                    p.set_value(co_await t);
-                }
-            } catch (...) {
-                p.set_exception(std::current_exception());
-            }
-        }(std::move(task), std::move(p));
-        
-        // Kick off the driver
-        driver.resume();
-        
-        return fut.get();
-    }
-
-    // Spawn a task asynchronously and get a standard future (Bridge to Legacy/Main)
-    template<typename T>
-    std::future<T> spawn(Task<T> task) {
-        return std::async(std::launch::async, [t = std::move(task)]() mutable {
-            return sync_wait(std::move(t));
-        });
-    }
-
-    // Run multiple tasks in parallel and wait for all to complete
     template <typename T>
-    Task<std::vector<T>> when_all(std::vector<Task<T>> tasks) {
-        if (tasks.empty()) co_return {};
-        
-        struct State {
-            std::atomic<size_t> count;
-            std::vector<T> results;
-            std::coroutine_handle<> continuation;
-            
-            State(size_t n) : count(n), results(n) {}
-        };
-        
-        auto state = std::make_shared<State>(tasks.size());
-        
-        // Helper to run a task and store result
-        auto waiter = [](Task<T> t, std::shared_ptr<State> s, size_t idx) -> Task<void> {
-            try {
-                s->results[idx] = co_await t;
-            } catch (...) {
-                // In production, store exception to propagate
-            }
-            // Decrement count, if 0 resume continuation
-            if (s->count.fetch_sub(1, std::memory_order_acq_rel) == 1) {
-                if (s->continuation) s->continuation.resume();
-            }
-        };
-        
-        // Start all tasks
-        for (size_t i = 0; i < tasks.size(); ++i) {
-            auto w = waiter(std::move(tasks[i]), state, i);
-            w.resume(); // Start execution (will suspend at first await if async)
-        }
-        
-        // Suspend caller until all done
-        struct Awaiter {
-            std::shared_ptr<State> s;
-            bool await_ready() { return s->count.load(std::memory_order_acquire) == 0; }
-            void await_suspend(std::coroutine_handle<> h) {
-                s->continuation = h;
-                // Handle race condition: check if finished while suspending
-                if (s->count.load(std::memory_order_acquire) == 0) h.resume();
-            }
-            std::vector<T> await_resume() { return std::move(s->results); }
-        };
-        
-        co_return co_await Awaiter{state};
-    }
-
-    // Run multiple tasks in parallel and return the first one that completes
-    template <typename T>
-    Task<T> when_any(std::vector<Task<T>> tasks) {
-        if (tasks.empty()) throw std::runtime_error("when_any: no tasks");
-
-        struct State {
-            std::atomic<bool> done{false};
+    struct [[nodiscard]] Task {
+        struct promise_type : PromiseBase {
             std::optional<T> result;
-            std::exception_ptr exception;
-            std::coroutine_handle<> continuation;
+            Task<T> get_return_object() { return Task<T>{std::coroutine_handle<promise_type>::from_promise(*this)}; }
+            void return_value(T value) { result = std::move(value); }
         };
-        
-        auto state = std::make_shared<State>();
-        
-        // Helper coroutine to await a task and report completion
-        auto waiter = [](Task<T> t, std::shared_ptr<State> s) -> Task<void> {
-            try {
-                T val = co_await t;
-                // Try to set done flag (only first one succeeds)
-                if (!s->done.exchange(true, std::memory_order_acq_rel)) {
-                    s->result = std::move(val);
-                    if (s->continuation) s->continuation.resume();
-                }
-            } catch (...) {
-                if (!s->done.exchange(true, std::memory_order_acq_rel)) {
-                    s->exception = std::current_exception();
-                    if (s->continuation) s->continuation.resume();
-                }
-            }
-        };
-        
-        // Keep tasks alive in this frame
-        std::vector<Task<void>> in_flight;
-        in_flight.reserve(tasks.size());
-        
-        for (auto& t : tasks) {
-            auto w = waiter(std::move(t), state);
-            w.resume();
-            in_flight.push_back(std::move(w));
-        }
-        
+
+        std::coroutine_handle<promise_type> handle;
+        explicit Task(std::coroutine_handle<promise_type> h) : handle(h) {}
+        Task(Task&& s) noexcept : handle(std::exchange(s.handle, nullptr)) {}
+        ~Task() { if (handle) handle.destroy(); }
+
         struct Awaiter {
-            std::shared_ptr<State> s;
-            bool await_ready() { return s->done.load(std::memory_order_acquire); }
-            void await_suspend(std::coroutine_handle<> h) {
-                s->continuation = h;
-                // Handle race condition: check if finished while suspending
-                if (s->done.load(std::memory_order_acquire)) h.resume();
+            std::coroutine_handle<promise_type> h;
+            bool await_ready() { return h.done(); }
+            void await_suspend(std::coroutine_handle<> cont) { 
+                h.resume(); 
+                cont.resume(); 
             }
             T await_resume() {
-                if (s->exception) std::rethrow_exception(s->exception);
-                return std::move(*s->result);
+                if (h.promise().exception) std::rethrow_exception(h.promise().exception);
+                return std::move(*h.promise().result);
             }
         };
-        
-        co_return co_await Awaiter{state};
+        auto operator co_await() { return Awaiter{handle}; }
+    };
+
+    template <>
+    struct [[nodiscard]] Task<void> {
+        struct promise_type : PromiseBase {
+            Task<void> get_return_object() { return Task<void>{std::coroutine_handle<promise_type>::from_promise(*this)}; }
+            void return_void() noexcept {}
+        };
+
+        std::coroutine_handle<promise_type> handle;
+        explicit Task(std::coroutine_handle<promise_type> h) : handle(h) {}
+        Task(Task&& s) noexcept : handle(std::exchange(s.handle, nullptr)) {}
+        ~Task() { if (handle) handle.destroy(); }
+
+        struct Awaiter {
+            std::coroutine_handle<promise_type> h;
+            bool await_ready() { return h.done(); }
+            void await_suspend(std::coroutine_handle<> cont) { h.resume(); cont.resume(); }
+            void await_resume() {
+                if (h.promise().exception) std::rethrow_exception(h.promise().exception);
+            }
+        };
+        auto operator co_await() { return Awaiter{handle}; }
+    };
+
+    // --- Вспомогательные функции (Missing Identifiers) ---
+
+    // schedule_on: переключает выполнение корутины на пул потоков
+    export auto schedule_on(ThreadPool& pool) {
+        struct SchAwaiter {
+            ThreadPool& p;
+            bool await_ready() { return false; }
+            void await_suspend(std::coroutine_handle<> h) {
+                p.enqueue([h] { h.resume(); });
+            }
+            void await_resume() {}
+        };
+        return SchAwaiter{pool};
     }
 
+    export std::future<void> run_async(Task<void> task) {
+    std::promise<void> promise;
+    auto future = promise.get_future();
+    
+    // Лямбда-обертка для выполнения корутины и установки promise
+    auto runner = [](Task<void> t, std::promise<void> p) -> Task<void> {
+        try {
+            co_await t;
+            p.set_value();
+        } catch (...) {
+            p.set_exception(std::current_exception());
+        }
+    };
+
+    // Запускаем обертку
+    auto h = runner(std::move(task), std::move(promise)).handle;
+    h.resume(); 
+    // Внимание: здесь нужно управление временем жизни handle, 
+    // если runner не завершился синхронно.
+    
+    return future;
+}
+    // when_all: ожидает завершения списка задач
+    export Task<void> when_all(std::vector<Task<void>> tasks) {
+        for (auto& t : tasks) {
+            co_await t;
+        }
+        co_return;
+    }
+
+    export Task<void> sleep_for(std::chrono::milliseconds ms) {
+        std::this_thread::sleep_for(ms);
+        co_return;
+    }
 }

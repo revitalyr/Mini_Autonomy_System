@@ -6,8 +6,10 @@ module;
 #include <algorithm>
 #include <numeric>
 #include <ranges>
-#include <format>
-#include <print>
+#include <mutex>
+#include <limits>
+#include <iostream>
+#include <iomanip>
 
 export module perception.metrics;
 
@@ -38,7 +40,7 @@ export namespace perception {
             double p95_latency_ms;
             double p99_latency_ms;
             uint64_t total_frames;
-            std::chrono::milliseconds uptime;
+            double duration_seconds;
         };
 
         void record_frame_latency(double latency_ms) noexcept {
@@ -76,6 +78,7 @@ export namespace perception {
             const uint64_t frames = frame_count_.load(std::memory_order_relaxed);
             const auto now = std::chrono::steady_clock::now();
             const auto uptime = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_);
+            const double duration_seconds = uptime.count() / 1000.0;
             
             double fps = 0.0;
             if (uptime.count() > 0) {
@@ -109,7 +112,7 @@ export namespace perception {
                 .p95_latency_ms = p95,
                 .p99_latency_ms = p99,
                 .total_frames = frames,
-                .uptime = uptime
+                .duration_seconds = duration_seconds
             };
         }
 
@@ -126,18 +129,18 @@ export namespace perception {
             }
         }
 
-        // C++23 std::print support
+        // C++23 std::print support (using cout for now)
         void print_metrics() const {
             const auto snapshot = get_snapshot();
-            std::println("📊 Performance Metrics:");
-            std::println("   FPS: {:.2f}", snapshot.fps);
-            std::println("   Avg Latency: {:.2f}ms", snapshot.avg_latency_ms);
-            std::println("   Min/Max Latency: {:.2f}ms / {:.2f}ms", 
-                        snapshot.min_latency_ms, snapshot.max_latency_ms);
-            std::println("   P95/P99 Latency: {:.2f}ms / {:.2f}ms", 
-                        snapshot.p95_latency_ms, snapshot.p99_latency_ms);
-            std::println("   Total Frames: {}", snapshot.total_frames);
-            std::println("   Uptime: {}ms", snapshot.uptime.count());
+            std::cout << "📊 Performance Metrics:\n";
+            std::cout << "   FPS: " << std::fixed << std::setprecision(2) << snapshot.fps << "\n";
+            std::cout << "   Avg Latency: " << std::fixed << std::setprecision(2) << snapshot.avg_latency_ms << "ms\n";
+            std::cout << "   Min/Max Latency: " << std::fixed << std::setprecision(2) << snapshot.min_latency_ms 
+                      << "ms / " << std::fixed << std::setprecision(2) << snapshot.max_latency_ms << "ms\n";
+            std::cout << "   P95/P99 Latency: " << std::fixed << std::setprecision(2) << snapshot.p95_latency_ms 
+                      << "ms / " << std::fixed << std::setprecision(2) << snapshot.p99_latency_ms << "ms\n";
+            std::cout << "   Total Frames: " << snapshot.total_frames << "\n";
+            std::cout << "   Duration: " << std::fixed << std::setprecision(2) << snapshot.duration_seconds << "s\n";
         }
     };
 

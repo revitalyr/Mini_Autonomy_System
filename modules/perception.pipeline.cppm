@@ -9,6 +9,7 @@ module;
 #include <algorithm>
 #include <stop_token>
 #include <future>
+#include <coroutine>
 
 export module perception.pipeline;
 
@@ -94,13 +95,13 @@ export namespace perception {
             running_ = true;
             
             // Spawn the pipeline supervisor
-            pipeline_task_ = spawn([this]() -> Task<void> {
+            pipeline_task_ = run_async([this]() -> Task<void> {
                 std::vector<Task<void>> tasks;
                 tasks.reserve(stages_.size());
                 
                 for (auto& stage : stages_) {
                     // Create a task for each stage to run on the thread pool
-                    tasks.push_back([&stage]() -> Task<void> {
+                    tasks.emplace_back([&stage]() -> Task<void> {
                         co_await schedule_on(get_global_thread_pool());
                         stage.run_fn();
                     }());
@@ -110,6 +111,8 @@ export namespace perception {
                 if (!tasks.empty()) {
                     co_await when_all(std::move(tasks));
                 }
+                
+                co_return; // Explicit return for void coroutine
             }());
         }
 

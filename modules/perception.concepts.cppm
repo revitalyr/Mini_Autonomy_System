@@ -3,6 +3,11 @@ module;
 #include <concepts>
 #include <ranges>
 #include <type_traits>
+#include <chrono>
+#include <vector>
+
+// OpenCV headers
+#include <opencv2/opencv.hpp>
 
 export module perception.concepts;
 

@@ -6,10 +6,11 @@ import perception.detector;
 import perception.async;
 import perception.result;
 
-import <iostream>;
-import <memory>;
-import <thread>;
-import <chrono>;
+#include <iostream>
+#include <memory>
+#include <thread>
+#include <chrono>
+#include <opencv2/opencv.hpp>
 
 int main() {
     std::cout << "=== Mini Autonomy System Demo (C++20 Modules) ===" << std::endl;
@@ -41,13 +42,14 @@ int main() {
     
     // Test detector
     std::cout << "Testing detector..." << std::endl;
-    auto detections = detector->detect();
+    cv::Mat test_frame(480, 640, CV_8UC3, cv::Scalar(0, 0, 0)); // Black test frame
+    auto detections = detector->detect(test_frame);
     std::cout << "Found " << detections.size() << " detections" << std::endl;
     
     for (const auto& det : detections) {
         std::cout << "  Detection: class=" << det.class_name 
                   << " confidence=" << det.confidence 
-                  << " bbox=(" << det.x << "," << det.y << "," << det.width << "," << det.height << ")" 
+                  << " bbox=(" << det.bbox.x << "," << det.bbox.y << "," << det.bbox.width << "," << det.bbox.height << ")" 
                   << std::endl;
     }
     
@@ -66,7 +68,7 @@ int main() {
     std::cout << "FPS: " << snapshot.fps << std::endl;
     std::cout << "Average Latency: " << snapshot.avg_latency_ms << "ms" << std::endl;
     std::cout << "Total Frames: " << snapshot.total_frames << std::endl;
-    std::cout << "Uptime: " << snapshot.uptime.count() << "ms" << std::endl;
+    std::cout << "Uptime: " << snapshot.duration_seconds << "s" << std::endl;
     
     std::cout << "\nDemo completed successfully!" << std::endl;
     return 0;

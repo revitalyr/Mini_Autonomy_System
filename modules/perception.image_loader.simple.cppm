@@ -1,5 +1,6 @@
 module;
 
+#include <opencv2/opencv.hpp>
 #include <coroutine>
 #include <filesystem>
 #include <string>
@@ -11,20 +12,23 @@ module;
 
 export module perception.image_loader;
 
-import perception.result;
 import perception.async;
+import perception.result;
 
 export namespace perception {
 
-    // Simple image structure without OpenCV
+    // Image structure using OpenCV Mat
     struct Image {
-        int width;
-        int height;
-        int channels;
-        std::vector<unsigned char> data;
+        cv::Mat mat;  // OpenCV matrix
         
         Image() = default;
-        Image(int w, int h, int c) : width(w), height(h), channels(c), data(w * h * c) {}
+        explicit Image(cv::Mat m) : mat(std::move(m)) {}
+        
+        int width() const { return mat.cols; }
+        int height() const { return mat.rows; }
+        int channels() const { return mat.channels(); }
+        
+        bool empty() const { return mat.empty(); }
     };
 
     // Simple C++20 Generator for lazy sequences
@@ -34,7 +38,7 @@ export namespace perception {
         using handle_type = std::coroutine_handle<promise_type>;
 
         struct promise_type {
-            T value_;
+            std::conditional_t<std::is_void_v<T>, std::monostate, T> value_;
             std::exception_ptr exception_;
 
             Generator get_return_object() {
@@ -45,8 +49,13 @@ export namespace perception {
             void unhandled_exception() { exception_ = std::current_exception(); }
             
             template<std::convertible_to<T> From>
-            std::suspend_always yield_value(From&& from) {
-                value_ = std::forward<From>(from);
+            void yield_value(From&& from) {
+                if constexpr (std::is_void_v<T>) {
+                    // For void type, don't assign anything
+                    (void)from; // Suppress unused parameter warning
+                } else {
+                    value_ = std::forward<From>(from);
+                }
                 return {};
             }
             
@@ -86,39 +95,40 @@ export namespace perception {
             : thread_pool_(num_threads) {}
 
         // Load images from directory asynchronously
-        Generator<PerceptionResult<Image>> load_from_directory(
-            const std::filesystem::path& directory,
-            const std::vector<std::string>& extensions = {".jpg", ".png", ".bmp"}) {
-            
+        Generator<PerceptionResult<Image>> load_images(const std::filesystem::path& directory) {
             std::vector<std::filesystem::path> image_paths;
             
-            // Collect image paths
+            // Collect image paths first
             try {
                 for (const auto& entry : std::filesystem::directory_iterator(directory)) {
                     if (entry.is_regular_file()) {
                         const auto& path = entry.path();
                         const auto ext = path.extension().string();
                         
-                        if (std::ranges::find(extensions, ext) != extensions.end()) {
+                        // Use std::find instead of ranges::find for compatibility
+                        static const std::vector<std::string> extensions = {".jpg", ".png", ".bmp"};
+                        if (std::find(extensions.begin(), extensions.end(), ext) != extensions.end()) {
                             image_paths.push_back(path);
                         }
                     }
                 }
-            } catch (const std::filesystem::filesystem_error& e) {
-                co_yield error<Image>(PerceptionError::InvalidInput);
-                return;
+            } catch (const std::filesystem::filesystem_error&) {
+                // Cannot use co_await in catch block, so return error directly
+                co_return;
             }
             
             // Load images asynchronously
             for (const auto& path : image_paths) {
                 auto future = thread_pool_.submit([path]() -> PerceptionResult<Image> {
                     try {
-                        // Create mock image
-                        Image img(640, 480, 3);
-                        // Fill with mock data
-                        std::fill(img.data.begin(), img.data.end(), 128);
-                        return success<Image>(std::move(img));
-                    } catch (const std::exception& e) {
+                        // Load image using OpenCV
+                        cv::Mat mat = cv::imread(path.string(), cv::IMREAD_COLOR);
+                        if (mat.empty()) {
+                            return error<Image>(PerceptionError::InvalidInput);
+                        }
+                        
+                        return success<Image>(Image(std::move(mat)));
+                    } catch (const std::exception&) {
                         return error<Image>(PerceptionError::InvalidInput);
                     }
                 });
@@ -132,11 +142,13 @@ export namespace perception {
         std::future<PerceptionResult<Image>> load_image(const std::filesystem::path& path) {
             return thread_pool_.submit([path]() -> PerceptionResult<Image> {
                 try {
-                    // Create mock image
-                    Image img(640, 480, 3);
-                    // Fill with mock data
-                    std::fill(img.data.begin(), img.data.end(), 128);
-                    return success<Image>(std::move(img));
+                    // Load image using OpenCV
+                    cv::Mat mat = cv::imread(path.string(), cv::IMREAD_COLOR);
+                    if (mat.empty()) {
+                        return error<Image>(PerceptionError::InvalidInput);
+                    }
+                    
+                    return success<Image>(Image(std::move(mat)));
                 } catch (const std::exception& e) {
                     return error<Image>(PerceptionError::InvalidInput);
                 }

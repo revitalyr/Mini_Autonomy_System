@@ -6,7 +6,6 @@ module;
 #include <chrono>
 #include <stop_token>
 #include <semaphore>
-#include <expected>
 #include <concepts>
 
 export module perception.queue;
@@ -49,18 +48,18 @@ export namespace perception {
         }
 
         // Modern pop with stop_token support (C++20)
-        std::expected<T, bool> pop(std::stop_token st = {}) {
+        std::optional<T> pop(std::stop_token st = {}) {
             std::unique_lock<std::mutex> lock(mutex_);
             
             // Wait with stop token support
             if (!condition_.wait(lock, st, [this] { 
                 return !queue_.empty() || shutdown_; 
             })) {
-                return std::unexpected(false); // Stopped
+                return std::nullopt; // Stopped
             }
             
             if (queue_.empty() || shutdown_) {
-                return std::unexpected(true); // Shutdown
+                return std::nullopt; // Shutdown
             }
             
             T result = std::move(queue_.front());
@@ -69,33 +68,32 @@ export namespace perception {
         }
 
         // Timeout-based pop
-        std::expected<T, bool> pop_timeout(std::chrono::milliseconds timeout) {
+        std::optional<T> pop_timeout(std::chrono::milliseconds timeout) {
             std::unique_lock<std::mutex> lock(mutex_);
             
             if (condition_.wait_for(lock, timeout, [this] { 
                 return !queue_.empty() || shutdown_; 
             })) {
-                if (shutdown_) return std::unexpected(true);
+                if (shutdown_) return std::nullopt;
                 
                 T result = std::move(queue_.front());
                 queue_.pop();
                 return result;
             }
             
-            return std::unexpected(false); // Timeout
+            return std::nullopt; // Timeout
         }
 
         // Non-blocking try_pop using semaphore
-        std::expected<T, bool> try_pop() {
+        std::optional<T> try_pop() {
             if (!semaphore_.try_acquire()) {
-                return std::unexpected(false); // Empty
+                return std::nullopt; // Empty
             }
             
             std::lock_guard<std::mutex> lock(mutex_);
             if (queue_.empty() || shutdown_) {
-                return std::unexpected(true);
+                return std::nullopt; // Empty or shutdown
             }
-            
             T result = std::move(queue_.front());
             queue_.pop();
             return result;

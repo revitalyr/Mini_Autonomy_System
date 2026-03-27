@@ -1,12 +1,12 @@
 module;
 
-#include <expected>
 #include <string>
 #include <system_error>
 #include <variant>
 #include <future>
 #include <optional>
 #include <chrono>
+#include <stdexcept>
 
 export module perception.result;
 
@@ -82,66 +82,113 @@ struct std::is_error_code_enum<perception::PerceptionError> : std::true_type {};
 
 export namespace perception {
 
-    // Modern result type using std::expected
+    // Simple result type for C++20 (instead of std::expected)
     template<typename T>
-    using Result = std::expected<T, std::error_code>;
+    class Result {
+    private:
+        std::variant<T, std::error_code> m_value;
+        
+    public:
+        Result(T&& value) : m_value(std::move(value)) {}
+        Result(const T& value) : m_value(value) {}
+        Result(std::error_code error) : m_value(error) {}
+        
+        bool has_value() const noexcept {
+            return m_value.index() == 0;
+        }
+        
+        T& value() {
+            if (!has_value()) {
+                throw std::runtime_error("Result does not contain a value");
+            }
+            return std::get<T>(m_value);
+        }
+        
+        const T& value() const {
+            if (!has_value()) {
+                throw std::runtime_error("Result does not contain a value");
+            }
+            return std::get<T>(m_value);
+        }
+        
+        std::error_code error() const {
+            if (has_value()) {
+                return {};
+            }
+            return std::get<std::error_code>(m_value);
+        }
+        
+        explicit operator bool() const noexcept {
+            return has_value();
+        }
+    };
+
+    // Specialization for void
+    template<>
+    class Result<void> {
+    private:
+        std::optional<std::error_code> m_error;
+        
+    public:
+        Result() : m_error(std::nullopt) {}
+        Result(std::error_code error) : m_error(error) {}
+        
+        bool has_value() const noexcept {
+            return !m_error.has_value();
+        }
+        
+        std::error_code error() const {
+            return m_error.value_or(std::error_code{});
+        }
+        
+        explicit operator bool() const noexcept {
+            return has_value();
+        }
+    };
+
+    // Type aliases
+    template<typename T>
+    using PerceptionResult = Result<T>;
 
     // Helper functions for creating results
     template<typename T>
-    constexpr Result<T> success(T&& value) {
-        return Result<T>{std::forward<T>(value)};
+    constexpr PerceptionResult<T> success(T&& value) noexcept {
+        return PerceptionResult<T>(std::forward<T>(value));
+    }
+
+    inline PerceptionResult<void> success() noexcept {
+        return PerceptionResult<void>();
     }
 
     template<typename T>
-    constexpr Result<T> error(PerceptionError err) {
-        return std::unexpected(make_error_code(err));
-    }
-
-    // Monadic operations for Result
-    template<typename T, typename F>
-    auto map(Result<T> result, F&& func) 
-        -> Result<decltype(func(*std::move(result)))> {
-        
-        if (result) {
-            return success(func(*std::move(result)));
-        }
-        return std::unexpected(result.error());
-    }
-
-    template<typename T, typename F>
-    auto and_then(Result<T> result, F&& func) 
-        -> decltype(func(*std::move(result))) {
-        
-        if (result) {
-            return func(*std::move(result));
-        }
-        return std::unexpected(result.error());
+    constexpr PerceptionResult<T> error(PerceptionError err) noexcept {
+        return PerceptionResult<T>(std::make_error_code(err));
     }
 
     // Async result type
     template<typename T>
     class AsyncResult {
     private:
-        std::future<Result<T>> future_;
+        std::future<PerceptionResult<T>> m_future;
         
     public:
-        explicit AsyncResult(std::future<Result<T>>&& fut) 
-            : future_(std::move(fut)) {}
+        explicit AsyncResult(std::future<PerceptionResult<T>>&& fut) 
+            : m_future(std::move(fut)) {}
 
         // Wait for result
-        Result<T> get() {
-            return future_.get();
+        PerceptionResult<T> get() {
+            return m_future.get();
         }
 
         // Check if ready
         bool is_ready() const {
-            return future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+            return m_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
         }
 
         // Wait with timeout
-        std::optional<Result<T>> wait_for(std::chrono::milliseconds timeout) {
-            if (future_.wait_for(timeout) == std::future_status::ready) {
-                return future_.get();
+        std::optional<PerceptionResult<T>> wait_for(std::chrono::milliseconds timeout) {
+            if (m_future.wait_for(timeout) == std::future_status::ready) {
+                return m_future.get();
             }
             return std::nullopt;
         }

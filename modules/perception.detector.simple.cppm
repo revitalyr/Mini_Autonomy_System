@@ -1,8 +1,10 @@
 module;
 
+#include <opencv2/opencv.hpp>
 #include <vector>
 #include <string>
 #include <memory>
+#include <algorithm>
 
 export module perception.detector;
 
@@ -12,35 +14,42 @@ import perception.metrics;
 
 export namespace perception {
 
-    // Simple detection result without OpenCV
+    // Detection result structure using OpenCV
     struct Detection {
-        int x, y, width, height;
-        float confidence;
-        int class_id;
-        std::string class_name;
+        cv::Rect bbox;           // Bounding box
+        float confidence;       // Confidence score
+        int class_id;          // Class ID
+        std::string class_name; // Class name
         
-        Detection() = default;
-        Detection(int x_, int y_, int w, int h, float conf, int cls_id, std::string cls_name = "")
-            : x(x_), y(y_), width(w), height(h), confidence(conf), class_id(cls_id), 
-              class_name(std::move(cls_name)) {}
+        Detection(cv::Rect b, float conf, int id, std::string name)
+            : bbox(std::move(b)), confidence(conf), class_id(id), class_name(std::move(name)) {}
     };
 
     // Mock detector for testing
     class MockDetector {
     private:
-        std::vector<Detection> mock_detections_;
+        std::vector<std::string> m_class_names{"person", "car", "bicycle"};
         
     public:
-        MockDetector() {
-            // Create mock detections
-            mock_detections_.emplace_back(100, 100, 50, 50, 0.9f, 0, "person");
-            mock_detections_.emplace_back(200, 200, 60, 60, 0.8f, 1, "car");
+        explicit MockDetector() = default;
+        
+        std::vector<Detection> detect(const cv::Mat& frame) {
+            std::vector<Detection> detections;
+            
+            // Generate some fake detections for demo
+            if (frame.rows > 100 && frame.cols > 100) {
+                detections.emplace_back(
+                    cv::Rect(50, 50, 100, 200), 0.8f, 0, "person"
+                );
+                detections.emplace_back(
+                    cv::Rect(200, 100, 150, 80), 0.6f, 1, "car"
+                );
+            }
+            
+            return detections;
         }
         
-        std::vector<Detection> detect() const {
-            // Simulate detection processing
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            return mock_detections_;
-        }
+        const std::vector<std::string>& get_class_names() const { return m_class_names; }
     };
-}
+
+} // namespace perception
