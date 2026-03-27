@@ -3,17 +3,37 @@ module;
 #include <queue>
 #include <mutex>
 #include <condition_variable>
+#include <optional>
 #include <chrono>
 #include <stop_token>
-#include <semaphore>
-#include <concepts>
+
+/**
+ * @file perception.queue.cppm
+ * @brief Thread-safe queue implementations for the perception system
+ * 
+ * This module provides thread-safe queue implementations with timeout support,
+ * shutdown capabilities, and lock-free operations where possible.
+ * 
+ * @author Mini Autonomy System
+ * @date 2026
+ */
 
 export module perception.queue;
 
 import perception.concepts;
 
 export namespace perception {
-
+    /**
+     * @brief Thread-safe queue with timeout and shutdown support
+     * 
+     * This class provides a thread-safe queue that supports:
+     * - Push operations with blocking/non-blocking variants
+     * - Pop operations with timeout support
+     * - Graceful shutdown with stop token support
+     * - Size and empty queries
+     * 
+     * @tparam T Type of elements stored in the queue
+     */
     template<typename T>
     class ThreadSafeQueue {
     private:
@@ -24,9 +44,19 @@ export namespace perception {
         std::atomic<bool> shutdown_{false};
 
     public:
+        /**
+         * @brief Type alias for value type
+         */
         using value_type = T;
-        
+
+        /**
+         * @brief Default constructor
+         */
         constexpr ThreadSafeQueue() = default;
+
+        /**
+         * @brief Destructor
+         */
         ~ThreadSafeQueue() = default;
 
         // Modern C++23: Delete copy, enable move by default
@@ -35,7 +65,11 @@ export namespace perception {
         ThreadSafeQueue(ThreadSafeQueue&&) = default;
         ThreadSafeQueue& operator=(ThreadSafeQueue&&) = default;
 
-        // Modern push with perfect forwarding
+        /**
+         * @brief Push an element to the queue (blocking)
+         * 
+         * @param value Element to push
+         */
         template<typename U>
         requires std::convertible_to<U, T>
         void push(U&& value) {
@@ -47,7 +81,12 @@ export namespace perception {
             semaphore_.release();
         }
 
-        // Modern pop with stop_token support (C++20)
+        /**
+         * @brief Pop an element from the queue (blocking until available)
+         * 
+         * @param st Stop token for cancellation
+         * @return std::optional<T> containing the element if available, empty if cancelled
+         */
         std::optional<T> pop(std::stop_token st = {}) {
             std::unique_lock<std::mutex> lock(mutex_);
             
@@ -67,7 +106,12 @@ export namespace perception {
             return result;
         }
 
-        // Timeout-based pop
+        /**
+         * @brief Pop an element from the queue with timeout
+         * 
+         * @param timeout Maximum time to wait
+         * @return std::optional<T> containing the element if available, empty if timeout
+         */
         std::optional<T> pop_timeout(std::chrono::milliseconds timeout) {
             std::unique_lock<std::mutex> lock(mutex_);
             
@@ -84,7 +128,11 @@ export namespace perception {
             return std::nullopt; // Timeout
         }
 
-        // Non-blocking try_pop using semaphore
+        /**
+         * @brief Try to pop an element from the queue (non-blocking)
+         * 
+         * @return std::optional<T> containing the element if available, empty otherwise
+         */
         std::optional<T> try_pop() {
             if (!semaphore_.try_acquire()) {
                 return std::nullopt; // Empty
@@ -99,6 +147,9 @@ export namespace perception {
             return result;
         }
 
+        /**
+         * @brief Shut down the queue
+         */
         void shutdown() noexcept {
             {
                 std::lock_guard<std::mutex> lock(mutex_);
@@ -107,16 +158,31 @@ export namespace perception {
             condition_.notify_all();
         }
 
+        /**
+         * @brief Check if the queue is empty
+         * 
+         * @return true if empty, false otherwise
+         */
         [[nodiscard]] bool empty() const noexcept {
             std::lock_guard<std::mutex> lock(mutex_);
             return queue_.empty();
         }
 
+        /**
+         * @brief Get the number of elements in the queue
+         * 
+         * @return size_t Number of elements
+         */
         [[nodiscard]] size_t size() const noexcept {
             std::lock_guard<std::mutex> lock(mutex_);
             return queue_.size();
         }
 
+        /**
+         * @brief Check if the queue is shut down
+         * 
+         * @return true if shut down, false otherwise
+         */
         [[nodiscard]] bool is_shutdown() const noexcept {
             return shutdown_.load();
         }

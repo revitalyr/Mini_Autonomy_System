@@ -15,13 +15,35 @@ module;
 #include <memory>
 #include <future>
 
+/**
+ * @file perception.async.cppm
+ * @brief Async operations and coroutine support for the perception system
+ * 
+ * This module provides coroutine-based async operations including Task<T> for
+ * awaitable operations and Generator<T> for lazy sequences. It also includes
+ * a thread pool for efficient async task execution.
+ * 
+ * @author Mini Autonomy System
+ * @date 2026
+ */
+
 export module perception.async;
 
 export namespace perception {
 
-    // --- ThreadPool ---
+    /**
+     * @brief Thread pool for async task execution
+     * 
+     * This class provides a thread pool for executing tasks asynchronously.
+     * It supports task submission with futures for result retrieval.
+     */
     class ThreadPool {
     public:
+        /**
+         * @brief Constructs a thread pool with the specified number of threads
+         * 
+         * @param num_threads Number of threads to use in the pool
+         */
         explicit ThreadPool(size_t num_threads = std::thread::hardware_concurrency()) {
             for (size_t i = 0; i < num_threads; ++i) {
                 workers_.emplace_back([this](std::stop_token st) {
@@ -41,6 +63,11 @@ export namespace perception {
             }
         }
 
+        /**
+         * @brief Enqueues a task for execution in the thread pool
+         * 
+         * @param f Task to execute
+         */
         void enqueue(std::function<void()> f) {
             {
                 std::unique_lock lock(mutex_);
@@ -49,6 +76,13 @@ export namespace perception {
             condition_.notify_one();
         }
 
+        /**
+         * @brief Submits a task for execution in the thread pool and returns a future
+         * 
+         * @tparam F Type of task to submit
+         * @param f Task to submit
+         * @return Future representing the result of the task
+         */
         template<typename F>
         auto submit(F&& f) -> std::future<std::invoke_result_t<F>> {
             using RetType = std::invoke_result_t<F>;

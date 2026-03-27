@@ -1,222 +1,293 @@
 # Mini Autonomy System
 
-A real-time embedded perception system for autonomous applications, featuring object detection, tracking, and sensor fusion.
+A modern C++20 modules-based perception system for autonomous applications, featuring object detection, tracking, and sensor fusion with full OpenCV integration.
 
 ## Features
 
-- **Real-time Video Pipeline**: GStreamer-based video capture with hardware acceleration support
-- **Object Detection**: YOLO-compatible detector with TensorRT optimization (placeholder)
-- **Multi-Object Tracking**: SORT-like tracker with Kalman filtering
-- **Sensor Fusion**: Visual-Inertial Odometry (VIO) with Extended Kalman Filter
-- **Performance Metrics**: FPS and latency monitoring
+- **C++20 Modules**: Modern module-based architecture with clean interfaces
+- **OpenCV Integration**: Full integration with OpenCV 4.x for computer vision operations
 - **Thread-safe Architecture**: Multi-threaded pipeline with lock-free queues
+- **Performance Metrics**: Real-time FPS and latency monitoring
+- **Async Operations**: Coroutine-based async operations with C++20
+- **Error Handling**: Custom Result<T> type for C++20 compatibility
+- **Object Detection**: Mock detector with OpenCV cv::Mat and cv::Rect support
+- **Thread Pool**: Efficient async task execution
 
 ## Architecture
 
 ```
-Camera/Video → Decoder → Detector → Tracker → Fusion → Visualization
-     ↓              ↓         ↓        ↓        ↓         ↓
-   GStreamer    OpenCV   YOLO/TensorRT  SORT    EKF     OpenCV GUI
+Camera Input → Image Loader → Detector → Metrics → Output
+     ↓              ↓           ↓        ↓       ↓
+   cv::Mat        Async      OpenCV   Stats  Console
 ```
 
 ## Dependencies
 
 - **Required**:
-  - C++23 compatible compiler
-  - OpenCV 4.x (core, highgui, imgproc, imgcodecs, videoio)
+  - C++20 compatible compiler (MSVC 19.30+, GCC 11+, Clang 13+)
+  - OpenCV 4.x (core, imgproc, imgcodecs, highgui)
   - CMake 3.28+
+  - vcpkg package manager
   - pthreads
 
-- **Optional**:
-  - GStreamer 1.x (for RTSP/network streams)
-  - TensorRT (for GPU acceleration)
-  - pkg-config
+## Building with C++20 Modules
 
-## Building
-
-### Quick Start
+### Prerequisites
 ```bash
-# Install dependencies (Ubuntu/Debian)
-./build_and_test.sh deps
+# Install vcpkg (if not already installed)
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+.\bootstrap-vcpkg.bat  # On Windows
+# or
+./bootstrap-vcpkg.sh  # On Linux/macOS
 
-# Build the project
-./build_and_test.sh build
-
-# Or use the simple build script
-./build.sh
+# Install OpenCV via vcpkg
+.\vcpkg install opencv4[contrib]:x64-windows  # Windows
+# or
+./vcpkg install opencv4[contrib]:x64-linux     # Linux
 ```
 
-### Advanced Build Options
+### Build Steps
 ```bash
-# Build with tests enabled
-mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
-make -j$(nproc)
+# Configure with vcpkg toolchain
+cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=D:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
 
-# Build with specific compiler
-CXX=clang++ ./build_and_test.sh build
+# Build the project
+cmake --build build --config Release
 
-# Debug build
-mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Debug
-make -j$(nproc)
+# Copy required OpenCV DLLs (Windows only)
+copy D:\tools\vcpkg\installed\x64-windows\bin\opencv_core4.dll build\
+copy D:\tools\vcpkg\installed\x64-windows\bin\opencv_imgcodecs4.dll build\
+copy D:\tools\vcpkg\installed\x64-windows\bin\opencv_imgproc4.dll build\
+copy D:\tools\vcpkg\installed\x64-windows\bin\opencv_highgui4.dll build\
+copy D:\tools\vcpkg\installed\x64-windows\debug\bin\zlibd1.dll build\
 ```
 
 ## Running the Demo
 
-### Basic Demo
 ```bash
-# With demo video (place demo_video.mp4 in current directory)
-./run_demo.sh
-
-# With specific video file
-./run_demo.sh path/to/your/video.mp4
-
-# With camera (use camera index 0)
-./run_demo.sh 0
-
-# Direct execution
-./build/perception_demo demo_video.mp4
+# Run the perception system demo
+cd build
+./perception_demo.exe  # Windows
+# or
+./perception_demo      # Linux/macOS
 ```
 
-### Testing and Benchmarking
-```bash
-# Run all tests (requires -DBUILD_TESTING=ON)
-./build_and_test.sh test
-
-# Run performance benchmarks
-./build_and_test.sh benchmark
-
-# Run everything (build, test, benchmark)
-./build_and_test.sh all
-
-# Individual test execution
-./build/test_core
-./build/test_vision
-./build/perception_benchmark
+### Expected Output
 ```
+=== Mini Autonomy System Demo (C++20 Modules) ===
+Program started successfully!
+Creating queue...
+Queue created!
+Creating metrics...
+Metrics created!
+Creating detector...
+Detector created!
+Creating thread pool...
+Thread pool created!
+Testing thread-safe queue...
+Popped value: 42
+Testing performance metrics...
+Testing detector...
+Found 2 detections
+  Detection: class=person confidence=0.8 bbox=(50,50,100,200)
+  Detection: class=car confidence=0.6 bbox=(200,100,150,80)
+Testing thread pool...
+Thread pool result: 42
 
-### Configuration
-The system uses a configuration file `config.txt` for parameter tuning:
+=== Performance Metrics ===
+FPS: 16.129
+Average Latency: 10.8667ms
+Total Frames: 3
+Uptime: 0.186s
 
-```bash
-# Edit configuration
-nano config.txt
-
-# Or create custom config
-cp config.txt my_config.txt
-./build/perception_demo --config my_config.txt video.mp4
+Demo completed successfully!
 ```
-
-## Demo Features
-
-The demo shows:
-- **Detection Window**: Real-time object detection with bounding boxes and confidence scores
-- **Trajectory Window**: Object tracks with trajectory visualization
-- **Performance Overlay**: FPS and latency metrics
-- **Console Output**: Pose estimation and active track count
 
 ## Project Structure
 
 ```
 Mini_Autonomy_System/
-├── CMakeLists.txt              # Main build configuration
-├── build.sh                    # Simple build script
-├── build_and_test.sh           # Comprehensive build and test script
-├── run_demo.sh                 # Demo runner script
-├── config.txt                  # Configuration file
-├── docker-compose.yml          # Docker deployment
-├── Dockerfile                  # Container build
-├── include/                    # Header files
-│   ├── core/                   # Core infrastructure
-│   │   ├── pipeline.hpp
-│   │   ├── metrics.hpp
-│   │   ├── thread_safe_queue.hpp
-│   │   ├── config.hpp
-│   │   ├── logger.hpp
-│   │   └── benchmark.hpp
-│   ├── io/                     # Input/Output modules
-│   │   ├── gstreamer_capture.hpp
-│   │   └── imu_simulator.hpp
-│   └── vision/                 # Computer vision modules
-│       ├── detector.hpp
-│       ├── tracker.hpp
-│       └── fusion.hpp
-├── src/                        # Implementation files
-│   ├── core/
-│   ├── io/
-│   ├── vision/
-│   └── main.cpp                # Main demo application
-├── tests/                      # Unit tests
-│   ├── test_core.cpp
-│   └── test_vision.cpp
-├── apps/                       # Additional applications
-│   └── benchmark.cpp           # Performance benchmarking
+├── CMakeLists.txt              # C++20 modules build configuration
+├── modules/                    # C++20 modules (.cppm files)
+│   ├── perception.concepts.cppm    # Core concepts and interfaces
+│   ├── perception.result.cppm      # Result type and error handling
+│   ├── perception.async.cppm       # Async operations and coroutines
+│   ├── perception.queue.cppm        # Thread-safe queue implementation
+│   ├── perception.metrics.cppm     # Performance metrics tracking
+│   ├── perception.detector.simple.cppm  # Mock object detector
+│   ├── perception.image_loader.simple.cppm  # Async image loading
+│   └── perception.pipeline.cppm     # Pipeline orchestration
+├── src/
+│   └── main.cpp                # Demo application
+├── build/                      # Build output directory
 └── README.md                   # This file
+```
+
+## Module Documentation
+
+### perception.concepts
+Defines C++20 concepts for type safety:
+- `Detector<T>` - Object detection interfaces
+- `Queue<T>` - Thread-safe queue requirements
+- `MetricsProvider<T>` - Performance monitoring interfaces
+- `AsyncOperation<T>` - Async operation requirements
+
+### perception.result
+Custom error handling for C++20:
+- `Result<T>` - std::expected replacement for C++20
+- `PerceptionError` - Domain-specific error codes
+- `AsyncResult<T>` - Async result wrapper
+
+### perception.async
+Async operations and coroutines:
+- `Task<T>` - Coroutine-based async tasks
+- `Generator<T>` - Lazy sequence generation
+- `ThreadPool` - Thread pool for async execution
+
+### perception.queue
+Thread-safe data structures:
+- `ThreadSafeQueue<T>` - Lock-free queue implementation
+- Timeout-based operations
+- Shutdown-safe design
+
+### perception.metrics
+Performance monitoring:
+- `PerformanceMetrics` - FPS and latency tracking
+- `MetricsSnapshot` - Current performance state
+- Real-time statistics
+
+### perception.detector.simple
+Mock object detector:
+- OpenCV cv::Mat integration
+- cv::Rect bounding boxes
+- Detection results with confidence scores
+
+### perception.image_loader.simple
+Async image loading:
+- Generator-based lazy loading
+- OpenCV imread integration
+- Error handling with Result<T>
+
+## API Examples
+
+### Using the Thread-safe Queue
+```cpp
+import perception.queue;
+
+auto queue = std::make_unique<perception::ThreadSafeQueue<int>>();
+queue->push(42);
+auto result = queue->try_pop();
+if (result) {
+    std::cout << "Got: " << *result << std::endl;
+}
+```
+
+### Using Performance Metrics
+```cpp
+import perception.metrics;
+
+auto metrics = std::make_unique<perception::PerformanceMetrics>();
+metrics->record_frame_latency(10.5);
+auto snapshot = metrics->get_snapshot();
+std::cout << "FPS: " << snapshot.fps << std::endl;
+```
+
+### Using Object Detection
+```cpp
+import perception.detector;
+
+auto detector = std::make_unique<perception::MockDetector>();
+cv::Mat frame = cv::imread("image.jpg");
+auto detections = detector->detect(frame);
+for (const auto& det : detections) {
+    std::cout << "Found: " << det.class_name << std::endl;
+}
+```
+
+### Using Async Operations
+```cpp
+import perception.async;
+
+ThreadPool pool;
+auto future = pool.submit([]() -> int {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    return 42;
+});
+std::cout << "Result: " << future.get() << std::endl;
 ```
 
 ## Implementation Details
 
-### Core Pipeline
-- **ThreadSafeQueue**: Lock-free queue for inter-thread communication
-- **ThreadedPipeline**: Multi-stage processing pipeline
-- **Metrics**: Real-time performance monitoring
+### C++20 Modules Benefits
+- **Faster Compilation**: Module-based compilation reduces build times
+- **Clean Interfaces**: Explicit module boundaries
+- **No Header Guards**: Modules eliminate include guard issues
+- **Better Encapsulation**: Private module implementation details
 
-### Vision Modules
-- **Detector**: Placeholder for YOLO/TensorRT object detection
-- **Tracker**: SORT-like multi-object tracking with Kalman filtering
-- **Fusion**: Visual-inertial sensor fusion with EKF
+### Error Handling
+- Custom `Result<T>` type for C++20 compatibility
+- Type-safe error codes with `PerceptionError`
+- Seamless integration with `std::error_code`
 
-### IO Modules
-- **GStreamerCapture**: Hardware-accelerated video capture
-- **IMUSimulator**: Simulated IMU data with realistic noise
-
-## Performance Characteristics
-
-- **Target FPS**: 30 FPS
-- **Latency**: < 50ms end-to-end
-- **Memory**: Optimized for embedded systems
-- **CPU**: Multi-core utilization
-
-## Extending the System
-
-### Adding Real Object Detection
-Replace the placeholder in `src/vision/detector.cpp`:
-```cpp
-#ifdef HAVE_TENSORRT
-// Load your TensorRT engine
-bool Detector::load_tensorrt_model(const std::string& engine_path) {
-    // Your TensorRT implementation
-}
-#endif
-```
-
-### Adding Real IMU
-Replace the simulator in `src/io/imu_simulator.cpp` with actual IMU integration.
-
-### ROS2 Integration
-Add ROS2 publishers in the fusion stage:
-```cpp
-#include <rclcpp/rclcpp.hpp>
-// Publish detections, tracks, and pose
-```
+### Performance Characteristics
+- **Target FPS**: 30+ FPS achievable
+- **Latency**: < 20ms for simple operations
+- **Memory**: Efficient module-based linking
+- **CPU**: Multi-core utilization with thread pool
 
 ## Troubleshooting
 
 ### Build Issues
-- Ensure OpenCV is installed with development headers
-- Check C++23 compiler support
-- Verify pkg-config for optional dependencies
+- **Missing OpenCV**: Ensure OpenCV is installed via vcpkg
+- **Module Errors**: Check C++20 compiler support
+- **Link Errors**: Verify vcpkg toolchain configuration
 
-### Runtime Issues
-- Check video file format compatibility
-- Verify camera permissions
-- Monitor system resources
+### Runtime Issues (Windows)
+- **DLL Missing**: Copy OpenCV DLLs to build directory
+- **zlibd1.dll**: Required for OpenCV image operations
+- **Module Loading**: Ensure all modules are properly built
+
+### Performance Issues
+- **Debug Build**: Use Release configuration for performance
+- **OpenCV Optimization**: Ensure OpenCV is built with optimizations
+- **Thread Count**: Adjust thread pool size for your hardware
+
+## Extending the System
+
+### Adding New Modules
+1. Create `.cppm` file in `modules/` directory
+2. Export module with `export module perception.newmodule;`
+3. Add to `CMakeLists.txt` module list
+4. Import and use in main application
+
+### Real Object Detection
+Replace `MockDetector` with actual implementation:
+```cpp
+// In perception.detector.real.cppm
+export class RealDetector {
+    std::vector<Detection> detect(const cv::Mat& frame) override {
+        // Your real detection implementation
+    }
+};
+```
+
+### Additional Metrics
+Extend `PerformanceMetrics` class:
+```cpp
+// Add new metric types
+void record_memory_usage(size_t bytes);
+void record_gpu_utilization(double percent);
+```
 
 ## License
 
-This project is provided as a demonstration framework for embedded perception systems.
+This project is provided as a demonstration framework for modern C++20 modules and perception systems.
 
 ## Contributing
 
-Feel free to submit issues and enhancement requests!
+Feel free to submit issues and enhancement requests! When contributing:
+1. Follow C++20 modules best practices
+2. Add comprehensive Doxygen documentation
+3. Include unit tests for new features
+4. Update this README documentation

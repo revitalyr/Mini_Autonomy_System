@@ -8,32 +8,63 @@ module;
 #include <chrono>
 #include <stdexcept>
 
+/**
+ * @file perception.result.cppm
+ * @brief Result types and error handling for the perception system
+ * 
+ * This module provides custom Result<T> type for error handling as a replacement
+ * for std::expected (C++23) to maintain C++20 compatibility. It also includes
+ * async result types for coroutine-based operations.
+ * 
+ * @author Mini Autonomy System
+ * @date 2026
+ */
+
 export module perception.result;
 
 export namespace perception {
 
-    // Error types for the perception system
+    /**
+     * @brief Error codes for perception operations
+     * 
+     * These error codes are used throughout the perception system to indicate
+     * specific failure conditions in a type-safe manner.
+     */
     enum class PerceptionError {
-        Success = 0,
-        InvalidInput,
-        ModelLoadFailed,
-        InferenceFailed,
-        QueueEmpty,
-        QueueShutdown,
-        ThreadError,
-        CameraError,
-        IMUError,
-        TrackerError,
-        FusionError
+        Success = 0,              ///< No error occurred
+        InvalidInput,            ///< Invalid input parameters
+        ModelLoadFailed,        ///< Model loading failed
+        InferenceFailed,        ///< Inference operation failed
+        QueueEmpty,             ///< Queue is empty
+        QueueShutdown,          ///< Queue has been shutdown
+        ThreadError,            ///< Thread operation failed
+        CameraError,            ///< Camera operation failed
+        IMUError,               ///< IMU operation failed
+        TrackerError,           ///< Tracker operation failed
+        FusionError             ///< Fusion operation failed
     };
 
-    // Error category for system_error integration
+    /**
+     * @brief Error category for system_error integration
+     * 
+     * This class provides a custom error category for the perception system,
+     * allowing for seamless integration with std::error_code and std::system_error.
+     */
     class PerceptionErrorCategory : public std::error_category {
     public:
+        /**
+         * @brief Get the name of the error category
+         * @return The name of the error category
+         */
         const char* name() const noexcept override {
             return "perception_error";
         }
 
+        /**
+         * @brief Get the error message for a specific error code
+         * @param ev The error code
+         * @return The error message
+         */
         std::string message(int ev) const override {
             switch (static_cast<PerceptionError>(ev)) {
                 case PerceptionError::Success:
@@ -64,12 +95,20 @@ export namespace perception {
         }
     };
 
+    /**
+     * @brief Get the perception error category instance
+     * @return The perception error category instance
+     */
     inline const PerceptionErrorCategory& get_perception_error_category() {
         static PerceptionErrorCategory instance;
         return instance;
     }
 
-    // Make PerceptionError work with std::error_code
+    /**
+     * @brief Make PerceptionError work with std::error_code
+     * @param e The PerceptionError code
+     * @return The corresponding std::error_code
+     */
     inline std::error_code make_error_code(PerceptionError e) {
         return {static_cast<int>(e), get_perception_error_category()};
     }
@@ -82,22 +121,57 @@ struct std::is_error_code_enum<perception::PerceptionError> : std::true_type {};
 
 export namespace perception {
 
-    // Simple result type for C++20 (instead of std::expected)
+    /**
+     * @brief Custom result type for C++20 compatibility
+     * 
+     * This class provides std::expected-like functionality for C++20,
+     * allowing functions to return either a value or an error code.
+     * It uses std::variant to store either the successful result or an error.
+     * 
+     * @tparam T Type of the successful result value
+     */
     template<typename T>
     class Result {
     private:
         std::variant<T, std::error_code> m_value;
         
     public:
+        /**
+         * @brief Default constructor
+         */
         Result() = default;
+        
+        /**
+         * @brief Construct a successful result from a value
+         * @param value The successful result value
+         */
         Result(T&& value) : m_value(std::move(value)) {}
+        
+        /**
+         * @brief Construct a successful result from a value (copy)
+         * @param value The successful result value
+         */
         Result(const T& value) : m_value(value) {}
+        
+        /**
+         * @brief Construct an error result
+         * @param error The error code
+         */
         Result(std::error_code error) : m_value(error) {}
         
+        /**
+         * @brief Check if the result contains a value
+         * @return true if successful, false if error
+         */
         bool has_value() const noexcept {
             return m_value.index() == 0;
         }
         
+        /**
+         * @brief Get the result value
+         * @return Reference to the stored value
+         * @throws std::runtime_error if result contains an error
+         */
         T& value() {
             if (!has_value()) {
                 throw std::runtime_error("Result does not contain a value");
@@ -105,6 +179,11 @@ export namespace perception {
             return std::get<T>(m_value);
         }
         
+        /**
+         * @brief Get the result value (const version)
+         * @return Const reference to the stored value
+         * @throws std::runtime_error if result contains an error
+         */
         const T& value() const {
             if (!has_value()) {
                 throw std::runtime_error("Result does not contain a value");
@@ -112,13 +191,22 @@ export namespace perception {
             return std::get<T>(m_value);
         }
         
+        /**
+         * @brief Get the error code
+         * @return The stored error code
+         * @throws std::runtime_error if result contains a value
+         */
         std::error_code error() const {
             if (has_value()) {
-                return {};
+                throw std::runtime_error("Result does not contain an error");
             }
             return std::get<std::error_code>(m_value);
         }
         
+        /**
+         * @brief Conversion to bool for easy checking
+         * @return true if successful, false if error
+         */
         explicit operator bool() const noexcept {
             return has_value();
         }
