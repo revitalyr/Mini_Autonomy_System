@@ -38,6 +38,7 @@ find_package(Threads REQUIRED)
 
 # Find OpenCV for computer vision
 find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc imgcodecs videoio)
+set(OpenCV_FOUND TRUE)
 
 # Find GStreamer for video pipeline
 find_package(PkgConfig QUIET)
