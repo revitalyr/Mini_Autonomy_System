@@ -376,94 +376,71 @@
                 <div class="diagram-container">
                     <div class="mermaid">
                         classDiagram
-                            %% Core Classes with links
+                            %% Core Classes
                             class Result {
-                                -std::variant~T, std::error_code~ m_value
+                                -m_value: variant
                                 +Result()
-                                +Result(T&& value)
-                                +Result(const T& value)
-                                +Result(std::error_code error)
                                 +has_value() bool
-                                +value() T&
-                                +value() const T&
-                                +error() std::error_code
+                                +value() T
+                                +error() error_code
                                 +operator bool() bool
                             }
                             
-                            class ThreadSafeQueue~T~ {
-                                -std::queue~T~ queue_
-                                -mutable std::mutex mutex_
-                                -std::condition_variable_any condition_
-                                -std::binary_semaphore semaphore_
-                                -std::atomic~bool~ shutdown_
-                                +ThreadSafeQueue()
-                                +push(U&& value)
-                                +pop(stop_token) std::optional~T~
-                                +pop_timeout(timeout) std::optional~T~
-                                +try_pop() std::optional~T~
-                                +shutdown()
+                            class ThreadSafeQueue {
+                                -queue_: queue
+                                -mutex_: mutex
+                                -condition_: condition_variable
+                                +push(value)
+                                +pop() optional
+                                +try_pop() optional
                                 +empty() bool
                                 +size() size_t
-                                +is_shutdown() bool
                             }
                             
                             class ThreadPool {
-                                -std::vector~std::jthread~ workers_
-                                -std::queue~std::function~void~~> tasks_
-                                -std::mutex mutex_
-                                -std::condition_variable_any condition_
+                                -workers_: vector
+                                -tasks_: queue
+                                -mutex_: mutex
                                 +ThreadPool(num_threads)
                                 +enqueue(f)
-                                +submit(F&& f) std::future~std::invoke_result_t~F~~
+                                +submit(f) future
                             }
                             
-                            class Task~T~ {
-                                +operator co_await()
-                            }
-                            
-                            class Generator~T~ {
+                            class Task {
                                 +operator co_await()
                             }
                             
                             class PerformanceMetrics {
-                                -std::chrono::steady_clock::time_point start_time_
-                                -std::atomic~int~ frame_count_
-                                -std::atomic~double~ total_latency_
-                                -std::mutex metrics_mutex_
-                                +PerformanceMetrics()
+                                -start_time_: time_point
+                                -frame_count_: atomic
                                 +record_frame_latency(latency)
                                 +get_snapshot() MetricsSnapshot
                                 +get_fps() double
                             }
                             
                             class MockDetector {
-                                +detect(const cv::Mat& frame) std::vector~Detection~
+                                +detect(frame) vector
                             }
                             
                             class Detection {
-                                +cv::Rect bbox
-                                +std::string class_name
-                                +float confidence
+                                +bbox: Rect
+                                +class_name: string
+                                +confidence: float
                             }
                             
                             class Image {
-                                -cv::Mat mat_
+                                -mat_: Mat
                                 +Image()
-                                +Image(cv::Mat mat)
-                                +Image(const Image& other)
-                                +operator=(cv::Mat mat) Image&
                                 +empty() bool
                                 +rows() int
                                 +cols() int
-                                +channels() int
                             }
                             
                             %% Relationships
                             Result --> Detection
                             ThreadSafeQueue --> Result
                             ThreadPool --> ThreadSafeQueue
-                            Task~T~ --> ThreadPool
-                            Generator~T~ --> Task~T~
+                            Task --> ThreadPool
                             PerformanceMetrics --> Result
                             MockDetector --> Detection
                             MockDetector --> Image
