@@ -803,10 +803,107 @@
     </div>
 
     <script>
+        // Initialize Mermaid
         mermaid.initialize({
             startOnLoad: true,
             theme: 'default',
             securityLevel: 'loose'
+        });
+        
+        // Tab switching functionality
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-pane');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from all nav tabs
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked nav tab
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+        }
+        
+        // Control functions
+        function resetZoom() {
+            const svgs = document.querySelectorAll('.mermaid svg');
+            svgs.forEach(svg => {
+                svg.style.transform = 'scale(1)';
+                svg.style.transformOrigin = 'center';
+            });
+        }
+        
+        function exportSVG() {
+            const svg = document.querySelector('.tab-pane.active .mermaid svg');
+            if (svg) {
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const blob = new Blob([svgData], {type: 'image/svg+xml'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'architecture_diagram.svg';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        document.querySelector('.nav-tab:nth-child(1)').click();
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        document.querySelector('.nav-tab:nth-child(2)').click();
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        document.querySelector('.nav-tab:nth-child(3)').click();
+                        break;
+                    case '4':
+                        e.preventDefault();
+                        document.querySelector('.nav-tab:nth-child(4)').click();
+                        break;
+                    case '5':
+                        e.preventDefault();
+                        document.querySelector('.nav-tab:nth-child(5)').click();
+                        break;
+                    case '6':
+                        e.preventDefault();
+                        document.querySelector('.nav-tab:nth-child(6)').click();
+                        break;
+                    case '7':
+                        e.preventDefault();
+                        document.querySelector('.nav-tab:nth-child(7)').click();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        resetZoom();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        exportSVG();
+                        break;
+                    case 'd':
+                        e.preventDefault();
+                        toggleDarkMode();
+                        break;
+                }
+            }
         });
     </script>
 </body>
