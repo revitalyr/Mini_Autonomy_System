@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mini Autonomy System - Architecture Visualization</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@9.4.3/dist/mermaid.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -308,27 +308,25 @@
 </div>
 
 <script>
-    // Простая инициализация Mermaid
     mermaid.initialize({startOnLoad: true});
     
-    // Максимально простая функция переключения вкладок
-    function showTab(tabId) {
-        // Скрываем все вкладки
-        const tabs = document.querySelectorAll('.tab-pane');
-        for (let i = 0; i < tabs.length; i++) {
+    function showTab(tabName) {
+        // Hide all tabs
+        var tabs = document.getElementsByClassName('tab-pane');
+        for (var i = 0; i < tabs.length; i++) {
             tabs[i].classList.remove('active');
         }
         
-        // Убираем активный класс у кнопок
-        const buttons = document.querySelectorAll('.nav-tab');
-        for (let i = 0; i < buttons.length; i++) {
+        // Remove active class from buttons
+        var buttons = document.getElementsByClassName('nav-tab');
+        for (var i = 0; i < buttons.length; i++) {
             buttons[i].classList.remove('active');
         }
         
-        // Показываем выбранную вкладку
-        document.getElementById(tabId).classList.add('active');
+        // Show selected tab
+        document.getElementById(tabName).classList.add('active');
         
-        // Активируем кнопку
+        // Add active class to clicked button
         event.target.classList.add('active');
     }
 </script>
