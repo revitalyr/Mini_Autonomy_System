@@ -75,13 +75,13 @@
     </div>
 
     <div class="nav-tabs">
-        <button class="nav-tab active" onclick="showTab('modules', this)">Зависимости модулей</button>
-        <button class="nav-tab" onclick="showTab('pipeline', this)">Конвейер (Pipeline)</button>
-        <button class="nav-tab" onclick="showTab('async', this)">Асинхронная модель</button>
-        <button class="nav-tab" onclick="showTab('classes', this)">Классы</button>
-        <button class="nav-tab" onclick="showTab('dataflow', this)">Поток данных</button>
-        <button class="nav-tab" onclick="showTab('threads', this)">Потоки</button>
-        <button class="nav-tab" onclick="showTab('performance', this)">Производительность</button>
+        <button class="nav-tab active" onclick="showTab('modules')">Зависимости модулей</button>
+        <button class="nav-tab" onclick="showTab('pipeline')">Конвейер (Pipeline)</button>
+        <button class="nav-tab" onclick="showTab('async')">Асинхронная модель</button>
+        <button class="nav-tab" onclick="showTab('classes')">Классы</button>
+        <button class="nav-tab" onclick="showTab('dataflow')">Поток данных</button>
+        <button class="nav-tab" onclick="showTab('threads')">Потоки</button>
+        <button class="nav-tab" onclick="showTab('performance')">Производительность</button>
     </div>
 
     <div class="content">
@@ -337,7 +337,7 @@
     };
 
     // 2. Исправленная функция переключения вкладок
-    function showTab(tabId, button) {
+    function showTab(tabId) {
         // Скрываем все вкладки
         const panes = document.querySelectorAll('.tab-pane');
         panes.forEach(p => p.classList.remove('active'));
@@ -349,7 +349,10 @@
         // Активируем нужную
         const targetPane = document.getElementById(tabId);
         targetPane.classList.add('active');
-        button.classList.add('active');
+        
+        // Находим кнопку, которая вызвала функцию
+        const activeButton = event.target;
+        activeButton.classList.add('active');
 
         // 3. Критически важный момент: 
         // Даем браузеру 50мс, чтобы отрисовать блок (display: block),
