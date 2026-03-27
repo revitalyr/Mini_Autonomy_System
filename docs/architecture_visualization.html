@@ -803,17 +803,13 @@
     </div>
 
     <script>
-        // Wait for DOM to be ready, then initialize Mermaid
+        // Simple and reliable Mermaid initialization
         document.addEventListener('DOMContentLoaded', function() {
+            // Basic initialization
             mermaid.initialize({
-                startOnLoad: false,
+                startOnLoad: true,
                 theme: 'default',
                 securityLevel: 'loose',
-                flowchart: {
-                    useMaxWidth: true,
-                    htmlLabels: true,
-                    curve: 'basis'
-                },
                 themeVariables: {
                     primaryColor: '#4a90e2',
                     primaryTextColor: '#333',
@@ -822,19 +818,6 @@
                     secondaryColor: '#e8f5e8',
                     tertiaryColor: '#fce4ec'
                 }
-            });
-            
-            // Manually render all mermaid diagrams
-            const mermaidElements = document.querySelectorAll('.mermaid');
-            mermaidElements.forEach((element, index) => {
-                mermaid.render('mermaid-diagram-' + index, element.textContent)
-                    .then(result => {
-                        element.innerHTML = result.svg;
-                    })
-                    .catch(error => {
-                        console.error('Mermaid rendering error:', error);
-                        element.innerHTML = '<div style="color: red; padding: 20px; border: 1px solid red;">Error rendering diagram: ' + error.message + '</div>';
-                    });
             });
         });
         
@@ -856,20 +839,22 @@
                 event.target.classList.add('active');
             }
             
-            // Re-render mermaid diagrams in the active tab
+            // Force re-render of mermaid diagram in active tab
             setTimeout(() => {
                 const activeTabMermaid = document.querySelector('.tab-pane.active .mermaid');
                 if (activeTabMermaid) {
-                    const index = Array.from(document.querySelectorAll('.mermaid')).indexOf(activeTabMermaid);
-                    mermaid.render('mermaid-diagram-' + index, activeTabMermaid.textContent)
-                        .then(result => {
-                            activeTabMermaid.innerHTML = result.svg;
-                        })
-                        .catch(error => {
-                            console.error('Mermaid rendering error:', error);
-                        });
+                    // Get the original content
+                    const originalContent = activeTabMermaid.textContent;
+                    // Clear and reset
+                    activeTabMermaid.innerHTML = '';
+                    // Set content back and let mermaid auto-render
+                    activeTabMermaid.textContent = originalContent;
+                    // Trigger mermaid to render
+                    mermaid.run({
+                        querySelector: activeTabMermaid
+                    });
                 }
-            }, 100);
+            }, 50);
         }
         
         // Control functions
