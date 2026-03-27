@@ -308,74 +308,28 @@
 </div>
 
 <script>
-    // 1. Настройка Mermaid: отключаем автозапуск при загрузке, чтобы не было "толстых углов"
-    mermaid.initialize({
-        startOnLoad: false,
-        theme: 'neutral',
-        flowchart: { 
-            useMaxWidth: true, 
-            htmlLabels: true,
-            curve: 'basis' 
-        }
-    });
-
-    // Функция для рендеринга диаграмм в конкретном контейнере
-    function renderMermaidInElement(container) {
-        const elements = container.querySelectorAll('.mermaid');
-        elements.forEach((el, index) => {
-            // Если диаграмма еще не была обработана
-            if (!el.getAttribute('data-processed')) {
-                el.setAttribute('data-processed', 'true');
-                mermaid.render('mermaid-diagram-' + Date.now() + '-' + index, el.textContent)
-                    .then(result => {
-                        el.innerHTML = result.svg;
-                    })
-                    .catch(error => {
-                        console.error('Mermaid rendering error:', error);
-                        el.innerHTML = '<div style="color: red; padding: 20px;">Error rendering diagram</div>';
-                    });
-            }
-        });
-    }
-
-    // Инициализация первой вкладки при загрузке
-    document.addEventListener('DOMContentLoaded', function() {
-        const activeTab = document.querySelector('.tab-pane.active');
-        if (activeTab) {
-            renderMermaidInElement(activeTab);
-        }
-    });
-
-    // 2. Исправленная функция переключения вкладок
+    // Простая инициализация Mermaid
+    mermaid.initialize({startOnLoad: true});
+    
+    // Максимально простая функция переключения вкладок
     function showTab(tabId) {
         // Скрываем все вкладки
-        const panes = document.querySelectorAll('.tab-pane');
-        panes.forEach(p => p.classList.remove('active'));
-
+        const tabs = document.querySelectorAll('.tab-pane');
+        for (let i = 0; i < tabs.length; i++) {
+            tabs[i].classList.remove('active');
+        }
+        
         // Убираем активный класс у кнопок
-        const tabs = document.querySelectorAll('.nav-tab');
-        tabs.forEach(t => t.classList.remove('active'));
-
-        // Активируем нужную
-        const targetPane = document.getElementById(tabId);
-        if (targetPane) {
-            targetPane.classList.add('active');
+        const buttons = document.querySelectorAll('.nav-tab');
+        for (let i = 0; i < buttons.length; i++) {
+            buttons[i].classList.remove('active');
         }
-
-        // Находим кнопку, которая вызвала функцию
-        if (event && event.target) {
-            const activeButton = event.target;
-            activeButton.classList.add('active');
-        }
-
-        // 3. Критически важный момент: 
-        // Даем браузеру 100мс, чтобы отрисовать блок (display: block),
-        // и только ПОТОМ просим Mermaid рассчитать размеры текста.
-        setTimeout(() => {
-            if (targetPane) {
-                renderMermaidInElement(targetPane);
-            }
-        }, 100);
+        
+        // Показываем выбранную вкладку
+        document.getElementById(tabId).classList.add('active');
+        
+        // Активируем кнопку
+        event.target.classList.add('active');
     }
 </script>
 

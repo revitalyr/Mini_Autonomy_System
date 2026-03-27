@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Working Tabs</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .tab { display: none; }
+        .tab.active { display: block; }
+        .button { padding: 10px; margin: 5px; cursor: pointer; background: #4a90e2; color: white; border: none; border-radius: 4px; }
+        .button.active { background: #357abd; }
+        .mermaid { border: 1px solid #ddd; padding: 20px; margin: 10px 0; }
+        h2 { color: #4a90e2; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Простая тестовая страница</h1>
+    
+    <div>
+        <button class="button active" onclick="showTab('tab1')">Вкладка 1</button>
+        <button class="button" onclick="showTab('tab2')">Вкладка 2</button>
+        <button class="button" onclick="showTab('tab3')">Вкладка 3</button>
+    </div>
+    
+    <div id="tab1" class="tab active">
+        <h2>Первая вкладка</h2>
+        <div class="mermaid">
+            graph TD
+                A[Начало] --> B[Процесс]
+                B --> C[Конец]
+        </div>
+    </div>
+    
+    <div id="tab2" class="tab">
+        <h2>Вторая вкладка</h2>
+        <div class="mermaid">
+            graph LR
+                X[Вход] --> Y[Обработка]
+                Y --> Z[Выход]
+        </div>
+    </div>
+    
+    <div id="tab3" class="tab">
+        <h2>Третья вкладка</h2>
+        <div class="mermaid">
+            graph TB
+                Top[Верх] --> Middle[Середина]
+                Middle --> Bottom[Низ]
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({startOnLoad: true});
+        
+        function showTab(tabId) {
+            // Скрываем все вкладки
+            const tabs = document.querySelectorAll('.tab');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            // Убираем активный класс у кнопок
+            const buttons = document.querySelectorAll('.button');
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('active');
+            }
+            
+            // Показываем выбранную вкладку
+            document.getElementById(tabId).classList.add('active');
+            
+            // Активируем кнопку
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
