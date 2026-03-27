@@ -89,6 +89,7 @@ export namespace perception {
         std::variant<T, std::error_code> m_value;
         
     public:
+        Result() = default;
         Result(T&& value) : m_value(std::move(value)) {}
         Result(const T& value) : m_value(value) {}
         Result(std::error_code error) : m_value(error) {}
@@ -162,7 +163,7 @@ export namespace perception {
 
     template<typename T>
     constexpr PerceptionResult<T> error(PerceptionError err) noexcept {
-        return PerceptionResult<T>(std::make_error_code(err));
+        return PerceptionResult<T>(make_error_code(err));
     }
 
     // Async result type

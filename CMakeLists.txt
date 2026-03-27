@@ -5,7 +5,7 @@ project(MiniAutonomySystem LANGUAGES CXX)
 # set(CMAKE_EXPERIMENTAL_CXX_MODULE_CXX23_FLAG ON)
 
 # Установка стандарта C++20 (или 20, в зависимости от ваших нужд)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -61,6 +61,9 @@ target_sources(perception_modules PUBLIC
 
 # Создание исполняемого файла
 add_executable(perception_demo src/main.cpp)
+
+# Создание минимального теста
+add_executable(minimal_test src/main_minimal.cpp)
 
 # Линковка
 target_link_libraries(perception_demo PRIVATE 

@@ -38,7 +38,7 @@ export namespace perception {
         using handle_type = std::coroutine_handle<promise_type>;
 
         struct promise_type {
-            std::conditional_t<std::is_void_v<T>, std::monostate, T> value_;
+            std::conditional_t<std::is_void_v<T>, std::monostate, T> value_{};
             std::exception_ptr exception_;
 
             Generator get_return_object() {
@@ -49,7 +49,7 @@ export namespace perception {
             void unhandled_exception() { exception_ = std::current_exception(); }
             
             template<std::convertible_to<T> From>
-            void yield_value(From&& from) {
+            std::suspend_always yield_value(From&& from) {
                 if constexpr (std::is_void_v<T>) {
                     // For void type, don't assign anything
                     (void)from; // Suppress unused parameter warning
@@ -149,7 +149,7 @@ export namespace perception {
                     }
                     
                     return success<Image>(Image(std::move(mat)));
-                } catch (const std::exception& e) {
+                } catch (const std::exception&) {
                     return error<Image>(PerceptionError::InvalidInput);
                 }
             });
