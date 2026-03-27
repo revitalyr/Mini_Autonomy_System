@@ -75,7 +75,7 @@
             // Hide all tabs
             var tabs = document.getElementsByClassName('tab');
             for (var i = 0; i < tabs.length; i++) {
-                tabs[i].style.display = 'none';
+                tabs[i].classList.remove('active');
             }
             
             // Remove active class from buttons
@@ -85,7 +85,7 @@
             }
             
             // Show selected tab
-            document.getElementById(tabName).style.display = 'block';
+            document.getElementById(tabName).classList.add('active');
             
             // Add active class to clicked button
             event.target.classList.add('active');
