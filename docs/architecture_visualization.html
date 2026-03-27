@@ -286,7 +286,7 @@
                     <div class="mermaid">
                         graph TD
                             %% C++20 Modules
-                            subgraph "Core Modules"
+                            subgraph Core_Modules["Core Modules"]
                                 A[<a href="../modules/perception.concepts.cppm" target="_blank" class="clickable-node">perception.concepts<br/>Core Concepts</a>]
                                 B[<a href="../modules/perception.result.cppm" target="_blank" class="clickable-node">perception.result<br/>Error Handling</a>]
                                 C[<a href="../modules/perception.async.cppm" target="_blank" class="clickable-node">perception.async<br/>Async Operations</a>]
@@ -294,7 +294,7 @@
                                 E[<a href="../modules/perception.metrics.cppm" target="_blank" class="clickable-node">perception.metrics<br/>Performance Metrics</a>]
                             end
                             
-                            subgraph "Vision Modules"
+                            subgraph Vision_Modules["Vision Modules"]
                                 F[<a href="../modules/perception.detector.simple.cppm" target="_blank" class="clickable-node">perception.detector.simple<br/>Object Detection</a>]
                                 G[<a href="../modules/perception.image_loader.simple.cppm" target="_blank" class="clickable-node">perception.image_loader.simple<br/>Image Loading</a>]
                                 H[<a href="../modules/perception.pipeline.cppm" target="_blank" class="clickable-node">perception.pipeline<br/>Processing Pipeline</a>]
@@ -347,7 +347,7 @@
                             classDef vision fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
                             classDef main fill:#fce4ec,stroke:#880e4f,stroke-width:2px
                             
-                            class A,B,C,D,E,F,G,H core
+                            class A,B,C,D,E core
                             class F,G,H vision
                             class I main
                     </div>
@@ -492,25 +492,25 @@
                     <div class="mermaid">
                         flowchart TD
                             %% Data Sources
-                            subgraph "Input Sources"
+                            subgraph Input_Sources["Input Sources"]
                                 A[<a href="../src/main.cpp#L92" target="_blank" class="clickable-node">Camera Frames<br/>cv::Mat input</a>]
                                 B[<a href="../modules/perception.image_loader.simple.cppm" target="_blank" class="clickable-node">Image Loader<br/>Async loading</a>]
                             end
                             
                             %% Processing Pipeline
-                            subgraph "Processing Pipeline"
+                            subgraph Processing_Pipeline["Processing Pipeline"]
                                 C[<a href="../modules/perception.detector.simple.cppm" target="_blank" class="clickable-node">Object Detector<br/>Mock detection</a>]
                                 D[<a href="../modules/perception.metrics.cppm" target="_blank" class="clickable-node">Performance Metrics<br/>FPS tracking</a>]
                             end
                             
                             %% Async Operations
-                            subgraph "Async Operations"
+                            subgraph Async_Operations["Async Operations"]
                                 E[<a href="../modules/perception.async.cppm" target="_blank" class="clickable-node">Thread Pool<br/>Task execution</a>]
                                 F[<a href="../modules/perception.queue.cppm" target="_blank" class="clickable-node">Thread-Safe Queue<br/>Data buffering</a>]
                             end
                             
                             %% Output
-                            subgraph "Output"
+                            subgraph Output["Output"]
                                 G[<a href="../src/main.cpp#L98" target="_blank" class="clickable-node">Console Output<br/>Results display</a>]
                                 H[<a href="../src/main.cpp#L120" target="_blank" class="clickable-node">Performance Stats<br/>Metrics snapshot</a>]
                             end
@@ -559,26 +559,26 @@
                     <div class="mermaid">
                         graph TB
                             %% Main Thread
-                            subgraph "Main Thread"
+                            subgraph Main_Thread["Main Thread"]
                                 MT[<a href="../src/main.cpp" target="_blank" class="clickable-node">Main Application Thread<br/>Coordinates system<br/>initialization</a>]
                             end
                             
                             %% Processing Threads
-                            subgraph "Processing Threads"
+                            subgraph Processing_Threads["Processing Threads"]
                                 PT1[<a href="../modules/perception.async.cppm" target="_blank" class="clickable-node">Processing Thread 1<br/>ThreadPool workers</a>]
                                 PT2[<a href="../modules/perception.detector.simple.cppm" target="_blank" class="clickable-node">Processing Thread 2<br/>Object detection</a>]
                                 PT3[<a href="../modules/perception.image_loader.simple.cppm" target="_blank" class="clickable-node">Processing Thread 3<br/>Image loading</a>]
                             end
                             
                             %% Data Queues
-                            subgraph "Thread-Safe Queues"
+                            subgraph ThreadSafe_Queues["Thread-Safe Queues"]
                                 Q1[<a href="../modules/perception.queue.cppm" target="_blank" class="clickable-node">Detection Queue<br/>ThreadSafeQueue~Detection~</a>]
                                 Q2[<a href="../modules/perception.queue.cppm" target="_blank" class="clickable-node">Image Queue<br/>ThreadSafeQueue~Image~</a>]
                                 Q3[<a href="../modules/perception.queue.cppm" target="_blank" class="clickable-node">Result Queue<br/>ThreadSafeQueue~Result~</a>]
                             end
                             
                             %% Shared Resources
-                            subgraph "Shared Resources"
+                            subgraph Shared_Resources["Shared Resources"]
                                 SR1[<a href="../modules/perception.metrics.cppm" target="_blank" class="clickable-node">PerformanceMetrics<br/>Thread-safe metrics</a>]
                             end
                             
@@ -634,7 +634,7 @@
                     <div class="mermaid">
                         graph LR
                             %% Module Interfaces
-                            subgraph "Core Module Interfaces"
+                            subgraph Core_Module_Interfaces["Core Module Interfaces"]
                                 M1[<a href="../modules/perception.concepts.cppm" target="_blank" class="clickable-node">perception.concepts.cppm<br/>Export: Concepts<br/>Import: concepts, ranges</a>]
                                 M2[<a href="../modules/perception.result.cppm" target="_blank" class="clickable-node">perception.result.cppm<br/>Export: Result<T><br/>Import: variant, system_error</a>]
                                 M3[<a href="../modules/perception.async.cppm" target="_blank" class="clickable-node">perception.async.cppm<br/>Export: Task<T>, ThreadPool<br/>Import: coroutine, future, thread</a>]
@@ -642,7 +642,7 @@
                                 M5[<a href="../modules/perception.metrics.cppm" target="_blank" class="clickable-node">perception.metrics.cppm<br/>Export: PerformanceMetrics<br/>Import: chrono, atomic</a>]
                             end
                             
-                            subgraph "Vision Module Interfaces"
+                            subgraph Vision_Module_Interfaces["Vision Module Interfaces"]
                                 M6[<a href="../modules/perception.detector.simple.cppm" target="_blank" class="clickable-node">perception.detector.simple.cppm<br/>Export: MockDetector, Detection<br/>Import: opencv2/opencv.hpp</a>]
                                 M7[<a href="../modules/perception.image_loader.simple.cppm" target="_blank" class="clickable-node">perception.image_loader.simple.cppm<br/>Export: Image, ImageLoader<br/>Import: opencv2/opencv.hpp, coroutine</a>]
                                 M8[<a href="../modules/perception.pipeline.cppm" target="_blank" class="clickable-node">perception.pipeline.cppm<br/>Export: ProcessingPipeline<br/>Import: async, queue, detector</a>]
@@ -691,30 +691,30 @@
                     <div class="mermaid">
                         graph TB
                             %% Input Layer
-                            subgraph "Input Layer"
+                            subgraph Input_Layer["Input Layer"]
                                 INPUT[<a href="../src/main.cpp#L85" target="_blank" class="clickable-node">Input Sources<br/>Camera, Images</a>]
                             end
                             
                             %% Processing Layer
-                            subgraph "Processing Layer"
+                            subgraph Processing_Layer["Processing Layer"]
                                 PROCESS[<a href="../modules/perception.detector.simple.cppm" target="_blank" class="clickable-node">Processing Pipeline<br/>Detection & Tracking</a>]
                                 ASYNC[<a href="../modules/perception.async.cppm" target="_blank" class="clickable-node">Async Operations<br/>ThreadPool & Coroutines</a>]
                             end
                             
                             %% Core Services Layer
-                            subgraph "Core Services"
+                            subgraph Core_Services["Core Services"]
                                 QUEUE[<a href="../modules/perception.queue.cppm" target="_blank" class="clickable-node">Data Management<br/>ThreadSafeQueue</a>]
                                 METRICS[<a href="../modules/perception.metrics.cppm" target="_blank" class="clickable-node">Performance<br/>Metrics & Monitoring</a>]
                                 ERROR[<a href="../modules/perception.result.cppm" target="_blank" class="clickable-node">Error Handling<br/>Result<T> Type</a>]
                             end
                             
                             %% Foundation Layer
-                            subgraph "Foundation Layer"
+                            subgraph Foundation_Layer["Foundation Layer"]
                                 CONCEPTS[<a href="../modules/perception.concepts.cppm" target="_blank" class="clickable-node">C++20 Concepts<br/>Type Constraints</a>]
                             end
                             
                             %% Output Layer
-                            subgraph "Output Layer"
+                            subgraph Output_Layer["Output Layer"]
                                 OUTPUT[<a href="../src/main.cpp#L120" target="_blank" class="clickable-node">Output<br/>Console, Results</a>]
                             end
                             
@@ -765,17 +765,17 @@
                     <div class="mermaid">
                         graph LR
                             %% Performance Components
-                            subgraph "Async Processing"
+                            subgraph Async_Processing["Async Processing"]
                                 A[<a href="../modules/perception.async.cppm" target="_blank" class="clickable-node">ThreadPool<br/>Parallel execution</a>]
                                 B[<a href="../modules/perception.async.cppm" target="_blank" class="clickable-node">Coroutines<br/>Non-blocking operations</a>]
                             end
                             
-                            subgraph "Memory Management"
+                            subgraph Memory_Management["Memory Management"]
                                 C[<a href="../modules/perception.queue.cppm" target="_blank" class="clickable-node">Lock-free Queue<br/>Atomic operations</a>]
                                 D[<a href="../modules/perception.result.cppm" target="_blank" class="clickable-node">Zero-cost Abstractions<br/>Result<T></a>]
                             end
                             
-                            subgraph "Monitoring"
+                            subgraph Monitoring["Monitoring"]
                                 E[<a href="../modules/perception.metrics.cppm" target="_blank" class="clickable-node">Real-time Metrics<br/>Atomic counters</a>]
                                 F[<a href="../src/main.cpp#L120" target="_blank" class="clickable-node">Performance Profiling<br/>FPS & Latency</a>]
                             end
@@ -831,13 +831,14 @@
         function initializeMermaid() {
             if (!mermaidInitialized) {
                 mermaid.initialize({
-                    startOnLoad: false,
+                    startOnLoad: true,
                     theme: 'default',
                     flowchart: {
                         useMaxWidth: true,
                         htmlLabels: true,
                         curve: 'basis'
-                    }
+                    },
+                    securityLevel: 'loose'
                 });
                 mermaidInitialized = true;
                 console.log('Mermaid initialized');
@@ -862,12 +863,11 @@
             // Reinitialize mermaid for the new tab
             setTimeout(() => {
                 initializeMermaid();
-                const mermaidDivs = document.querySelectorAll('.tab-pane.active .mermaid');
-                mermaidDivs.forEach(div => {
-                    mermaid.run({
-                        querySelector: div
-                    });
-                });
+                const mermaidDiv = document.querySelector('.tab-pane.active .mermaid');
+                if (mermaidDiv) {
+                    mermaidDiv.removeAttribute('data-processed');
+                    mermaid.init();
+                }
             }, 100);
         }
         
@@ -910,10 +910,8 @@
             setTimeout(() => {
                 const mermaidDivs = document.querySelectorAll('.mermaid');
                 mermaidDivs.forEach(div => {
-                    div.innerHTML = div.getAttribute('data-processed') ? '' : div.innerHTML;
-                    mermaid.run({
-                        querySelector: div
-                    });
+                    div.removeAttribute('data-processed');
+                    mermaid.init();
                 });
             }, 100);
         }
@@ -922,12 +920,10 @@
         document.addEventListener('DOMContentLoaded', function() {
             initializeMermaid();
             setTimeout(() => {
-                const mermaidDivs = document.querySelectorAll('.tab-pane.active .mermaid');
-                mermaidDivs.forEach(div => {
-                    mermaid.run({
-                        querySelector: div
-                    });
-                });
+                const mermaidDiv = document.querySelector('.tab-pane.active .mermaid');
+                if (mermaidDiv) {
+                    mermaid.init();
+                }
             }, 500);
         });
         
