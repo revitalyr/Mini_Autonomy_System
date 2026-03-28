@@ -1,0 +1,14 @@
+graph LR
+    Input[<a href="../src/main.cpp#L85" target="_blank" style="color:#e65100;text-decoration:none;">Входные данные</a>] --> Process[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#1565c0;text-decoration:none;">Обработка</a>]
+    Process --> Metrics[<a href="../modules/perception.metrics.cppm" target="_blank" style="color:#33691e;text-decoration:none;">Сбор метрик</a>]
+    Metrics --> Output[<a href="../src/main.cpp#L120" target="_blank" style="color:#880e4f;text-decoration:none;">Вывод</a>]
+    
+    classDef input fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef process fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef metrics fill:#e8f5e8,stroke:#33691e,stroke-width:2px
+    classDef output fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    
+    class Input input
+    class Process process
+    class Metrics metrics
+    class Output output

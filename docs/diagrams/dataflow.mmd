@@ -1,0 +1,13 @@
+graph TB
+    A[<a href="../src/main.cpp#L92" target="_blank" style="color:#e65100;text-decoration:none;">Камера</a>] --> B[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Обработка</a>]
+    B --> C[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Очередь</a>]
+    C --> D[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Детекция</a>]
+    D --> E[<a href="../src/main.cpp#L98" target="_blank" style="color:#880e4f;text-decoration:none;">Результат</a>]
+    
+    classDef input fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef processing fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef output fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    
+    class A input
+    class B,C,D processing
+    class E output
