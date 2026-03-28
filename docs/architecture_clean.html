@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Autonomy System - Architecture Visualization</title>
+    
+    <!-- Внешние ресурсы -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    
+    <!-- Локальные ресурсы -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Заголовок -->
+        <header class="header">
+            <h1>🚀 Система Мини-Автономии</h1>
+            <p>Архитектура модулей и потоков данных</p>
+        </header>
+
+        <!-- Навигация по вкладкам -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab(event, 'modules')">Зависимости модулей</button>
+            <button class="nav-tab" onclick="showTab(event, 'pipeline')">Конвейер (Pipeline)</button>
+            <button class="nav-tab" onclick="showTab(event, 'async')">Асинхронная модель</button>
+            <button class="nav-tab" onclick="showTab(event, 'classes')">Классы</button>
+            <button class="nav-tab" onclick="showTab(event, 'dataflow')">Поток данных</button>
+            <button class="nav-tab" onclick="showTab(event, 'threads')">Потоки</button>
+            <button class="nav-tab" onclick="showTab(event, 'performance')">Производительность</button>
+        </nav>
+
+        <!-- Контент вкладок -->
+        <main class="content">
+            <!-- Зависимости модулей -->
+            <section id="modules" class="tab-pane active">
+                <h2>Иерархия модулей</h2>
+                <div class="mermaid">
+                    graph TD
+                        Main[<a href="../src/main.cpp" target="_blank" style="color:#4a90e2;text-decoration:none;">main.cpp</a>] --> Pipeline[<a href="../modules/perception.pipeline.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.pipeline</a>]
+                        Pipeline --> Async[<a href="../modules/perception.async.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.async</a>]
+                        Pipeline --> Concepts[<a href="../modules/perception.concepts.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.concepts</a>]
+                        Pipeline --> Result[<a href="../modules/perception.result.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.result</a>]
+                        Pipeline --> ImageLoader[<a href="../modules/perception.image_loader.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.image_loader</a>]
+                        Pipeline --> Detector[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.detector</a>]
+                        Pipeline --> Queue[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.queue</a>]
+                        Pipeline --> Metrics[<a href="../modules/perception.metrics.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.metrics</a>]
+                </div>
+            </section>
+
+            <!-- Конвейер (Pipeline) -->
+            <section id="pipeline" class="tab-pane">
+                <h2>Архитектура Pipeline</h2>
+                <div class="mermaid">
+                    graph LR
+                        Input((<a href="../src/main.cpp#L85" target="_blank" style="color:#e65100;text-decoration:none;">Камера</a>)) --> 
+                        Loader[<a href="../modules/perception.image_loader.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Image Loader</a>]
+                        Loader --> 
+                        Pre[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">MockDetector</a>]
+                        Pre --> 
+                        Detect[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Detection</a>]
+                        Detect --> 
+                        Track[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Result</a>]
+                        Track --> 
+                        UI((<a href="../src/main.cpp#L120" target="_blank" style="color:#880e4f;text-decoration:none;">Визуализация</a>))
+                </div>
+            </section>
+
+            <!-- Асинхронная модель -->
+            <section id="async" class="tab-pane">
+                <h2>Асинхронная архитектура</h2>
+                <div class="mermaid">
+                    graph TB
+                        subgraph "Асинхронная архитектура"
+                            MainThread[<a href="../src/main.cpp" target="_blank" style="color:#ff6f00;text-decoration:none;">Главный поток</a>] --> 
+                            ThreadPool[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">ThreadPool</a>]
+                            
+                            ThreadPool --> 
+                            Worker1[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">Worker 1</a>]
+                            ThreadPool --> 
+                            Worker2[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">Worker 2</a>]
+                            ThreadPool --> 
+                            Worker3[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">Worker 3</a>]
+                            
+                            Worker1 --> 
+                            Queue1[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#1b5e20;text-decoration:none;">ThreadSafeQueue</a>]
+                            Worker2 --> 
+                            Queue2[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#1b5e20;text-decoration:none;">ThreadSafeQueue</a>]
+                            Worker3 --> 
+                            Queue3[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#1b5e20;text-decoration:none;">ThreadSafeQueue</a>]
+                            
+                            Queue1 --> 
+                            Results[<a href="../modules/perception.result.cppm" target="_blank" style="color:#880e4f;text-decoration:none;">Result</a>]
+                            Queue2 --> Results
+                            Queue3 --> Results
+                        end
+                        
+                        classDef main fill:#ffecb3,stroke:#ff6f00,stroke-width:2px
+                        classDef worker fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+                        classDef queue fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+                        classDef result fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+                        
+                        class MainThread main
+                        class ThreadPool,Worker1,Worker2,Worker3 worker
+                        class Queue1,Queue2,Queue3 queue
+                        class Results result
+                </div>
+            </section>
+
+            <!-- Диаграмма классов -->
+            <section id="classes" class="tab-pane">
+                <h2>Диаграмма классов</h2>
+                <div class="mermaid">
+                    classDiagram
+                        class PerceptionError {
+                            <<enumeration>>
+                            Success
+                            InvalidInput
+                            ModelLoadFailed
+                            InferenceFailed
+                            QueueEmpty
+                            QueueShutdown
+                            ThreadError
+                            CameraError
+                        }
+                        
+                        class Result {
+                            -m_value: variant
+                            +Result()
+                            +Result(T value)
+                            +has_value() bool
+                            +value() T
+                            +error() PerceptionError
+                            +operator bool() bool
+                        }
+                        
+                        class Detection {
+                            +bbox: cv::Rect
+                            +confidence: float
+                            +class_id: int
+                            +class_name: string
+                            +Detection(cv::Rect, float, int, string)
+                        }
+                        
+                        class MockDetector {
+                            -m_class_names: vector
+                            +MockDetector()
+                            +detect(frame) vector
+                        }
+                        
+                        class Image {
+                            +mat: cv::Mat
+                            +Image()
+                            +Image(cv::Mat m)
+                            +width() int
+                            +height() int
+                            +channels() int
+                            +empty() bool
+                        }
+                        
+                        class Generator {
+                            <<template T>>
+                            +get_return_object()
+                            +initial_suspend()
+                            +final_suspend()
+                            +unhandled_exception()
+                        }
+                        
+                        class ThreadPool {
+                            -workers_: vector
+                            -tasks_: queue
+                            -mutex_: mutex
+                            +ThreadPool(num_threads)
+                            +enqueue(f)
+                            +submit(f) future
+                        }
+                        
+                        class ThreadSafeQueue {
+                            -queue_: queue
+                            -mutex_: mutex
+                            -condition_: condition_variable_any
+                            -semaphore_: binary_semaphore
+                            -shutdown_: atomic
+                            +ThreadSafeQueue()
+                            +push(U value)
+                            +pop(stop_token) optional
+                            +try_pop() optional
+                            +shutdown()
+                            +empty() bool
+                            +size() size_t
+                            +is_shutdown() bool
+                        }
+                        
+                        class PerformanceMetrics {
+                            -frame_count_: atomic
+                            -total_latency_ms_: atomic
+                            -min_latency_ms_: atomic
+                            -max_latency_ms_: atomic
+                            -start_time_: time_point
+                            -recent_latencies_mutex_: mutex
+                            -recent_latencies_: vector
+                            +record_frame_latency(latency_ms)
+                            +get_snapshot() MetricsSnapshot
+                            +get_fps() double
+                        }
+                        
+                        MockDetector --> Detection
+                        Image --> Generator
+                        Result --> Detection
+                        ThreadPool --> ThreadSafeQueue
+                        ThreadSafeQueue --> Result
+                        PerformanceMetrics --> Result
+                        
+                        click PerceptionError href "../modules/perception.result.cppm" _blank
+                        click Result href "../modules/perception.result.cppm" _blank
+                        click Detection href "../modules/perception.detector.simple.cppm" _blank
+                        click MockDetector href "../modules/perception.detector.simple.cppm" _blank
+                        click Image href "../modules/perception.image_loader.simple.cppm" _blank
+                        click Generator href "../modules/perception.image_loader.simple.cppm" _blank
+                        click ThreadPool href "../modules/perception.async.cppm" _blank
+                        click ThreadSafeQueue href "../modules/perception.queue.cppm" _blank
+                        click PerformanceMetrics href "../modules/perception.metrics.cppm" _blank
+                </div>
+            </section>
+
+            <!-- Поток данных -->
+            <section id="dataflow" class="tab-pane">
+                <h2>Поток данных</h2>
+                <div class="mermaid">
+                    graph TB
+                        A[<a href="../src/main.cpp#L92" target="_blank" style="color:#e65100;text-decoration:none;">Камера</a>] --> B[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Обработка</a>]
+                        B --> C[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Очередь</a>]
+                        C --> D[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Детекция</a>]
+                        D --> E[<a href="../src/main.cpp#L98" target="_blank" style="color:#880e4f;text-decoration:none;">Результат</a>]
+                        
+                        classDef input fill:#fff3e0,stroke:#e65100,stroke-width:2px
+                        classDef processing fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+                        classDef output fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+                        
+                        class A input
+                        class B,C,D processing
+                        class E output
+                </div>
+            </section>
+
+            <!-- Потоки -->
+            <section id="threads" class="tab-pane">
+                <h2>Архитектура потоков</h2>
+                <div class="mermaid">
+                    graph TB
+                        Main[<a href="../src/main.cpp" target="_blank" style="color:#ff6f00;text-decoration:none;">Главный поток</a>] --> Worker1[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">Рабочий поток 1</a>]
+                        Main --> Worker2[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">Рабочий поток 2</a>]
+                        Main --> Worker3[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">Рабочий поток 3</a>]
+                        
+                        Worker1 --> Queue1[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#1b5e20;text-decoration:none;">Очередь 1</a>]
+                        Worker2 --> Queue2[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#1b5e20;text-decoration:none;">Очередь 2</a>]
+                        Worker3 --> Queue3[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#1b5e20;text-decoration:none;">Очередь 3</a>]
+                        
+                        Queue1 --> Result[<a href="../modules/perception.result.cppm" target="_blank" style="color:#880e4f;text-decoration:none;">Результат</a>]
+                        Queue2 --> Result
+                        Queue3 --> Result
+                        
+                        classDef main fill:#ffecb3,stroke:#ff6f00,stroke-width:2px
+                        classDef worker fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+                        classDef queue fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+                        
+                        class Main main
+                        class Worker1,Worker2,Worker3 worker
+                        class Queue1,Queue2,Queue3 queue
+                        class Result output
+                </div>
+            </section>
+
+            <!-- Производительность -->
+            <section id="performance" class="tab-pane">
+                <h2>Метрики производительности</h2>
+                <div class="mermaid">
+                    graph LR
+                        Input[<a href="../src/main.cpp#L85" target="_blank" style="color:#e65100;text-decoration:none;">Входные данные</a>] --> Process[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#1565c0;text-decoration:none;">Обработка</a>]
+                        Process --> Metrics[<a href="../modules/perception.metrics.cppm" target="_blank" style="color:#33691e;text-decoration:none;">Сбор метрик</a>]
+                        Metrics --> Output[<a href="../src/main.cpp#L120" target="_blank" style="color:#880e4f;text-decoration:none;">Вывод</a>]
+                        
+                        classDef input fill:#fff3e0,stroke:#e65100,stroke-width:2px
+                        classDef process fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+                        classDef metrics fill:#e8f5e8,stroke:#33691e,stroke-width:2px
+                        classDef output fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+                        
+                        class Input input
+                        class Process process
+                        class Metrics metrics
+                        class Output output
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Глобальная функция для onclick
+        window.showTab = function(event, tabName) {
+            // Скрываем все вкладки
+            const tabs = document.getElementsByClassName('tab-pane');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            // Убираем активный класс у кнопок
+            const buttons = document.getElementsByClassName('nav-tab');
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('active');
+            }
+            
+            // Показываем выбранную вкладку
+            const targetTab = document.getElementById(tabName);
+            if (targetTab) {
+                targetTab.classList.add('active');
+                
+                // Инициализируем Mermaid для новой видимой вкладки
+                mermaid.run({
+                    nodes: targetTab.querySelectorAll('.mermaid')
+                }).catch(err => console.error("Mermaid run error:", err));
+            }
+            
+            // Активируем кнопку
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
+        };
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализация Mermaid
+            mermaid.initialize({ 
+                startOnLoad: false, 
+                securityLevel: 'loose', 
+                theme: 'default' 
+            });
+            
+            // Показываем первую вкладку
+            showTab({ currentTarget: document.querySelector('.nav-tab.active') }, 'modules');
+        });
+    </script>
+</body>
+</html>
