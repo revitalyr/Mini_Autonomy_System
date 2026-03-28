@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Autonomy System - Architecture Visualization</title>
+    
+    <!-- Внешние ресурсы -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    
+    <!-- Локальные ресурсы -->
+    <link rel="stylesheet" href="styles.css">
+    <script src="diagrams.js"></script>
+    <script src="script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Заголовок -->
+        <header class="header">
+            <h1>🚀 Система Мини-Автономии</h1>
+            <p>Архитектура модулей и потоков данных</p>
+        </header>
+
+        <!-- Навигация по вкладкам -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab(event, 'modules')">Зависимости модулей</button>
+            <button class="nav-tab" onclick="showTab(event, 'pipeline')">Конвейер (Pipeline)</button>
+            <button class="nav-tab" onclick="showTab(event, 'async')">Асинхронная модель</button>
+            <button class="nav-tab" onclick="showTab(event, 'classes')">Классы</button>
+            <button class="nav-tab" onclick="showTab(event, 'dataflow')">Поток данных</button>
+            <button class="nav-tab" onclick="showTab(event, 'threads')">Потоки</button>
+            <button class="nav-tab" onclick="showTab(event, 'performance')">Производительность</button>
+        </nav>
+
+        <!-- Контент вкладок -->
+        <main class="content">
+            <!-- Зависимости модулей -->
+            <section id="modules" class="tab-pane">
+                <h2>Иерархия модулей</h2>
+                <div class="mermaid">
+                    ${Diagrams.modules}
+                </div>
+            </section>
+
+            <!-- Конвейер (Pipeline) -->
+            <section id="pipeline" class="tab-pane">
+                <h2>Архитектура Pipeline</h2>
+                <div class="mermaid">
+                    ${Diagrams.pipeline}
+                </div>
+            </section>
+
+            <!-- Асинхронная модель -->
+            <section id="async" class="tab-pane">
+                <h2>Асинхронная архитектура</h2>
+                <div class="mermaid">
+                    ${Diagrams.async}
+                </div>
+            </section>
+
+            <!-- Диаграмма классов -->
+            <section id="classes" class="tab-pane">
+                <h2>Диаграмма классов</h2>
+                <div class="mermaid">
+                    ${Diagrams.classes}
+                </div>
+            </section>
+
+            <!-- Поток данных -->
+            <section id="dataflow" class="tab-pane">
+                <h2>Поток данных</h2>
+                <div class="mermaid">
+                    ${Diagrams.dataflow}
+                </div>
+            </section>
+
+            <!-- Потоки -->
+            <section id="threads" class="tab-pane">
+                <h2>Архитектура потоков</h2>
+                <div class="mermaid">
+                    ${Diagrams.threads}
+                </div>
+            </section>
+
+            <!-- Производительность -->
+            <section id="performance" class="tab-pane">
+                <h2>Метрики производительности</h2>
+                <div class="mermaid">
+                    ${Diagrams.performance}
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

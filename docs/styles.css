@@ -1,0 +1,126 @@
+/* Стили для архитектурной визуализации */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.header {
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 2.5em;
+    font-weight: 300;
+}
+
+.header p {
+    margin: 10px 0 0 0;
+    opacity: 0.9;
+    font-size: 1.1em;
+}
+
+.nav-tabs {
+    display: flex;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    overflow-x: auto;
+}
+
+.nav-tab {
+    padding: 15px 25px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    outline: none;
+    transition: 0.3s;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.nav-tab:hover { 
+    background: #e9ecef; 
+}
+
+.nav-tab.active {
+    background: white;
+    color: #4a90e2;
+    border-bottom: 3px solid #4a90e2;
+}
+
+.content { 
+    padding: 40px; 
+}
+
+.tab-pane { 
+    display: none; 
+}
+
+.tab-pane.active { 
+    display: block; 
+}
+
+.mermaid { 
+    display: flex; 
+    justify-content: center; 
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    overflow: auto;
+    border: 1px solid #eee;
+}
+
+h2 { 
+    color: #4a90e2; 
+    margin-top: 0; 
+    margin-bottom: 30px;
+    font-size: 1.8em;
+    font-weight: 400;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .nav-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .nav-tab {
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+    }
+    
+    .content {
+        padding: 20px;
+    }
+    
+    .header h1 {
+        font-size: 2em;
+    }
+}
+
+/* Плавные переходы */
+.tab-pane {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

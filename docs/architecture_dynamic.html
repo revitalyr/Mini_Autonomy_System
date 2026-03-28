@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Autonomy System - Architecture Visualization</title>
+    
+    <!-- Внешние ресурсы -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    
+    <!-- Локальные ресурсы -->
+    <link rel="stylesheet" href="styles.css">
+    <script src="diagrams.js"></script>
+    <script src="script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Заголовок -->
+        <header class="header">
+            <h1>🚀 Система Мини-Автономии</h1>
+            <p>Архитектура модулей и потоков данных</p>
+        </header>
+
+        <!-- Навигация по вкладкам -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab(event, 'modules')">Зависимости модулей</button>
+            <button class="nav-tab" onclick="showTab(event, 'pipeline')">Конвейер (Pipeline)</button>
+            <button class="nav-tab" onclick="showTab(event, 'async')">Асинхронная модель</button>
+            <button class="nav-tab" onclick="showTab(event, 'classes')">Классы</button>
+            <button class="nav-tab" onclick="showTab(event, 'dataflow')">Поток данных</button>
+            <button class="nav-tab" onclick="showTab(event, 'threads')">Потоки</button>
+            <button class="nav-tab" onclick="showTab(event, 'performance')">Производительность</button>
+        </nav>
+
+        <!-- Контент вкладок -->
+        <main class="content" id="content">
+            <!-- Содержимое будет генерироваться динамически -->
+        </main>
+    </div>
+
+    <script>
+        // Динамическая генерация контента
+        function generateContent() {
+            const content = document.getElementById('content');
+            const tabs = [
+                { id: 'modules', title: 'Иерархия модулей' },
+                { id: 'pipeline', title: 'Архитектура Pipeline' },
+                { id: 'async', title: 'Асинхронная архитектура' },
+                { id: 'classes', title: 'Диаграмма классов' },
+                { id: 'dataflow', title: 'Поток данных' },
+                { id: 'threads', title: 'Архитектура потоков' },
+                { id: 'performance', title: 'Метрики производительности' }
+            ];
+
+            let html = '';
+            tabs.forEach(tab => {
+                html += `
+                    <section id="${tab.id}" class="tab-pane">
+                        <h2>${tab.title}</h2>
+                        <div class="mermaid">
+                            ${Diagrams[tab.id]}
+                        </div>
+                    </section>
+                `;
+            });
+
+            content.innerHTML = html;
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            generateContent();
+            tabManager = new TabManager();
+        });
+    </script>
+</body>
+</html>
