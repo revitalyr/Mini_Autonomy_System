@@ -10,6 +10,53 @@
     
     <!-- Локальные ресурсы -->
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- Определяем функцию сразу -->
+    <script>
+        // Глобальная функция для onclick
+        function showTab(event, tabName) {
+            // Скрываем все вкладки
+            const tabs = document.getElementsByClassName('tab-pane');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            // Убираем активный класс у кнопок
+            const buttons = document.getElementsByClassName('nav-tab');
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('active');
+            }
+            
+            // Показываем выбранную вкладку
+            const targetTab = document.getElementById(tabName);
+            if (targetTab) {
+                targetTab.classList.add('active');
+                
+                // Инициализируем Mermaid для новой видимой вкладки
+                mermaid.run({
+                    nodes: targetTab.querySelectorAll('.mermaid')
+                }).catch(err => console.error("Mermaid run error:", err));
+            }
+            
+            // Активируем кнопку
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализация Mermaid
+            mermaid.initialize({ 
+                startOnLoad: false, 
+                securityLevel: 'loose', 
+                theme: 'default' 
+            });
+            
+            // Показываем первую вкладку
+            showTab({ currentTarget: document.querySelector('.nav-tab.active') }, 'modules');
+        });
+    </script>
 </head>
 <body>
     <div class="container">
@@ -293,51 +340,5 @@
             </section>
         </main>
     </div>
-
-    <script>
-        // Глобальная функция для onclick
-        window.showTab = function(event, tabName) {
-            // Скрываем все вкладки
-            const tabs = document.getElementsByClassName('tab-pane');
-            for (let i = 0; i < tabs.length; i++) {
-                tabs[i].classList.remove('active');
-            }
-            
-            // Убираем активный класс у кнопок
-            const buttons = document.getElementsByClassName('nav-tab');
-            for (let i = 0; i < buttons.length; i++) {
-                buttons[i].classList.remove('active');
-            }
-            
-            // Показываем выбранную вкладку
-            const targetTab = document.getElementById(tabName);
-            if (targetTab) {
-                targetTab.classList.add('active');
-                
-                // Инициализируем Mermaid для новой видимой вкладки
-                mermaid.run({
-                    nodes: targetTab.querySelectorAll('.mermaid')
-                }).catch(err => console.error("Mermaid run error:", err));
-            }
-            
-            // Активируем кнопку
-            if (event && event.currentTarget) {
-                event.currentTarget.classList.add('active');
-            }
-        };
-
-        // Инициализация при загрузке страницы
-        document.addEventListener('DOMContentLoaded', function() {
-            // Инициализация Mermaid
-            mermaid.initialize({ 
-                startOnLoad: false, 
-                securityLevel: 'loose', 
-                theme: 'default' 
-            });
-            
-            // Показываем первую вкладку
-            showTab({ currentTarget: document.querySelector('.nav-tab.active') }, 'modules');
-        });
-    </script>
 </body>
 </html>
