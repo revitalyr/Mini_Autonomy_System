@@ -4,7 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mini Autonomy System - Architecture Visualization</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@9.4.3/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script>
+        // Определяем функцию в head, чтобы она была доступна сразу
+        function showTab(event, tabName) {
+            // Скрываем все вкладки
+            var tabs = document.getElementsByClassName('tab-pane');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            // Убираем активный класс у кнопок
+            var buttons = document.getElementsByClassName('nav-tab');
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('active');
+            }
+            
+            // Показываем выбранную вкладку
+            var targetTab = document.getElementById(tabName);
+            if (targetTab) {
+                targetTab.classList.add('active');
+                // Инициализируем Mermaid для новой видимой вкладки
+                mermaid.run({
+                    nodes: targetTab.querySelectorAll('.mermaid')
+                }).catch(err => console.error("Mermaid run error:", err));
+            }
+            
+            // Активируем кнопку
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
+        }
+
+        // Инициализация Mermaid
+        mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', theme: 'default' });
+    </script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -60,8 +94,7 @@
             padding: 20px;
             border-radius: 8px;
             overflow: auto;
-            transform: scale(1.2);
-            transform-origin: top left;
+            border: 1px solid #eee;
         }
         h2 { color: #4a90e2; margin-top: 0; }
     </style>
@@ -75,13 +108,13 @@
     </div>
 
     <div class="nav-tabs">
-        <button class="nav-tab active" onclick="showTab('modules')">Зависимости модулей</button>
-        <button class="nav-tab" onclick="showTab('pipeline')">Конвейер (Pipeline)</button>
-        <button class="nav-tab" onclick="showTab('async')">Асинхронная модель</button>
-        <button class="nav-tab" onclick="showTab('classes')">Классы</button>
-        <button class="nav-tab" onclick="showTab('dataflow')">Поток данных</button>
-        <button class="nav-tab" onclick="showTab('threads')">Потоки</button>
-        <button class="nav-tab" onclick="showTab('performance')">Производительность</button>
+            <button class="nav-tab active" onclick="showTab(event, 'modules')">Зависимости модулей</button>
+            <button class="nav-tab" onclick="showTab(event, 'pipeline')">Конвейер (Pipeline)</button>
+            <button class="nav-tab" onclick="showTab(event, 'async')">Асинхронная модель</button>
+            <button class="nav-tab" onclick="showTab(event, 'classes')">Классы</button>
+            <button class="nav-tab" onclick="showTab(event, 'dataflow')">Поток данных</button>
+            <button class="nav-tab" onclick="showTab(event, 'threads')">Потоки</button>
+            <button class="nav-tab" onclick="showTab(event, 'performance')">Производительность</button>
     </div>
 
     <div class="content">
@@ -132,7 +165,7 @@
             <h2>Диаграмма классов</h2>
             <div class="mermaid">
                 classDiagram
-                    class <a href="../modules/perception.result.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">PerceptionError</a> {
+                    class PerceptionError {
                         <<enumeration>>
                         Success
                         InvalidInput
@@ -144,7 +177,7 @@
                         CameraError
                     }
                     
-                    class <a href="../modules/perception.result.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Result</a> {
+                    class Result {
                         -m_value: variant
                         +Result()
                         +Result(T value)
@@ -154,7 +187,7 @@
                         +operator bool() bool
                     }
                     
-                    class <a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Detection</a> {
+                    class Detection {
                         +bbox: cv::Rect
                         +confidence: float
                         +class_id: int
@@ -162,13 +195,13 @@
                         +Detection(cv::Rect, float, int, string)
                     }
                     
-                    class <a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">MockDetector</a> {
+                    class MockDetector {
                         -m_class_names: vector
                         +MockDetector()
                         +detect(frame) vector
                     }
                     
-                    class <a href="../modules/perception.image_loader.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Image</a> {
+                    class Image {
                         +mat: cv::Mat
                         +Image()
                         +Image(cv::Mat m)
@@ -178,7 +211,7 @@
                         +empty() bool
                     }
                     
-                    class <a href="../modules/perception.image_loader.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Generator</a> {
+                    class Generator {
                         <<template T>>
                         +get_return_object()
                         +initial_suspend()
@@ -186,7 +219,7 @@
                         +unhandled_exception()
                     }
                     
-                    class <a href="../modules/perception.async.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">ThreadPool</a> {
+                    class ThreadPool {
                         -workers_: vector
                         -tasks_: queue
                         -mutex_: mutex
@@ -195,7 +228,7 @@
                         +submit(f) future
                     }
                     
-                    class <a href="../modules/perception.queue.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">ThreadSafeQueue</a> {
+                    class ThreadSafeQueue {
                         -queue_: queue
                         -mutex_: mutex
                         -condition_: condition_variable_any
@@ -211,7 +244,7 @@
                         +is_shutdown() bool
                     }
                     
-                    class <a href="../modules/perception.metrics.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">PerformanceMetrics</a> {
+                    class PerformanceMetrics {
                         -frame_count_: atomic
                         -total_latency_ms_: atomic
                         -min_latency_ms_: atomic
@@ -230,6 +263,16 @@
                     ThreadPool --> ThreadSafeQueue
                     ThreadSafeQueue --> Result
                     PerformanceMetrics --> Result
+
+                    click PerceptionError href "../modules/perception.result.cppm" _blank
+                    click Result href "../modules/perception.result.cppm" _blank
+                    click Detection href "../modules/perception.detector.simple.cppm" _blank
+                    click MockDetector href "../modules/perception.detector.simple.cppm" _blank
+                    click Image href "../modules/perception.image_loader.simple.cppm" _blank
+                    click Generator href "../modules/perception.image_loader.simple.cppm" _blank
+                    click ThreadPool href "../modules/perception.async.cppm" _blank
+                    click ThreadSafeQueue href "../modules/perception.queue.cppm" _blank
+                    click PerformanceMetrics href "../modules/perception.metrics.cppm" _blank
             </div>
         </div>
 
@@ -306,30 +349,6 @@
         </div>
     </div>
 </div>
-
-<script>
-    mermaid.initialize({startOnLoad: true});
-    
-    function showTab(tabName) {
-        // Hide all tabs
-        var tabs = document.getElementsByClassName('tab-pane');
-        for (var i = 0; i < tabs.length; i++) {
-            tabs[i].classList.remove('active');
-        }
-        
-        // Remove active class from buttons
-        var buttons = document.getElementsByClassName('nav-tab');
-        for (var i = 0; i < buttons.length; i++) {
-            buttons[i].classList.remove('active');
-        }
-        
-        // Show selected tab
-        document.getElementById(tabName).classList.add('active');
-        
-        // Add active class to clicked button
-        event.target.classList.add('active');
-    }
-</script>
 
 </body>
 </html>

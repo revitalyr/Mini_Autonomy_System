@@ -1,20 +1,20 @@
 cmake_minimum_required(VERSION 3.28)
-project(MiniAutonomySystem LANGUAGES CXX)
+project(MiniAutonomySystem LANGUAGES CXX VERSION 1.0.0)
 
-# Включаем экспериментальную поддержку модулей C++20
-# set(CMAKE_EXPERIMENTAL_CXX_MODULE_CXX23_FLAG ON)
-
-# Установка стандарта C++20 (или 20, в зависимости от ваших нужд)
-set(CMAKE_CXX_STANDARD 23)
+# Настройка C++26 стандарта с максимальными современными фичами
+set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Включаем сканирование модулей
+# Включаем экспериментальную поддержку модулей C++20/23
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
+    set(CMAKE_EXPERIMENTAL_CXX_MODULE_CXX23_FLAG ON)
     set(CMAKE_CXX_SCAN_FOR_MODULES ON)
     set(MODULES_SUPPORT ON)
+    message(STATUS "C++26 modules support enabled")
 else()
     set(MODULES_SUPPORT OFF)
+    message(WARNING "C++ modules not supported - using traditional includes")
 endif()
 
 # Проверяем, задана ли переменная окружения VCPKG_ROOT
@@ -75,25 +75,93 @@ target_link_libraries(perception_demo PRIVATE
 # Настройка путей включения
 target_include_directories(perception_demo PRIVATE include)
 
-# --- ИСПРАВЛЕНИЕ ОШИБКИ MSVC ---
+# Современные настройки компилятора
 if(MSVC)
-    # Удаляем жесткое прописывание /O2 для всех конфигураций
-    # Вместо этого используем генераторные выражения, чтобы флаги не конфликтовали
+    # MSVC настройки с C++26
     target_compile_options(perception_modules PRIVATE 
-        /W4 
-        /EHsc 
-        $<$<CONFIG:Release>:/O2>   # /O2 только в Release 
-        $<$<CONFIG:Debug>:/Zi>    # Инфо для отладки в Debug
+        /W4                    # Высокий уровень предупреждений
+        /EHsc                  # Обработка исключений C++
+        /permissive-           # Строгий стандарт C++
+        /std:c++26           # C++26 стандарт
+        /Zc:__cplusplus        # Правильный __cplusplus
+        $<$<CONFIG:Release>:/O2 /Ob2 /Oi /Ot>   # Максимальная оптимизация в Release
+        $<$<CONFIG:Debug>:/Zi /Od>             # Отладочная информация в Debug
     )
     
     target_compile_options(perception_demo PRIVATE 
-        /W4 
-        /EHsc 
-        $<$<CONFIG:Release>:/O2>   # /O2 только в Release 
+        /W4
+        /EHsc
+        /permissive-
+        /std:c++26
+        /Zc:__cplusplus
+        $<$<CONFIG:Release>:/O2>
+        $<$<CONFIG:Debug>:/Zi>
     )
-
-    target_compile_definitions(perception_demo PRIVATE _CRT_SECURE_NO_WARNINGS)
+    
+    # Современные определения для MSVC
+    target_compile_definitions(perception_demo PRIVATE 
+        _CRT_SECURE_NO_WARNINGS
+        _SILENCE_CXX23_OLD_DEPRECATION_WARNINGS
+    )
 else()
-    target_compile_options(perception_modules PRIVATE -Wall -Wextra -O3)
-    target_compile_options(perception_demo PRIVATE -Wall -Wextra -O3)
+    # GCC/Clang настройки с C++26
+    target_compile_options(perception_modules PRIVATE 
+        -Wall -Wextra -Wpedantic -Werror
+        -std=c++26
+        -fmodules-ts
+        $<$<CONFIG:Release>:-O3 -march=native -flto>
+        $<$<CONFIG:Debug>:-g -O0>
+    )
+    
+    target_compile_options(perception_demo PRIVATE 
+        -Wall -Wextra -Wpedantic
+        -std=c++26
+        $<$<CONFIG:Release>:-O3>
+        $<$<CONFIG:Debug>:-g>
+    )
 endif()
+
+# Добавление современных библиотек и инструментов
+option(BUILD_TESTS "Build tests with Google Test" ON)
+option(ENABLE_SANITIZERS "Enable address and undefined behavior sanitizers" OFF)
+option(ENABLE_COVERAGE "Enable code coverage" OFF)
+
+# Подключение Google Test для тестов
+if(BUILD_TESTS)
+    enable_testing()
+    find_package(GTest QUIET)
+    if(GTest_FOUND)
+        add_subdirectory(tests)
+    else()
+        message(WARNING "Google Test not found - tests disabled")
+    endif()
+endif()
+
+# Санитизаторы для отладки
+if(ENABLE_SANITIZERS AND NOT MSVC)
+    target_compile_options(perception_modules PRIVATE 
+        -fsanitize=address -fsanitize=undefined
+    )
+    target_link_options(perception_modules PRIVATE 
+        -fsanitize=address -fsanitize=undefined
+    )
+    target_compile_options(perception_demo PRIVATE 
+        -fsanitize=address -fsanitize=undefined
+    )
+    target_link_options(perception_demo PRIVATE 
+        -fsanitize=address -fsanitize=undefined
+    )
+endif()
+
+# Code coverage
+if(ENABLE_COVERAGE AND NOT MSVC)
+    target_compile_options(perception_modules PRIVATE --coverage)
+    target_link_options(perception_modules PRIVATE --coverage)
+endif()
+
+# Установка целей
+install(TARGETS perception_demo perception_modules
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+)

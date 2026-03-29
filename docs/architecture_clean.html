@@ -82,76 +82,70 @@
             <!-- Зависимости модулей -->
             <section id="modules" class="tab-pane active">
                 <h2>Иерархия модулей</h2>
-                <div class="mermaid">
-                    graph TD
-                        Main[<a href="../src/main.cpp" target="_blank" style="color:#4a90e2;text-decoration:none;">main.cpp</a>] --> Pipeline[<a href="../modules/perception.pipeline.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.pipeline</a>]
-                        Pipeline --> Async[<a href="../modules/perception.async.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.async</a>]
-                        Pipeline --> Concepts[<a href="../modules/perception.concepts.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.concepts</a>]
-                        Pipeline --> Result[<a href="../modules/perception.result.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.result</a>]
-                        Pipeline --> ImageLoader[<a href="../modules/perception.image_loader.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.image_loader</a>]
-                        Pipeline --> Detector[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.detector</a>]
-                        Pipeline --> Queue[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.queue</a>]
-                        Pipeline --> Metrics[<a href="../modules/perception.metrics.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.metrics</a>]
-                </div>
+                <div class="mermaid">graph TD
+    Main[<a href="../src/main.cpp" target="_blank" style="color:#4a90e2;text-decoration:none;">main.cpp</a>] --> Pipeline[<a href="../modules/perception.pipeline.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.pipeline</a>]
+    Pipeline --> Async[<a href="../modules/perception.async.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.async</a>]
+    Pipeline --> Concepts[<a href="../modules/perception.concepts.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.concepts</a>]
+    Pipeline --> Result[<a href="../modules/perception.result.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.result</a>]
+    Pipeline --> ImageLoader[<a href="../modules/perception.image_loader.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.image_loader</a>]
+    Pipeline --> Detector[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.detector</a>]
+    Pipeline --> Queue[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.queue</a>]
+    Pipeline --> Metrics[<a href="../modules/perception.metrics.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">perception.metrics</a>]</div>
             </section>
 
             <!-- Конвейер (Pipeline) -->
             <section id="pipeline" class="tab-pane">
                 <h2>Архитектура Pipeline</h2>
-                <div class="mermaid">
-                    graph LR
-                        Input((<a href="../src/main.cpp#L85" target="_blank" style="color:#e65100;text-decoration:none;">Камера</a>)) --> 
-                        Loader[<a href="../modules/perception.image_loader.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Image Loader</a>]
-                        Loader --> 
-                        Pre[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">MockDetector</a>]
-                        Pre --> 
-                        Detect[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Detection</a>]
-                        Detect --> 
-                        Track[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Result</a>]
-                        Track --> 
-                        UI((<a href="../src/main.cpp#L120" target="_blank" style="color:#880e4f;text-decoration:none;">Визуализация</a>))
-                </div>
+                <div class="mermaid">graph LR
+    Input((<a href="../src/main.cpp#L85" target="_blank" style="color:#e65100;text-decoration:none;">Камера</a>)) --> 
+    Loader[<a href="../modules/perception.image_loader.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Image Loader</a>]
+    Loader --> 
+    Pre[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">MockDetector</a>]
+    Pre --> 
+    Detect[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Detection</a>]
+    Detect --> 
+    Track[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Result</a>]
+    Track --> 
+    UI((<a href="../src/main.cpp#L120" target="_blank" style="color:#880e4f;text-decoration:none;">Визуализация</a>))</div>
             </section>
 
             <!-- Асинхронная модель -->
             <section id="async" class="tab-pane">
                 <h2>Асинхронная архитектура</h2>
-                <div class="mermaid">
-                    graph TB
-                        subgraph "Асинхронная архитектура"
-                            MainThread[<a href="../src/main.cpp" target="_blank" style="color:#ff6f00;text-decoration:none;">Главный поток</a>] --> 
-                            ThreadPool[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">ThreadPool</a>]
-                            
-                            ThreadPool --> 
-                            Worker1[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">Worker 1</a>]
-                            ThreadPool --> 
-                            Worker2[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">Worker 2</a>]
-                            ThreadPool --> 
-                            Worker3[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">Worker 3</a>]
-                            
-                            Worker1 --> 
-                            Queue1[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#1b5e20;text-decoration:none;">ThreadSafeQueue</a>]
-                            Worker2 --> 
-                            Queue2[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#1b5e20;text-decoration:none;">ThreadSafeQueue</a>]
-                            Worker3 --> 
-                            Queue3[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#1b5e20;text-decoration:none;">ThreadSafeQueue</a>]
-                            
-                            Queue1 --> 
-                            Results[<a href="../modules/perception.result.cppm" target="_blank" style="color:#880e4f;text-decoration:none;">Result</a>]
-                            Queue2 --> Results
-                            Queue3 --> Results
-                        end
-                        
-                        classDef main fill:#ffecb3,stroke:#ff6f00,stroke-width:2px
-                        classDef worker fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-                        classDef queue fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
-                        classDef result fill:#fce4ec,stroke:#880e4f,stroke-width:2px
-                        
-                        class MainThread main
-                        class ThreadPool,Worker1,Worker2,Worker3 worker
-                        class Queue1,Queue2,Queue3 queue
-                        class Results result
-                </div>
+                <div class="mermaid">graph TB
+    subgraph "Асинхронная архитектура"
+        MainThread[<a href="../src/main.cpp" target="_blank" style="color:#ff6f00;text-decoration:none;">Главный поток</a>] --> 
+        ThreadPool[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">ThreadPool</a>]
+        
+        ThreadPool --> 
+        Worker1[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">Worker 1</a>]
+        ThreadPool --> 
+        Worker2[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">Worker 2</a>]
+        ThreadPool --> 
+        Worker3[<a href="../modules/perception.async.cppm" target="_blank" style="color:#01579b;text-decoration:none;">Worker 3</a>]
+        
+        Worker1 --> 
+        Queue1[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#1b5e20;text-decoration:none;">ThreadSafeQueue</a>]
+        Worker2 --> 
+        Queue2[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#1b5e20;text-decoration:none;">ThreadSafeQueue</a>]
+        Worker3 --> 
+        Queue3[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#1b5e20;text-decoration:none;">ThreadSafeQueue</a>]
+        
+        Queue1 --> 
+        Results[<a href="../modules/perception.result.cppm" target="_blank" style="color:#880e4f;text-decoration:none;">Result</a>]
+        Queue2 --> Results
+        Queue3 --> Results
+    end
+    
+    classDef main fill:#ffecb3,stroke:#ff6f00,stroke-width:2px
+    classDef worker fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef queue fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef result fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    
+    class MainThread main
+    class ThreadPool,Worker1,Worker2,Worker3 worker
+    class Queue1,Queue2,Queue3 queue
+    class Results result</div>
             </section>
 
             <!-- Диаграмма классов -->
@@ -273,21 +267,19 @@
             <!-- Поток данных -->
             <section id="dataflow" class="tab-pane">
                 <h2>Поток данных</h2>
-                <div class="mermaid">
-                    graph TB
-                        A[<a href="../src/main.cpp#L92" target="_blank" style="color:#e65100;text-decoration:none;">Камера</a>] --> B[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Обработка</a>]
-                        B --> C[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Очередь</a>]
-                        C --> D[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Детекция</a>]
-                        D --> E[<a href="../src/main.cpp#L98" target="_blank" style="color:#880e4f;text-decoration:none;">Результат</a>]
-                        
-                        classDef input fill:#fff3e0,stroke:#e65100,stroke-width:2px
-                        classDef processing fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
-                        classDef output fill:#fce4ec,stroke:#880e4f,stroke-width:2px
-                        
-                        class A input
-                        class B,C,D processing
-                        class E output
-                </div>
+                <div class="mermaid">graph TB
+    A[<a href="../src/main.cpp#L92" target="_blank" style="color:#e65100;text-decoration:none;">Камера</a>] --> B[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Обработка</a>]
+    B --> C[<a href="../modules/perception.queue.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Очередь</a>]
+    C --> D[<a href="../modules/perception.detector.simple.cppm" target="_blank" style="color:#4a90e2;text-decoration:none;">Детекция</a>]
+    D --> E[<a href="../src/main.cpp#L98" target="_blank" style="color:#880e4f;text-decoration:none;">Результат</a>]
+    
+    classDef input fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef processing fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef output fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    
+    class A input
+    class B,C,D processing
+    class E output</div>
             </section>
 
             <!-- Потоки -->
