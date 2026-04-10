@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
-#include "vision/detector.hpp"
-#include "vision/tracker.hpp"
-#include "vision/fusion.hpp"
-#include "io/imu_simulator.hpp"
+import perception.detector;
+import perception.tracker;
+import perception.fusion;
 #include <opencv2/opencv.hpp>
 
 // Test Detector

@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
-#include "core/thread_safe_queue.hpp"
-#include "core/metrics.hpp"
-#include "core/config.hpp"
+import perception.queue;
+import perception.metrics;
 #include <chrono>
 #include <thread>
 

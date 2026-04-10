@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.28)
 project(MiniAutonomySystem LANGUAGES CXX VERSION 1.0.0)
 
-# Настройка C++23 стандарта с максимальными современными фичами
-set(CMAKE_CXX_STANDARD 23)
+# Настройка C++20 стандарта с максимальными современными фичами
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -49,6 +49,7 @@ target_sources(perception_modules PUBLIC
     FILE_SET CXX_MODULES TYPE CXX_MODULES 
     BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/modules"
     FILES
+        modules/perception.types.cppm
         modules/perception.concepts.cppm
         modules/perception.result.cppm
         modules/perception.async.cppm
@@ -77,12 +78,12 @@ target_include_directories(perception_demo PRIVATE include)
 
 # Современные настройки компилятора
 if(MSVC)
-    # MSVC настройки с C++23
+    # MSVC настройки с C++20
     target_compile_options(perception_modules PRIVATE
         /W4                    # Высокий уровень предупреждений
         /EHsc                  # Обработка исключений C++
         /permissive-           # Строгий стандарт C++
-        /std:c++23           # C++23 стандарт
+        /std:c++20           # C++20 стандарт
         /Zc:__cplusplus        # Правильный __cplusplus
         $<$<CONFIG:Release>:/O2 /Ob2 /Oi /Ot>   # Максимальная оптимизация в Release
         $<$<CONFIG:Debug>:/Zi /Od>             # Отладочная информация в Debug
@@ -92,7 +93,7 @@ if(MSVC)
         /W4
         /EHsc
         /permissive-
-        /std:c++23
+        /std:c++20
         /Zc:__cplusplus
         $<$<CONFIG:Release>:/O2>
         $<$<CONFIG:Debug>:/Zi>
@@ -101,13 +102,13 @@ if(MSVC)
     # Современные определения для MSVC
     target_compile_definitions(perception_demo PRIVATE 
         _CRT_SECURE_NO_WARNINGS
-        _SILENCE_CXX23_OLD_DEPRECATION_WARNINGS
+        _SILENCE_CXX20_OLD_DEPRECATION_WARNINGS
     )
 else()
-    # GCC/Clang настройки с C++23
+    # GCC/Clang настройки с C++20
     target_compile_options(perception_modules PRIVATE
         -Wall -Wextra -Wpedantic -Werror
-        -std=c++23
+        -std=c++20
         -fmodules-ts
         $<$<CONFIG:Release>:-O3 -march=native -flto>
         $<$<CONFIG:Debug>:-g -O0>
@@ -115,7 +116,7 @@ else()
     
     target_compile_options(perception_demo PRIVATE
         -Wall -Wextra -Wpedantic
-        -std=c++23
+        -std=c++20
         $<$<CONFIG:Release>:-O3>
         $<$<CONFIG:Debug>:-g>
     )
