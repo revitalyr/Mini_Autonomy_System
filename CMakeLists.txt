@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.28)
 project(MiniAutonomySystem LANGUAGES CXX VERSION 1.0.0)
 
-# Настройка C++26 стандарта с максимальными современными фичами
-set(CMAKE_CXX_STANDARD 26)
+# Настройка C++23 стандарта с максимальными современными фичами
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -33,7 +33,7 @@ else()
 endif()
 
 # Поиск необходимых пакетов (OpenCV и потоки)
-find_package(OpenCV REQUIRED)
+find_package(OpenCV REQUIRED CONFIG)
 find_package(Threads REQUIRED)
 
 # Создание библиотеки модулей
@@ -77,22 +77,22 @@ target_include_directories(perception_demo PRIVATE include)
 
 # Современные настройки компилятора
 if(MSVC)
-    # MSVC настройки с C++26
-    target_compile_options(perception_modules PRIVATE 
+    # MSVC настройки с C++23
+    target_compile_options(perception_modules PRIVATE
         /W4                    # Высокий уровень предупреждений
         /EHsc                  # Обработка исключений C++
         /permissive-           # Строгий стандарт C++
-        /std:c++26           # C++26 стандарт
+        /std:c++23           # C++23 стандарт
         /Zc:__cplusplus        # Правильный __cplusplus
         $<$<CONFIG:Release>:/O2 /Ob2 /Oi /Ot>   # Максимальная оптимизация в Release
         $<$<CONFIG:Debug>:/Zi /Od>             # Отладочная информация в Debug
     )
     
-    target_compile_options(perception_demo PRIVATE 
+    target_compile_options(perception_demo PRIVATE
         /W4
         /EHsc
         /permissive-
-        /std:c++26
+        /std:c++23
         /Zc:__cplusplus
         $<$<CONFIG:Release>:/O2>
         $<$<CONFIG:Debug>:/Zi>
@@ -104,18 +104,18 @@ if(MSVC)
         _SILENCE_CXX23_OLD_DEPRECATION_WARNINGS
     )
 else()
-    # GCC/Clang настройки с C++26
-    target_compile_options(perception_modules PRIVATE 
+    # GCC/Clang настройки с C++23
+    target_compile_options(perception_modules PRIVATE
         -Wall -Wextra -Wpedantic -Werror
-        -std=c++26
+        -std=c++23
         -fmodules-ts
         $<$<CONFIG:Release>:-O3 -march=native -flto>
         $<$<CONFIG:Debug>:-g -O0>
     )
     
-    target_compile_options(perception_demo PRIVATE 
+    target_compile_options(perception_demo PRIVATE
         -Wall -Wextra -Wpedantic
-        -std=c++26
+        -std=c++23
         $<$<CONFIG:Release>:-O3>
         $<$<CONFIG:Debug>:-g>
     )
