@@ -1,4 +1,4 @@
-module;
+#pragma once
 
 #include <string>
 #include <system_error>
@@ -9,20 +9,18 @@ module;
 #include <stdexcept>
 
 /**
- * @file perception.result.cppm
+ * @file perception.result.hpp
  * @brief Result types and error handling for the perception system
- * 
- * This module provides custom Result<T> type for error handling as a replacement
+ *
+ * This header provides custom Result<T> type for error handling as a replacement
  * for std::expected (C++23) to maintain C++20 compatibility. It also includes
  * async result types for coroutine-based operations.
- * 
+ *
  * @author Mini Autonomy System
  * @date 2026
  */
 
-export module perception.result;
-
-export namespace perception {
+namespace perception {
 
     /**
      * @brief Error codes for perception operations
@@ -119,7 +117,7 @@ export namespace perception {
 template<>
 struct std::is_error_code_enum<perception::PerceptionError> : std::true_type {};
 
-export namespace perception {
+namespace perception {
 
     /**
      * @brief Custom result type for C++20 compatibility
@@ -239,6 +237,13 @@ export namespace perception {
     template<typename T>
     using PerceptionResult = Result<T>;
 
+    // C++20-compatible Expected type alias
+    template<typename T, typename E>
+    using Expected = Result<T>;
+
+    template<typename E>
+    using Unexpected = E;
+
     // Helper functions for creating results
     template<typename T>
     constexpr PerceptionResult<T> success(T&& value) noexcept {
@@ -252,6 +257,16 @@ export namespace perception {
     template<typename T>
     constexpr PerceptionResult<T> error(PerceptionError err) noexcept {
         return PerceptionResult<T>(make_error_code(err));
+    }
+
+    template<typename E>
+    auto make_unexpected(E e) -> Result<void> {
+        return error<void>(static_cast<PerceptionError>(e));
+    }
+
+    template<typename T, typename E>
+    auto make_unexpected_typed(E e) -> Result<T> {
+        return error<T>(static_cast<PerceptionError>(e));
     }
 
     // Async result type

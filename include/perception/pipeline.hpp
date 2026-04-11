@@ -1,4 +1,4 @@
-module;
+#pragma once
 
 #include <vector>
 #include <thread>
@@ -11,13 +11,11 @@ module;
 #include <future>
 #include <coroutine>
 
-export module perception.pipeline;
+#include "perception/concepts.hpp"
+#include "perception/queue.hpp"
+#include "perception/async.hpp"
 
-import perception.concepts;
-import perception.queue;
-import perception.async;
-
-export namespace perception {
+namespace perception {
 
     // Modern pipeline stage with concepts
     template<PipelineStage Stage>

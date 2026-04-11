@@ -12,18 +12,18 @@
 #include <iostream>
 #include <ranges>
 #include <coroutine>
-#include <print>
 #include <chrono>
 #include <thread>
+#include <format>
 
-import perception.concepts;
-import perception.queue;
-import perception.pipeline;
-import perception.metrics;
-import perception.detector;
-import perception.async;
-import perception.result;
-import perception.types;
+#include "perception/concepts.hpp"
+#include "perception/queue.hpp"
+#include "perception/pipeline.hpp"
+#include "perception/metrics.hpp"
+#include "perception/detector.hpp"
+#include "perception/async.hpp"
+#include "perception/result.hpp"
+#include "perception/types.hpp"
 
 namespace perception {
 
@@ -158,8 +158,8 @@ public:
     AsyncProcessingPipeline(const AsyncProcessingPipeline&) = delete;
     auto operator=(const AsyncProcessingPipeline&) -> AsyncProcessingPipeline& = delete;
 
-    AsyncProcessingPipeline(AsyncProcessingPipeline&&) = default;
-    auto operator=(AsyncProcessingPipeline&&) -> AsyncProcessingPipeline& = default;
+    AsyncProcessingPipeline(AsyncProcessingPipeline&&) = delete;
+    auto operator=(AsyncProcessingPipeline&&) -> AsyncProcessingPipeline& = delete;
 
     ~AsyncProcessingPipeline() = default;
 
@@ -224,7 +224,7 @@ public:
             return std::move(*result);
         }
 
-        return make_unexpected(PerceptionError::QueueEmpty);
+        return make_unexpected_typed<Vector<Detection>>(PerceptionError::QueueEmpty);
     }
 
     /**
@@ -275,13 +275,13 @@ auto demo_ranges_and_concepts() noexcept -> Expected<void, PerceptionError> {
             | std::views::filter(filter_by_confidence(0.5))
             | std::views::take(3);
 
-        std::println("=== Detection Filtering Demo ===");
-        std::println("Total detections: {}", test_detections.size());
-        std::println("High confidence detections (>= 0.5):");
+        std::cout << "=== Detection Filtering Demo ===\n";
+        std::cout << "Total detections: " << test_detections.size() << "\n";
+        std::cout << "High confidence detections (>= 0.5):\n";
 
         for (const auto& detection : high_confidence_detections) {
-            std::println("  - {}: confidence={:.2f}",
-                        detection.class_name, detection.confidence);
+            std::cout << "  - " << detection.class_name << ": confidence=" 
+                      << std::format("{:.2f}", detection.confidence) << "\n";
         }
 
         return {};
@@ -295,15 +295,15 @@ auto demo_ranges_and_concepts() noexcept -> Expected<void, PerceptionError> {
  */
 auto demo_coroutines() noexcept -> Expected<void, PerceptionError> {
     try {
-        std::println("=== Frame Generation Demo ===");
+        std::cout << "=== Frame Generation Demo ===\n";
 
         auto frame_generator = generate_test_frames(5);
         size_t frame_count = 0;
 
         for (const auto& frame : frame_generator) {
             ++frame_count;
-            std::println("Generated frame {} ({}x{})",
-                        frame_count, frame.width, frame.height);
+            std::cout << "Generated frame " << frame_count << " (" 
+                      << frame.width << "x" << frame.height << ")\n";
         }
 
         return {};
@@ -317,7 +317,7 @@ auto demo_coroutines() noexcept -> Expected<void, PerceptionError> {
  */
 auto demo_async_processing() noexcept -> Expected<void, PerceptionError> {
     try {
-        std::println("=== Async Detection Pipeline Demo ===");
+        std::cout << "=== Async Detection Pipeline Demo ===\n";
 
         auto pipeline = AsyncProcessingPipeline{};
 
@@ -335,15 +335,15 @@ auto demo_async_processing() noexcept -> Expected<void, PerceptionError> {
 
         for (int i = 0; i < 3; ++i) {
             if (auto results = pipeline.get_results(); results) {
-                std::println("Got {} detections", results->size());
+                std::cout << "Got " << results.value().size() << " detections\n";
             } else {
                 break;
             }
         }
 
         auto metrics = pipeline.get_metrics();
-        std::println("FPS: {:.2f}", metrics.fps);
-        std::println("Average latency: {:.2f}ms", metrics.avg_latency_ms);
+        std::cout << "FPS: " << std::format("{:.2f}", metrics.fps) << "\n";
+        std::cout << "Average latency: " << std::format("{:.2f}", metrics.avg_latency_ms) << "ms\n";
 
         pipeline.stop();
 
@@ -361,32 +361,32 @@ auto demo_async_processing() noexcept -> Expected<void, PerceptionError> {
 
 auto main() -> int {
     try {
-        std::println("=== Mini Autonomy System Demo ===");
-        std::println("Program started successfully!");
+        std::cout << "=== Mini Autonomy System Demo ===\n";
+        std::cout << "Program started successfully!\n";
 
         if (auto result = perception::demo_ranges_and_concepts(); !result) {
-            std::println("Detection filtering demo failed: {}", static_cast<int>(result.error()));
+            std::cout << "Detection filtering demo failed: " << result.error().message() << "\n";
             return 1;
         }
 
         if (auto result = perception::demo_coroutines(); !result) {
-            std::println("Frame generation demo failed: {}", static_cast<int>(result.error()));
+            std::cout << "Frame generation demo failed: " << result.error().message() << "\n";
             return 1;
         }
 
         if (auto result = perception::demo_async_processing(); !result) {
-            std::println("Async pipeline demo failed: {}", static_cast<int>(result.error()));
+            std::cout << "Async pipeline demo failed: " << result.error().message() << "\n";
             return 1;
         }
 
-        std::println("\nAll demos completed successfully!");
+        std::cout << "\nAll demos completed successfully!\n";
         return 0;
 
     } catch (const std::exception& e) {
-        std::println("Error: {}", e.what());
+        std::cout << "Error: " << e.what() << "\n";
         return 1;
     } catch (...) {
-        std::println("Unknown error occurred!");
+        std::cout << "Unknown error occurred!\n";
         return 1;
     }
 }

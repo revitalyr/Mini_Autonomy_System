@@ -1,17 +1,16 @@
-module;
+#pragma once
 
 #include <coroutine>
 #include <filesystem>
 #include <string>
 #include <vector>
 
-export module perception.ros_provider;
+#include "perception/types.hpp"
+#include "perception/result.hpp"
+#include "perception/async.hpp"
+#include "perception/image_loader.hpp"
 
-import perception.types;
-import perception.result;
-import perception.async;
-
-export namespace perception {
+namespace perception {
 
     /**
      * ROSBAG data provider for reading ROS bag files

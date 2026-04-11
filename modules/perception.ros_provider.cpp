@@ -1,4 +1,3 @@
-module;
 // GMF - ROS and OpenCV isolated here
 #include <rosbag/bag.h>
 #include <rosbag/view.h>

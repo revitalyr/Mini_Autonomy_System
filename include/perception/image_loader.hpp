@@ -1,4 +1,4 @@
-module;
+#pragma once
 
 #include <coroutine>
 #include <filesystem>
@@ -9,13 +9,11 @@ module;
 #include <chrono>
 #include <memory>
 
-export module perception.image_loader;
+#include "perception/types.hpp"
+#include "perception/async.hpp"
+#include "perception/result.hpp"
 
-import perception.types;
-import perception.async;
-import perception.result;
-
-export namespace perception {
+namespace perception {
 
     /**
      * Lazy sequence generator for streaming results

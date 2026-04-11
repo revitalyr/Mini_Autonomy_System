@@ -1,28 +1,26 @@
-module;
+#pragma once
 
 // Include required standard library headers for concepts
 #include <concepts>
 #include <type_traits>
 #include <ranges>
 #include <format>
+#include <functional>
 
-export module perception.concepts;
-
-import perception.types;
-import perception.result;
+#include "perception/types.hpp"
 
 /**
  * @brief Modern C++26 concepts for perception system
- * 
- * This module defines all concepts used throughout the perception system
+ *
+ * This header defines all concepts used throughout the perception system
  * with modern C++26 features including requires clauses, concepts composition,
  * and advanced type checking.
- * 
+ *
  * @author Mini Autonomy System
  * @date 2026
  */
 
-export namespace perception {
+namespace perception {
 
 // ============================================================================
 // CORE CONCEPTS
@@ -109,7 +107,7 @@ concept PipelineStage = requires(T stage) {
  * @brief Enhanced concept for detector types with modern features
  */
 template<typename T>
-concept Detector = requires(T detector, const ImageData& frame) {
+concept DetectorConcept = requires(T detector, const ImageData& frame) {
     { detector.detect(frame) } -> std::same_as<Vector<typename T::DetectionType>>;
     typename T::DetectionType;
     requires Container<Vector<typename T::DetectionType>>;
@@ -201,21 +199,11 @@ concept AsyncOperation = requires(T operation) {
  * @brief Concept for thread pool types
  */
 template<typename T>
-concept ThreadPool = requires(T pool) {
+concept ThreadPoolConcept = requires(T pool) {
     { pool.get_thread_count() } -> std::convertible_to<std::size_t>;
     { pool.get_active_threads() } -> std::convertible_to<std::size_t>;
     { pool.shutdown() } -> std::same_as<void>;
     { pool.is_shutdown() } -> std::convertible_to<bool>;
-    
-    // Task submission - check if submit accepts callable objects
-    requires requires(T p) {
-        { p.submit([]{}) } -> std::same_as<AsyncOperation<decltype(p.submit([]{}))>>;
-    };
-    
-    // Alternative: check submit with int-returning task
-    requires requires(T p) {
-        { p.submit([]{ return 0; }) } -> std::same_as<AsyncOperation<decltype(p.submit([]{ return 0; }))>>;
-    };
 };
 
 /**
@@ -306,9 +294,7 @@ concept Configurable = requires(T component, typename T::ConfigType config) {
  * @brief Concept for observable components (callback support)
  */
 template<typename T>
-concept Observable = requires(T component, auto callback) {
-    { component.add_observer(callback) } -> std::same_as<void>;
-    { component.remove_observer(callback) } -> std::same_as<void>;
+concept Observable = requires(T component) {
     { component.notify_observers() } -> std::same_as<void>;
 };
 

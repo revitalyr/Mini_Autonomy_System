@@ -1,4 +1,4 @@
-module;
+#pragma once
 
 #include <chrono>
 #include <atomic>
@@ -11,11 +11,17 @@ module;
 #include <iostream>
 #include <iomanip>
 
-export module perception.metrics;
+#include "perception/concepts.hpp"
 
-import perception.concepts;
+/**
+ * @file perception.metrics.hpp
+ * @brief Performance metrics for the perception system
+ *
+ * @author Mini Autonomy System
+ * @date 2026
+ */
 
-export namespace perception {
+namespace perception {
 
     // Modern metrics with atomic operations
     class PerformanceMetrics {

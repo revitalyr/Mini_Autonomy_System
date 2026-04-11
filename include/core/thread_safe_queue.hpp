@@ -1,4 +1,4 @@
-module;
+#pragma once
 
 #include <queue>
 #include <mutex>
@@ -8,22 +8,20 @@ module;
 #include <chrono>
 #include <stop_token>
 
+#include "../perception/concepts.hpp"
+
 /**
- * @file perception.queue.cppm
+ * @file thread_safe_queue.hpp
  * @brief Thread-safe queue implementations for the perception system
- * 
- * This module provides thread-safe queue implementations with timeout support,
+ *
+ * This header provides thread-safe queue implementations with timeout support,
  * shutdown capabilities, and lock-free operations where possible.
- * 
+ *
  * @author Mini Autonomy System
  * @date 2026
  */
 
-export module perception.queue;
-
-import perception.concepts;
-
-export namespace perception {
+namespace perception {
     /**
      * @brief Thread-safe queue with timeout and shutdown support
      * 

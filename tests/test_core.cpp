@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
-import perception.queue;
-import perception.metrics;
+#include "perception/queue.hpp"
+#include "perception/metrics.hpp"
 #include <thread>
 
 TEST_CASE("ThreadSafeQueue - BasicOperations") {

@@ -12,9 +12,9 @@
 #include <catch2/catch_all.hpp>
 #include <filesystem>
 
-import perception.ros_provider;
-import perception.types;
-import perception.result;
+#include "perception/ros_provider.hpp"
+#include "perception/types.hpp"
+#include "perception/result.hpp"
 
 namespace perception {
 

@@ -1,17 +1,15 @@
-module;
+#pragma once
 
 #include <vector>
 #include <string>
 #include <memory>
 
-export module perception.detector;
+#include "perception/types.hpp"
+#include "perception/concepts.hpp"
+#include "perception/result.hpp"
+#include "perception/metrics.hpp"
 
-import perception.types;
-import perception.concepts;
-import perception.result;
-import perception.metrics;
-
-export namespace perception {
+namespace perception {
 
     /**
      * Detection result containing bounding box, confidence, and class information
@@ -31,7 +29,7 @@ export namespace perception {
      * @param threshold Minimum confidence required (0.0 to 1.0)
      * @return Predicate function for filtering
      */
-    export auto filter_by_confidence(float threshold) {
+    inline auto filter_by_confidence(float threshold) {
         return [threshold](const Detection& det) {
             return det.confidence >= threshold;
         };

@@ -1,4 +1,4 @@
-module;
+#pragma once
 
 #include <string>
 #include <string_view>
@@ -8,11 +8,10 @@ module;
 #include <chrono>
 #include <mutex>
 #include <cstdint>
-#include <expected>
 #include <memory>
 #include <atomic>
 
-export module perception.types;
+#include "perception/result.hpp"
 
 /**
  * @brief Common data types for perception system
@@ -24,7 +23,7 @@ export module perception.types;
  * @date 2026
  */
 
-export namespace perception {
+namespace perception {
 
 // ============================================================================
 // STANDARD TYPE ALIASES
@@ -33,36 +32,27 @@ export namespace perception {
 using String = std::string;
 using StringView = std::string_view;
 
-export template<typename T>
+template<typename T>
 using Vector = std::vector<T>;
 
-export template<typename T>
+template<typename T>
 using Optional = std::optional<T>;
-
-export template<typename T, typename E>
-using Expected = std::expected<T, E>;
-
-export template<typename E>
-using Unexpected = std::unexpected<E>;
-
-export template<typename E>
-auto make_unexpected(E e) { return std::unexpected(e); }
 
 using Milliseconds = std::chrono::milliseconds;
 using Seconds = std::chrono::seconds;
 
-export auto to_milliseconds(auto duration) -> Milliseconds {
+auto to_milliseconds(auto duration) -> Milliseconds {
     return std::chrono::duration_cast<Milliseconds>(duration);
 }
 
 using Mutex = std::mutex;
 
-export template<typename T>
+template<typename T>
 using UniquePtr = std::unique_ptr<T>;
 
-export using std::make_unique;
+using std::make_unique;
 
-export template<typename T>
+template<typename T>
 using Atomic = std::atomic<T>;
 
 // ============================================================================
@@ -144,6 +134,6 @@ struct VioFrame {
 };
 
 template<typename T>
-using Callable = T;
+using CallableType = T;
 
 } // namespace perception

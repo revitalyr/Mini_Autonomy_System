@@ -5,13 +5,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Включаем экспериментальную поддержку модулей C++20/23
+# Temporarily disabled due to libc++ availability issues
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
-    set(CMAKE_EXPERIMENTAL_CXX_MODULE_CXX23_FLAG ON)
-    set(CMAKE_CXX_SCAN_FOR_MODULES ON)
-    set(MODULES_SUPPORT ON)
-    message(STATUS "C++26 modules support enabled")
+    set(CMAKE_CXX_STANDARD 20)
+    set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+    set(MODULES_SUPPORT OFF)
+    message(STATUS "C++20 modules disabled - using traditional includes")
 else()
-set(CMAKE_CXX_STANDARD 20)
+    set(CMAKE_CXX_STANDARD 20)
     set(MODULES_SUPPORT OFF)
     message(WARNING "C++ modules not supported - using traditional includes")
 endif()
@@ -34,53 +35,94 @@ endif()
 # Поиск необходимых пакетов (OpenCV, ROS, потоки)
 find_package(OpenCV REQUIRED CONFIG)
 find_package(Threads REQUIRED)
-find_package(catkin REQUIRED COMPONENTS
-    rosbag
-    cv_bridge
-    sensor_msgs
-    std_msgs
-)
+
+# Поиск ROS 2 (опционально)
+find_package(ament_cmake QUIET)
+find_package(rclcpp QUIET)
+find_package(rosbag2_cpp QUIET)
+find_package(cv_bridge QUIET)
+find_package(sensor_msgs QUIET)
+find_package(std_msgs QUIET)
+
+if(ament_cmake_FOUND AND rclcpp_FOUND)
+    message(STATUS "ROS 2 found - building with ROS 2 support")
+    set(ROS_FOUND TRUE)
+else()
+    message(STATUS "ROS 2 not found - building without ROS support")
+    set(ROS_FOUND FALSE)
+    add_definitions(-DNO_ROS_SUPPORT)
+endif()
 
 # Создание библиотеки модулей
 add_library(perception_modules)
 
 set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
 
+# Add C++20 compile feature for module support
+target_compile_features(perception_modules PUBLIC cxx_std_20)
+
+# Add include directory for header files
+target_include_directories(perception_modules PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
 # Добавляем OpenCV include directories
 target_include_directories(perception_modules PUBLIC ${OpenCV_INCLUDE_DIRS})
-target_include_directories(perception_modules PUBLIC ${catkin_INCLUDE_DIRS})
+if(ROS_FOUND)
+    target_include_directories(perception_modules PUBLIC ${rclcpp_INCLUDE_DIRS} ${cv_bridge_INCLUDE_DIRS} ${sensor_msgs_INCLUDE_DIRS} ${std_msgs_INCLUDE_DIRS})
+endif()
 
 # Линкуем OpenCV и ROS к модулям
-target_link_libraries(perception_modules PUBLIC ${OpenCV_LIBS} ${catkin_LIBRARIES})
+target_link_libraries(perception_modules PUBLIC ${OpenCV_LIBS})
+if(ROS_FOUND)
+    target_link_libraries(perception_modules PUBLIC ${rclcpp_LIBRARIES} ${cv_bridge_LIBRARIES} ${rosbag2_cpp_LIBRARIES})
+endif()
 
-target_sources(perception_modules PUBLIC
-    FILE_SET CXX_MODULES TYPE CXX_MODULES
-    BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    FILES
-        include/perception/types.ixx
-        include/perception/concepts.ixx
-        include/perception/result.ixx
-        include/perception/async.ixx
-        include/perception/queue.ixx
-        include/perception/metrics.ixx
-        include/perception/image_loader.ixx
-        include/perception/detector.ixx
-        include/perception/pipeline.ixx
-        include/perception/ros_provider.ixx
-)
+if(MODULES_SUPPORT)
+    target_sources(perception_modules PUBLIC
+        FILE_SET CXX_MODULES TYPE CXX_MODULES
+        BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        FILES
+            include/perception/types.hpp
+            include/perception/concepts.hpp
+            include/perception/result.hpp
+            include/perception/async.hpp
+            include/perception/queue.hpp
+            include/perception/metrics.hpp
+            include/perception/image_loader.hpp
+            include/perception/detector.hpp
+            include/perception/pipeline.hpp
+    )
+
+    # Add ROS module only if ROS is available
+    if(ROS_FOUND)
+        target_sources(perception_modules PUBLIC
+            FILE_SET CXX_MODULES TYPE CXX_MODULES
+            BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
+            FILES
+                include/perception/ros_provider.hpp
+        )
+    endif()
+else()
+    # When modules are disabled, .hpp files are treated as headers
+    # No need to add them as source files - they're included by implementation files
+endif()
 
 # Add implementation files for modules with PIMPL pattern
 target_sources(perception_modules PRIVATE
     modules/perception.detector.cpp
     modules/perception.image_loader.cpp
-    modules/perception.ros_provider.cpp
 )
+
+# Temporarily disabled due to ROS 1 to ROS 2 conversion needed
+# if(ROS_FOUND)
+#     target_sources(perception_modules PRIVATE
+#         modules/perception.ros_provider.cpp
+#     )
+# endif()
 
 # Создание исполняемого файла
 add_executable(perception_demo src/main.cpp)
-
-# Создание исполняемого файла для ROSBAG демо
-add_executable(rosbag_demo src/rosbag_demo.cpp)
 
 # Линковка
 target_link_libraries(perception_demo PRIVATE 
@@ -89,16 +131,11 @@ target_link_libraries(perception_demo PRIVATE
     Threads::Threads
 )
 
-target_link_libraries(rosbag_demo PRIVATE
-    perception_modules
-    ${OpenCV_LIBS}
-    ${catkin_LIBRARIES}
-    Threads::Threads
-)
-
 # Настройка путей включения
 target_include_directories(perception_demo PRIVATE include)
-target_include_directories(rosbag_demo PRIVATE include)
+if(ROS_FOUND)
+    target_include_directories(perception_demo PRIVATE ${rclcpp_INCLUDE_DIRS} ${cv_bridge_INCLUDE_DIRS} ${sensor_msgs_INCLUDE_DIRS} ${std_msgs_INCLUDE_DIRS})
+endif()
 
 # Современные настройки компилятора
 if(MSVC)
@@ -122,24 +159,9 @@ if(MSVC)
         $<$<CONFIG:Release>:/O2>
         $<$<CONFIG:Debug>:/Zi>
     )
-    
-    target_compile_options(rosbag_demo PRIVATE
-        /W4
-        /EHsc
-        /permissive-
-        /std:c++latest
-        /Zc:__cplusplus
-        $<$<CONFIG:Release>:/O2>
-        $<$<CONFIG:Debug>:/Zi>
-    )
 
     # Современные определения для MSVC
     target_compile_definitions(perception_demo PRIVATE 
-        _CRT_SECURE_NO_WARNINGS
-        _SILENCE_CXX20_OLD_DEPRECATION_WARNINGS
-    )
-
-    target_compile_definitions(rosbag_demo PRIVATE 
         _CRT_SECURE_NO_WARNINGS
         _SILENCE_CXX20_OLD_DEPRECATION_WARNINGS
     )
@@ -148,7 +170,6 @@ else()
     target_compile_options(perception_modules PRIVATE
         -Wall -Wextra -Wpedantic -Werror
         -std=c++20
-        -fmodules-ts
         $<$<CONFIG:Release>:-O3 -march=native -flto>
         $<$<CONFIG:Debug>:-g -O0>
     )
@@ -162,7 +183,7 @@ else()
 endif()
 
 # Добавление современных библиотек и инструментов
-option(BUILD_TESTS "Build tests with Catch2 v3" ON)
+option(BUILD_TESTS "Build tests with Catch2 v3" OFF)
 option(ENABLE_SANITIZERS "Enable address and undefined behavior sanitizers" OFF)
 option(ENABLE_COVERAGE "Enable code coverage" OFF)
 

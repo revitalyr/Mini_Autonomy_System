@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mini_autonomy_system</name>
+  <version>1.0.0</version>
+  <description>Mini Autonomy System with ROS 2 integration and C++20/23 modules</description>
+  
+  <maintainer email="user@example.com">User</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  
+  <depend>rclcpp</depend>
+  <depend>rosbag2_cpp</depend>
+  <depend>cv_bridge</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  
+  <build_depend>opencv-dev</build_depend>
+  <exec_depend>opencv-dev</exec_depend>
+  
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

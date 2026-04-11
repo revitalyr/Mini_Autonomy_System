@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-import perception.detector;
+#include "perception/detector.hpp"
 
 TEST_CASE("Detector - FakeDetections") {
     perception::MockDetector detector;

@@ -1,13 +1,10 @@
-module;
 // GMF - OpenCV isolated here
 #include <opencv2/opencv.hpp>
 
-module perception.detector;
-
-import perception.types;
-import perception.concepts;
-import perception.result;
-import perception.metrics;
+#include "perception/types.hpp"
+#include "perception/result.hpp"
+#include "perception/metrics.hpp"
+#include "perception/detector.hpp"
 
 #include <vector>
 #include <string>

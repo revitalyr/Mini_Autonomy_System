@@ -10,39 +10,39 @@
  */
 
 #include <iostream>
-#include <print>
+#include <format>
 #include <filesystem>
 
-import perception.ros_provider;
-import perception.detector;
-import perception.types;
+#include "perception/ros_provider.hpp"
+#include "perception/detector.hpp"
+#include "perception/types.hpp"
 
 namespace perception {
 
 auto demo_rosbag_provider(const std::string& bag_path) -> Expected<void, PerceptionError> {
     try {
-        std::println("=== ROSBAG Provider Demo ===");
-        std::println("Bag file: {}", bag_path);
+        std::cout << "=== ROSBAG Provider Demo ===\n";
+        std::cout << "Bag file: " << bag_path << "\n";
 
         // Create ROSBAG provider
         RosBagProvider provider;
 
         // Open the bag file
         if (auto result = provider.open(bag_path); !result) {
-            std::println("Failed to open bag file: {}", static_cast<int>(result.error()));
+            std::cout << "Failed to open bag file: " << static_cast<int>(result.error()) << "\n";
             return result;
         }
 
-        std::println("Bag file opened successfully");
+        std::cout << "Bag file opened successfully\n";
 
         // Stream data from the bag
         // Note: Topic names depend on the specific bag file
         std::string img_topic = "/cam0/image_raw";  // Adjust based on your bag
         std::string imu_topic = "/imu0";             // Adjust based on your bag
 
-        std::println("Streaming from topics:");
-        std::println("  Image: {}", img_topic);
-        std::println("  IMU: {}", imu_topic);
+        std::cout << "Streaming from topics:\n";
+        std::cout << "  Image: " << img_topic << "\n";
+        std::cout << "  IMU: " << imu_topic << "\n";
 
         size_t frame_count = 0;
         size_t max_frames = 10;  // Limit for demo
@@ -52,56 +52,60 @@ auto demo_rosbag_provider(const std::string& bag_path) -> Expected<void, Percept
         // Iterate through the generator
         for (auto&& result : data_stream) {
             if (!result) {
-                std::println("Error reading frame: {}", static_cast<int>(result.error()));
+                std::cout << "Error reading frame: " << static_cast<int>(result.error()) << "\n";
                 continue;
             }
 
             const VioFrame& frame = *result;
             frame_count++;
 
-            std::println("Frame {}:", frame_count);
-            std::println("  Image size: {}x{}", frame.image.width, frame.image.height);
-            std::println("  IMU samples: {}", frame.imu_samples.size());
-            std::println("  Timestamp: {:.6f}", frame.timestamp);
+            std::cout << "Frame " << frame_count << ":\n";
+            std::cout << "  Image size: " << frame.image.width << "x" << frame.image.height << "\n";
+            std::cout << "  IMU samples: " << frame.imu_samples.size() << "\n";
+            std::cout << "  Timestamp: " << std::format("{:.6f}", frame.timestamp) << "\n";
 
             if (frame.imu_samples.size() > 0) {
                 const IMUData& imu = frame.imu_samples.back();
-                std::println("  Latest IMU - Accel: ({:.3f}, {:.3f}, {:.3f})",
-                            imu.accelerometer_x, imu.accelerometer_y, imu.accelerometer_z);
-                std::println("  Latest IMU - Gyro: ({:.3f}, {:.3f}, {:.3f})",
-                            imu.gyroscope_x, imu.gyroscope_y, imu.gyroscope_z);
+                std::cout << "  Latest IMU - Accel: (" 
+                          << std::format("{:.3f}", imu.accelerometer_x) << ", "
+                          << std::format("{:.3f}", imu.accelerometer_y) << ", "
+                          << std::format("{:.3f}", imu.accelerometer_z) << ")\n";
+                std::cout << "  Latest IMU - Gyro: ("
+                          << std::format("{:.3f}", imu.gyroscope_x) << ", "
+                          << std::format("{:.3f}", imu.gyroscope_y) << ", "
+                          << std::format("{:.3f}", imu.gyroscope_z) << ")\n";
             }
 
             if (frame_count >= max_frames) {
-                std::println("Reached max frames limit ({})", max_frames);
+                std::cout << "Reached max frames limit (" << max_frames << ")\n";
                 break;
             }
         }
 
         // Close the bag file
         provider.close();
-        std::println("Bag file closed");
+        std::cout << "Bag file closed\n";
 
-        std::println("\nTotal frames processed: {}", frame_count);
+        std::cout << "\nTotal frames processed: " << frame_count << "\n";
 
         return {};
     } catch (const std::exception& e) {
-        std::println("Exception: {}", e.what());
+        std::cout << "Exception: " << e.what() << "\n";
         return make_unexpected(PerceptionError::InvalidInput);
     }
 }
 
 auto demo_rosbag_with_detection(const std::string& bag_path) -> Expected<void, PerceptionError> {
     try {
-        std::println("=== ROSBAG + Detection Demo ===");
-        std::println("Bag file: {}", bag_path);
+        std::cout << "=== ROSBAG + Detection Demo ===\n";
+        std::cout << "Bag file: " << bag_path << "\n";
 
         // Create ROSBAG provider
         RosBagProvider provider;
 
         // Open the bag file
         if (auto result = provider.open(bag_path); !result) {
-            std::println("Failed to open bag file: {}", static_cast<int>(result.error()));
+            std::cout << "Failed to open bag file: " << static_cast<int>(result.error()) << "\n";
             return result;
         }
 
@@ -128,11 +132,12 @@ auto demo_rosbag_with_detection(const std::string& bag_path) -> Expected<void, P
             // Run detection on the image
             auto detections = detector.detect(frame.image);
 
-            std::println("Frame {}: {} detections", frame_count, detections.size());
+            std::cout << "Frame " << frame_count << ": " << detections.size() << " detections\n";
             for (const auto& det : detections) {
-                std::println("  - {}: confidence={:.2f}, bbox=({:.0f}, {:.0f}, {:.0f}x{:.0f})",
-                            det.class_name, det.confidence,
-                            det.bbox.x, det.bbox.y, det.bbox.width, det.bbox.height);
+                std::cout << "  - " << det.class_name << ": confidence="
+                          << std::format("{:.2f}", det.confidence)
+                          << ", bbox=(" << det.bbox.x << ", " << det.bbox.y << ", "
+                          << det.bbox.width << "x" << det.bbox.height << ")\n";
             }
 
             if (frame_count >= max_frames) {
@@ -141,11 +146,11 @@ auto demo_rosbag_with_detection(const std::string& bag_path) -> Expected<void, P
         }
 
         provider.close();
-        std::println("\nTotal frames processed: {}", frame_count);
+        std::cout << "\nTotal frames processed: " << frame_count << "\n";
 
         return {};
     } catch (const std::exception& e) {
-        std::println("Exception: {}", e.what());
+        std::cout << "Exception: " << e.what() << "\n";
         return make_unexpected(PerceptionError::InvalidInput);
     }
 }
@@ -165,33 +170,33 @@ auto main(int argc, char* argv[]) -> int {
 
         // Check if bag file exists
         if (!std::filesystem::exists(bag_path)) {
-            std::println("Error: Bag file not found: {}", bag_path);
-            std::println("Usage: rosbag_demo [path_to_bag_file]");
+            std::cout << "Error: Bag file not found: " << bag_path << "\n";
+            std::cout << "Usage: rosbag_demo [path_to_bag_file]\n";
             return 1;
         }
 
         // Run basic demo
         if (auto result = perception::demo_rosbag_provider(bag_path); !result) {
-            std::println("ROSBAG provider demo failed: {}", static_cast<int>(result.error()));
+            std::cout << "ROSBAG provider demo failed: " << static_cast<int>(result.error()) << "\n";
             return 1;
         }
 
-        std::println("\n---\n");
+        std::cout << "\n---\n";
 
         // Run demo with detection
         if (auto result = perception::demo_rosbag_with_detection(bag_path); !result) {
-            std::println("ROSBAG + detection demo failed: {}", static_cast<int>(result.error()));
+            std::cout << "ROSBAG + detection demo failed: " << static_cast<int>(result.error()) << "\n";
             return 1;
         }
 
-        std::println("\nAll ROSBAG demos completed successfully!");
+        std::cout << "\nAll ROSBAG demos completed successfully!\n";
         return 0;
 
     } catch (const std::exception& e) {
-        std::println("Error: {}", e.what());
+        std::cout << "Error: " << e.what() << "\n";
         return 1;
     } catch (...) {
-        std::println("Unknown error occurred!");
+        std::cout << "Unknown error occurred!\n";
         return 1;
     }
 }

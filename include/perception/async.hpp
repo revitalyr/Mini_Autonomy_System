@@ -1,4 +1,4 @@
-module;
+#pragma once
 
 #include <coroutine>
 #include <exception>
@@ -16,20 +16,18 @@ module;
 #include <future>
 
 /**
- * @file perception.async.cppm
+ * @file perception.async.hpp
  * @brief Async operations and coroutine support for the perception system
- * 
- * This module provides coroutine-based async operations including Task<T> for
+ *
+ * This header provides coroutine-based async operations including Task<T> for
  * awaitable operations and Generator<T> for lazy sequences. It also includes
  * a thread pool for efficient async task execution.
- * 
+ *
  * @author Mini Autonomy System
  * @date 2026
  */
 
-export module perception.async;
-
-export namespace perception {
+namespace perception {
 
     /**
      * @brief Thread pool for async task execution
@@ -146,7 +144,7 @@ export namespace perception {
     };
 
     // Глобальный пул потоков
-    export ThreadPool& get_global_thread_pool() {
+    ThreadPool& get_global_thread_pool() {
         static ThreadPool pool;
         return pool;
     }
@@ -213,7 +211,7 @@ export namespace perception {
     // --- Вспомогательные функции (Missing Identifiers) ---
 
     // schedule_on: переключает выполнение корутины на пул потоков
-    export auto schedule_on(ThreadPool& pool) {
+    auto schedule_on(ThreadPool& pool) {
         struct SchAwaiter {
             ThreadPool& p;
             bool await_ready() { return false; }
@@ -225,10 +223,10 @@ export namespace perception {
         return SchAwaiter{pool};
     }
 
-    export std::future<void> run_async(Task<void> task) {
+    std::future<void> run_async(Task<void> task) {
     std::promise<void> promise;
     auto future = promise.get_future();
-    
+
     // Лямбда-обертка для выполнения корутины и установки promise
     auto runner = [](Task<void> t, std::promise<void> p) -> Task<void> {
         try {
@@ -248,14 +246,14 @@ export namespace perception {
     return future;
 }
     // when_all: ожидает завершения списка задач
-    export Task<void> when_all(std::vector<Task<void>> tasks) {
+    Task<void> when_all(std::vector<Task<void>> tasks) {
         for (auto& t : tasks) {
             co_await t;
         }
         co_return;
     }
 
-    export Task<void> sleep_for(std::chrono::milliseconds ms) {
+    Task<void> sleep_for(std::chrono::milliseconds ms) {
         std::this_thread::sleep_for(ms);
         co_return;
     }
