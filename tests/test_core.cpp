@@ -1,28 +1,28 @@
-#include <gtest/gtest.h>
+#include <catch2/catch_test_macros.hpp>
 import perception.queue;
 import perception.metrics;
 #include <thread>
 
-TEST(ThreadSafeQueueTest, BasicOperations) {
+TEST_CASE("ThreadSafeQueue - BasicOperations") {
     perception::ThreadSafeQueue<int> queue;
 
     // Test empty queue
-    EXPECT_TRUE(queue.empty());
-    EXPECT_EQ(queue.size(), 0);
+    REQUIRE(queue.empty());
+    REQUIRE(queue.size() == 0);
 
     // Test push and pop
     queue.push(42);
-    EXPECT_FALSE(queue.empty());
-    EXPECT_EQ(queue.size(), 1);
+    REQUIRE_FALSE(queue.empty());
+    REQUIRE(queue.size() == 1);
 
     auto value = queue.pop();
-    ASSERT_TRUE(value.has_value());
-    EXPECT_EQ(*value, 42);
-    EXPECT_TRUE(queue.empty());
-    EXPECT_EQ(queue.size(), 0);
+    REQUIRE(value.has_value());
+    REQUIRE(*value == 42);
+    REQUIRE(queue.empty());
+    REQUIRE(queue.size() == 0);
 }
 
-TEST(ThreadSafeQueueTest, TimeoutOperations) {
+TEST_CASE("ThreadSafeQueue - TimeoutOperations") {
     perception::ThreadSafeQueue<int> queue;
 
     // Test timeout on empty queue
@@ -30,11 +30,11 @@ TEST(ThreadSafeQueueTest, TimeoutOperations) {
     auto value = queue.pop_timeout(std::chrono::milliseconds(50));
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    EXPECT_FALSE(value.has_value());
-    EXPECT_GE(duration.count(), 40); // Should wait at least 40ms
+    REQUIRE_FALSE(value.has_value());
+    REQUIRE(duration.count() >= 40); // Should wait at least 40ms
 }
 
-TEST(ThreadSafeQueueTest, ConcurrentOperations) {
+TEST_CASE("ThreadSafeQueue - ConcurrentOperations") {
     perception::ThreadSafeQueue<int> queue;
     const int num_items = 100;
     const int num_producers = 4;
@@ -68,27 +68,27 @@ TEST(ThreadSafeQueueTest, ConcurrentOperations) {
     }
     consumer.join();
 
-    EXPECT_EQ(total_consumed.load(), num_items * num_producers);
-    EXPECT_TRUE(queue.empty());
+    REQUIRE(total_consumed.load() == num_items * num_producers);
+    REQUIRE(queue.empty());
 }
 
-TEST(MetricsTest, BasicMetrics) {
+TEST_CASE("Metrics - BasicMetrics") {
     perception::PerformanceMetrics metrics;
 
     // Initial state
     auto snapshot = metrics.get_snapshot();
-    EXPECT_EQ(snapshot.total_frames, 0);
-    EXPECT_EQ(snapshot.fps, 0.0);
+    REQUIRE(snapshot.total_frames == 0);
+    REQUIRE(snapshot.fps == 0.0);
 
     // Simulate frame processing
     metrics.record_frame_latency(33.0);
 
     snapshot = metrics.get_snapshot();
-    EXPECT_EQ(snapshot.total_frames, 1);
-    EXPECT_GT(snapshot.avg_latency_ms, 30.0);
+    REQUIRE(snapshot.total_frames == 1);
+    REQUIRE(snapshot.avg_latency_ms > 30.0);
 }
 
-TEST(MetricsTest, MultipleFrames) {
+TEST_CASE("Metrics - MultipleFrames") {
     perception::PerformanceMetrics metrics;
     const int num_frames = 10;
     const double frame_latency_ms = 16.0; // ~60 FPS
@@ -99,7 +99,7 @@ TEST(MetricsTest, MultipleFrames) {
     }
 
     auto snapshot = metrics.get_snapshot();
-    EXPECT_EQ(snapshot.total_frames, num_frames);
-    EXPECT_GT(snapshot.fps, 50.0); // Should be around 60 FPS
-    EXPECT_LT(snapshot.avg_latency_ms, 20.0);
+    REQUIRE(snapshot.total_frames == num_frames);
+    REQUIRE(snapshot.fps > 50.0); // Should be around 60 FPS
+    REQUIRE(snapshot.avg_latency_ms < 20.0);
 }

@@ -1,8 +1,4 @@
-export module perception.image_loader;
-
-import perception.types;
-import perception.async;
-import perception.result;
+module;
 
 #include <coroutine>
 #include <filesystem>
@@ -12,6 +8,12 @@ import perception.result;
 #include <algorithm>
 #include <chrono>
 #include <memory>
+
+export module perception.image_loader;
+
+import perception.types;
+import perception.async;
+import perception.result;
 
 export namespace perception {
 

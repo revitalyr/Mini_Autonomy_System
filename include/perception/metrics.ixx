@@ -32,7 +32,7 @@ export namespace perception {
         static constexpr size_t WINDOW_SIZE = 1000;
 
     public:
-        struct MetricsSnapshot {
+        struct Snapshot {
             double fps;
             double avg_latency_ms;
             double min_latency_ms;
@@ -74,7 +74,7 @@ export namespace perception {
             }
         }
 
-        [[nodiscard]] MetricsSnapshot get_snapshot() const {
+        [[nodiscard]] Snapshot get_snapshot() const {
             const uint64_t frames = frame_count_.load(std::memory_order_relaxed);
             const auto now = std::chrono::steady_clock::now();
             const auto uptime = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_);

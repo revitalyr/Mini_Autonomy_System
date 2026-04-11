@@ -2,16 +2,17 @@ module;
 // GMF - OpenCV isolated here
 #include <opencv2/opencv.hpp>
 
+#include <filesystem>
+#include <vector>
+#include <algorithm>
+#include <memory>
+#include <coroutine>
+
 module perception.image_loader;
 
 import perception.types;
 import perception.async;
 import perception.result;
-
-#include <filesystem>
-#include <vector>
-#include <algorithm>
-#include <memory>
 
 namespace perception {
 

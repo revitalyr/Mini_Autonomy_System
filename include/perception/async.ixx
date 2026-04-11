@@ -44,20 +44,27 @@ export namespace perception {
          * 
          * @param num_threads Number of threads to use in the pool
          */
-        explicit ThreadPool(size_t num_threads = std::thread::hardware_concurrency()) {
+        explicit ThreadPool(size_t num_threads = std::thread::hardware_concurrency())
+            : shutdown_(false), active_threads_(0) {
             for (size_t i = 0; i < num_threads; ++i) {
                 workers_.emplace_back([this](std::stop_token st) {
-                    while (!st.stop_requested()) {
+                    while (!st.stop_requested() && !shutdown_) {
                         std::function<void()> task;
                         {
                             std::unique_lock lock(mutex_);
-                            condition_.wait(lock, st, [this] { return !tasks_.empty(); });
-                            if (st.stop_requested() && tasks_.empty()) return;
-                            
-                            task = std::move(tasks_.front());
-                            tasks_.pop();
+                            condition_.wait(lock, st, [this] { return !tasks_.empty() || shutdown_; });
+                            if (shutdown_ && tasks_.empty()) return;
+
+                            if (!tasks_.empty()) {
+                                task = std::move(tasks_.front());
+                                tasks_.pop();
+                                active_threads_++;
+                            }
                         }
-                        task();
+                        if (task) {
+                            task();
+                            active_threads_--;
+                        }
                     }
                 });
             }
@@ -96,11 +103,46 @@ export namespace perception {
             return fut;
         }
 
+        /**
+         * @brief Gets the number of threads in the pool
+         */
+        size_t get_thread_count() const {
+            return workers_.size();
+        }
+
+        /**
+         * @brief Gets the number of currently active threads
+         */
+        size_t get_active_threads() const {
+            return active_threads_;
+        }
+
+        /**
+         * @brief Shuts down the thread pool
+         */
+        void shutdown() {
+            {
+                std::unique_lock lock(mutex_);
+                shutdown_ = true;
+            }
+            condition_.notify_all();
+            workers_.clear();
+        }
+
+        /**
+         * @brief Checks if the thread pool is shut down
+         */
+        bool is_shutdown() const {
+            return shutdown_;
+        }
+
     private:
         std::vector<std::jthread> workers_;
         std::queue<std::function<void()>> tasks_;
         std::mutex mutex_;
         std::condition_variable_any condition_;
+        std::atomic<bool> shutdown_;
+        std::atomic<size_t> active_threads_;
     };
 
     // Глобальный пул потоков

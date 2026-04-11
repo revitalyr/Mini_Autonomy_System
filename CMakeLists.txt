@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 project(MiniAutonomySystem LANGUAGES CXX VERSION 1.0.0)
 
-# Настройка C++20 стандарта с максимальными современными фичами
-set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -13,6 +11,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
     set(MODULES_SUPPORT ON)
     message(STATUS "C++26 modules support enabled")
 else()
+set(CMAKE_CXX_STANDARD 20)
     set(MODULES_SUPPORT OFF)
     message(WARNING "C++ modules not supported - using traditional includes")
 endif()
@@ -38,6 +37,8 @@ find_package(Threads REQUIRED)
 
 # Создание библиотеки модулей
 add_library(perception_modules)
+
+set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
 
 # Добавляем OpenCV include directories
 target_include_directories(perception_modules PUBLIC ${OpenCV_INCLUDE_DIRS})
@@ -69,9 +70,6 @@ target_sources(perception_modules PRIVATE
 # Создание исполняемого файла
 add_executable(perception_demo src/main.cpp)
 
-# Создание минимального теста
-add_executable(minimal_test src/main_minimal.cpp)
-
 # Линковка
 target_link_libraries(perception_demo PRIVATE 
     perception_modules 
@@ -89,7 +87,7 @@ if(MSVC)
         /W4                    # Высокий уровень предупреждений
         /EHsc                  # Обработка исключений C++
         /permissive-           # Строгий стандарт C++
-        /std:c++20           # C++20 стандарт
+        /std:c++latest         # C++ стандарт
         /Zc:__cplusplus        # Правильный __cplusplus
         $<$<CONFIG:Release>:/O2 /Ob2 /Oi /Ot>   # Максимальная оптимизация в Release
         $<$<CONFIG:Debug>:/Zi /Od>             # Отладочная информация в Debug
@@ -99,7 +97,7 @@ if(MSVC)
         /W4
         /EHsc
         /permissive-
-        /std:c++20
+        /std:c++latest
         /Zc:__cplusplus
         $<$<CONFIG:Release>:/O2>
         $<$<CONFIG:Debug>:/Zi>
@@ -129,18 +127,18 @@ else()
 endif()
 
 # Добавление современных библиотек и инструментов
-option(BUILD_TESTS "Build tests with Google Test" ON)
+option(BUILD_TESTS "Build tests with Catch2 v3" ON)
 option(ENABLE_SANITIZERS "Enable address and undefined behavior sanitizers" OFF)
 option(ENABLE_COVERAGE "Enable code coverage" OFF)
 
-# Подключение Google Test для тестов
+# Подключение Catch2 v3 для тестов
 if(BUILD_TESTS)
     enable_testing()
-    find_package(GTest QUIET)
-    if(GTest_FOUND)
+    find_package(Catch2 3 QUIET)
+    if(Catch2_FOUND)
         add_subdirectory(tests)
     else()
-        message(WARNING "Google Test not found - tests disabled")
+        message(WARNING "Catch2 v3 not found - tests disabled")
     endif()
 endif()
 

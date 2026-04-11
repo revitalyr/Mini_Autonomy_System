@@ -1,13 +1,15 @@
+module;
+
+#include <vector>
+#include <string>
+#include <memory>
+
 export module perception.detector;
 
 import perception.types;
 import perception.concepts;
 import perception.result;
 import perception.metrics;
-
-#include <vector>
-#include <string>
-#include <memory>
 
 export namespace perception {
 
@@ -21,6 +23,13 @@ export namespace perception {
         Detection(Rect b, float conf, int id, std::string name)
             : bbox(std::move(b)), confidence(conf), class_id(id), class_name(std::move(name)) {}
     };
+
+    // Helper function for filtering detections by confidence
+    export auto filter_by_confidence(float threshold) {
+        return [threshold](const Detection& det) {
+            return det.confidence >= threshold;
+        };
+    }
 
     // Mock detector for testing
     class MockDetector {

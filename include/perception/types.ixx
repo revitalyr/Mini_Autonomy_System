@@ -1,3 +1,5 @@
+module;
+
 #include <string>
 #include <string_view>
 #include <vector>
@@ -6,6 +8,9 @@
 #include <chrono>
 #include <mutex>
 #include <cstdint>
+#include <expected>
+#include <memory>
+#include <atomic>
 
 export module perception.types;
 
@@ -30,53 +35,44 @@ using String = std::string;
 using StringView = std::string_view;
 
 // Container types
-template<typename T>
+export template<typename T>
 using Vector = std::vector<T>;
 
-template<typename T>
+export template<typename T>
 using Optional = std::optional<T>;
 
-// C++20-compatible Expected type using std::variant
-template<typename T, typename E>
-class Expected {
-public:
-    Expected(T value) : data(std::move(value)) {}
-    Expected(E error) : data(std::move(error)) {}
+export template<typename T, typename E>
+using Expected = std::expected<T, E>;
 
-    bool has_value() const { return std::holds_alternative<T>(data); }
-    bool has_error() const { return std::holds_alternative<E>(data); }
+export template<typename E>
+using Unexpected = std::unexpected<E>;
 
-    const T& value() const { return std::get<T>(data); }
-    T& value() { return std::get<T>(data); }
-
-    const E& error() const { return std::get<E>(data); }
-    E& error() { return std::get<E>(data); }
-
-    explicit operator bool() const { return has_value(); }
-
-private:
-    std::variant<T, E> data;
-};
+export template<typename E>
+auto make_unexpected(E e) { return std::unexpected(e); }
 
 // Time types
 using Milliseconds = std::chrono::milliseconds;
 using Seconds = std::chrono::seconds;
 
+// Helper function to convert duration to milliseconds
+export auto to_milliseconds(auto duration) -> Milliseconds {
+    return std::chrono::duration_cast<Milliseconds>(duration);
+}
+
 // Thread types
 using Mutex = std::mutex;
+
+export template<typename T>
+using UniquePtr = std::unique_ptr<T>;
+
+export using std::make_unique;
+
+export template<typename T>
+using Atomic = std::atomic<T>;
 
 // ============================================================================
 // PERCEPTION-SPECIFIC TYPES
 // ============================================================================
-
-// Error type for perception operations
-struct PerceptionError {
-    String message;
-    int code;
-
-    PerceptionError() : code(0) {}
-    PerceptionError(String msg, int c = 0) : message(std::move(msg)), code(c) {}
-};
 
 // Confidence type (0.0 to 1.0)
 using Confidence = double;
@@ -105,6 +101,13 @@ struct ImageData {
     }
 
     bool empty() const { return width == 0 || height == 0; }
+};
+
+// Configuration structure for components
+struct Config {
+    size_t thread_pool_size = 4;
+    size_t max_queue_size = 100;
+    double confidence_threshold = 0.5;
 };
 
 // Callable type alias

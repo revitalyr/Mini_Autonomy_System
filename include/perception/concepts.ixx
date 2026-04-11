@@ -9,6 +9,7 @@ module;
 export module perception.concepts;
 
 import perception.types;
+import perception.result;
 
 /**
  * @brief Modern C++26 concepts for perception system
@@ -108,11 +109,11 @@ concept PipelineStage = requires(T stage) {
  * @brief Enhanced concept for detector types with modern features
  */
 template<typename T>
-concept Detector = requires(T detector, const Image& frame) {
+concept Detector = requires(T detector, const ImageData& frame) {
     { detector.detect(frame) } -> std::same_as<Vector<typename T::DetectionType>>;
     typename T::DetectionType;
     requires Container<Vector<typename T::DetectionType>>;
-    
+
     // Additional requirements for modern detectors
     { detector.get_confidence_threshold() } -> std::convertible_to<Confidence>;
     { detector.set_confidence_threshold(Confidence{}) } -> std::same_as<void>;
@@ -222,11 +223,11 @@ concept ThreadPool = requires(T pool) {
  */
 template<typename T>
 concept ImageLoader = requires(T loader, StringView source) {
-    { loader.load(source) } -> std::same_as<Expected<Image, PerceptionError>>;
+    { loader.load(source) } -> std::same_as<Expected<ImageData, PerceptionError>>;
     { loader.is_available() } -> std::convertible_to<bool>;
     { loader.get_supported_formats() } -> Range;
     typename T::ImageType;
-    requires std::same_as<typename T::ImageType, Image>;
+    requires std::same_as<typename T::ImageType, ImageData>;
 };
 
 /**
