@@ -127,6 +127,7 @@ add_executable(perception_demo src/main.cpp)
 # Создание исполняемого файла для ROSBAG демо только если ROS доступен
 if(ROS_FOUND)
     add_executable(rosbag_demo src/rosbag_demo.cpp)
+    add_executable(rosbag_viz_demo src/rosbag_viz_demo.cpp)
 endif()
 
 # Линковка
@@ -145,6 +146,14 @@ if(ROS_FOUND)
         ${rosbag2_cpp_LIBRARIES}
         Threads::Threads
     )
+    target_link_libraries(rosbag_viz_demo PRIVATE
+        perception_modules
+        ${OpenCV_LIBS}
+        ${rclcpp_LIBRARIES}
+        ${cv_bridge_LIBRARIES}
+        ${rosbag2_cpp_LIBRARIES}
+        Threads::Threads
+    )
 endif()
 
 # Настройка путей включения
@@ -156,6 +165,8 @@ endif()
 if(ROS_FOUND)
     target_include_directories(rosbag_demo PRIVATE include)
     target_include_directories(rosbag_demo PRIVATE ${rclcpp_INCLUDE_DIRS} ${cv_bridge_INCLUDE_DIRS} ${sensor_msgs_INCLUDE_DIRS} ${std_msgs_INCLUDE_DIRS})
+    target_include_directories(rosbag_viz_demo PRIVATE include)
+    target_include_directories(rosbag_viz_demo PRIVATE ${rclcpp_INCLUDE_DIRS} ${cv_bridge_INCLUDE_DIRS} ${sensor_msgs_INCLUDE_DIRS} ${std_msgs_INCLUDE_DIRS})
 endif()
 
 # Современные настройки компилятора
@@ -204,6 +215,12 @@ else()
 
     if(ROS_FOUND)
         target_compile_options(rosbag_demo PRIVATE
+            -Wall -Wextra -Wpedantic
+            -std=c++20
+            $<$<CONFIG:Release>:-O3>
+            $<$<CONFIG:Debug>:-g>
+        )
+        target_compile_options(rosbag_viz_demo PRIVATE
             -Wall -Wextra -Wpedantic
             -std=c++20
             $<$<CONFIG:Release>:-O3>
