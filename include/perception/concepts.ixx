@@ -231,6 +231,23 @@ concept ImageLoader = requires(T loader, StringView source) {
 };
 
 /**
+ * @brief Concept for data providers that can stream synchronized data
+ * Used for ROSBAG, camera, and other data sources
+ */
+template<typename T>
+concept DataProvider = requires(T provider, String img_topic, String imu_topic) {
+    typename T::FrameType;
+    typename T::GeneratorType;
+
+    { provider.open(String{}) } -> std::same_as<Expected<void, PerceptionError>>;
+    { provider.close() } -> std::same_as<void>;
+    { provider.is_open() } -> std::convertible_to<bool>;
+
+    // Streaming data with generator
+    { provider.stream_data(img_topic, imu_topic) } -> Range;
+};
+
+/**
  * @brief Concept for result types with modern error handling
  */
 template<typename T>

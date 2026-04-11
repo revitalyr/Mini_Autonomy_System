@@ -110,6 +110,39 @@ struct Config {
     double confidence_threshold = 0.5;
 };
 
+/**
+ * IMU measurement data
+ */
+struct IMUData {
+    double timestamp;
+    double accelerometer_x;
+    double accelerometer_y;
+    double accelerometer_z;
+    double gyroscope_x;
+    double gyroscope_y;
+    double gyroscope_z;
+
+    IMUData() : timestamp(0), accelerometer_x(0), accelerometer_y(0), accelerometer_z(0),
+               gyroscope_x(0), gyroscope_y(0), gyroscope_z(0) {}
+
+    IMUData(double ts, double ax, double ay, double az, double gx, double gy, double gz)
+        : timestamp(ts), accelerometer_x(ax), accelerometer_y(ay), accelerometer_z(az),
+          gyroscope_x(gx), gyroscope_y(gy), gyroscope_z(gz) {}
+};
+
+/**
+ * Synchronized VIO frame with image and IMU data
+ */
+struct VioFrame {
+    ImageData image;
+    std::vector<IMUData> imu_samples;
+    double timestamp;
+
+    VioFrame() : timestamp(0) {}
+    VioFrame(ImageData img, std::vector<IMUData> imu, double ts)
+        : image(std::move(img)), imu_samples(std::move(imu)), timestamp(ts) {}
+};
+
 template<typename T>
 using Callable = T;
 

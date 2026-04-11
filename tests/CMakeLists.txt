@@ -27,3 +27,19 @@ target_include_directories(test_vision PRIVATE ${OpenCV_INCLUDE_DIRS})
 
 # Register test_vision with CTest
 catch_discover_tests(test_vision)
+
+# Create test_ros_provider executable
+add_executable(test_ros_provider test_ros_provider.cpp)
+target_link_libraries(test_ros_provider PRIVATE
+    Catch2::Catch2WithMain
+    perception_modules
+    ${OpenCV_LIBS}
+    ${catkin_LIBRARIES}
+    Threads::Threads
+)
+target_include_directories(test_ros_provider PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(test_ros_provider PRIVATE ${OpenCV_INCLUDE_DIRS})
+target_include_directories(test_ros_provider PRIVATE ${catkin_INCLUDE_DIRS})
+
+# Register test_ros_provider with CTest
+catch_discover_tests(test_ros_provider)

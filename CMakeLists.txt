@@ -31,9 +31,15 @@ else()
     message(WARNING "VCPKG_ROOT environment variable is not set!")
 endif()
 
-# Поиск необходимых пакетов (OpenCV и потоки)
+# Поиск необходимых пакетов (OpenCV, ROS, потоки)
 find_package(OpenCV REQUIRED CONFIG)
 find_package(Threads REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+    rosbag
+    cv_bridge
+    sensor_msgs
+    std_msgs
+)
 
 # Создание библиотеки модулей
 add_library(perception_modules)
@@ -42,9 +48,10 @@ set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
 
 # Добавляем OpenCV include directories
 target_include_directories(perception_modules PUBLIC ${OpenCV_INCLUDE_DIRS})
+target_include_directories(perception_modules PUBLIC ${catkin_INCLUDE_DIRS})
 
-# Линкуем OpenCV к модулям
-target_link_libraries(perception_modules PUBLIC ${OpenCV_LIBS})
+# Линкуем OpenCV и ROS к модулям
+target_link_libraries(perception_modules PUBLIC ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
 target_sources(perception_modules PUBLIC
     FILE_SET CXX_MODULES TYPE CXX_MODULES
@@ -59,16 +66,21 @@ target_sources(perception_modules PUBLIC
         include/perception/image_loader.ixx
         include/perception/detector.ixx
         include/perception/pipeline.ixx
+        include/perception/ros_provider.ixx
 )
 
 # Add implementation files for modules with PIMPL pattern
 target_sources(perception_modules PRIVATE
     modules/perception.detector.cpp
     modules/perception.image_loader.cpp
+    modules/perception.ros_provider.cpp
 )
 
 # Создание исполняемого файла
 add_executable(perception_demo src/main.cpp)
+
+# Создание исполняемого файла для ROSBAG демо
+add_executable(rosbag_demo src/rosbag_demo.cpp)
 
 # Линковка
 target_link_libraries(perception_demo PRIVATE 
@@ -77,8 +89,16 @@ target_link_libraries(perception_demo PRIVATE
     Threads::Threads
 )
 
+target_link_libraries(rosbag_demo PRIVATE
+    perception_modules
+    ${OpenCV_LIBS}
+    ${catkin_LIBRARIES}
+    Threads::Threads
+)
+
 # Настройка путей включения
 target_include_directories(perception_demo PRIVATE include)
+target_include_directories(rosbag_demo PRIVATE include)
 
 # Современные настройки компилятора
 if(MSVC)
@@ -103,8 +123,23 @@ if(MSVC)
         $<$<CONFIG:Debug>:/Zi>
     )
     
+    target_compile_options(rosbag_demo PRIVATE
+        /W4
+        /EHsc
+        /permissive-
+        /std:c++latest
+        /Zc:__cplusplus
+        $<$<CONFIG:Release>:/O2>
+        $<$<CONFIG:Debug>:/Zi>
+    )
+
     # Современные определения для MSVC
     target_compile_definitions(perception_demo PRIVATE 
+        _CRT_SECURE_NO_WARNINGS
+        _SILENCE_CXX20_OLD_DEPRECATION_WARNINGS
+    )
+
+    target_compile_definitions(rosbag_demo PRIVATE 
         _CRT_SECURE_NO_WARNINGS
         _SILENCE_CXX20_OLD_DEPRECATION_WARNINGS
     )
