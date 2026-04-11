@@ -29,7 +29,7 @@ auto demo_rosbag_provider(const std::string& bag_path) -> Expected<void, Percept
 
         // Open the bag file
         if (auto result = provider.open(bag_path); !result) {
-            std::cout << "Failed to open bag file: " << static_cast<int>(result.error()) << "\n";
+            std::cout << "Failed to open bag file: " << result.error().message() << "\n";
             return result;
         }
 
@@ -52,11 +52,11 @@ auto demo_rosbag_provider(const std::string& bag_path) -> Expected<void, Percept
         // Iterate through the generator
         for (auto&& result : data_stream) {
             if (!result) {
-                std::cout << "Error reading frame: " << static_cast<int>(result.error()) << "\n";
+                std::cout << "Error reading frame: " << result.error().message() << "\n";
                 continue;
             }
 
-            const VioFrame& frame = *result;
+            const VioFrame& frame = result.value();
             frame_count++;
 
             std::cout << "Frame " << frame_count << ":\n";
@@ -105,7 +105,7 @@ auto demo_rosbag_with_detection(const std::string& bag_path) -> Expected<void, P
 
         // Open the bag file
         if (auto result = provider.open(bag_path); !result) {
-            std::cout << "Failed to open bag file: " << static_cast<int>(result.error()) << "\n";
+            std::cout << "Failed to open bag file: " << result.error().message() << "\n";
             return result;
         }
 
@@ -126,7 +126,7 @@ auto demo_rosbag_with_detection(const std::string& bag_path) -> Expected<void, P
                 continue;
             }
 
-            const VioFrame& frame = *result;
+            const VioFrame& frame = result.value();
             frame_count++;
 
             // Run detection on the image
@@ -164,20 +164,16 @@ auto main(int argc, char* argv[]) -> int {
         if (argc > 1) {
             bag_path = argv[1];
         } else {
-            // Use default test file
-            bag_path = "demo/data/dataset-calib-cam1_512_16.bag";
+            // Use dummy path for stub demonstration
+            bag_path = "dummy.bag";
         }
 
-        // Check if bag file exists
-        if (!std::filesystem::exists(bag_path)) {
-            std::cout << "Error: Bag file not found: " << bag_path << "\n";
-            std::cout << "Usage: rosbag_demo [path_to_bag_file]\n";
-            return 1;
-        }
+        std::cout << "Note: Using stub ROS provider (ROS 1 to ROS 2 migration needed)\n";
+        std::cout << "Bag file path: " << bag_path << "\n\n";
 
         // Run basic demo
         if (auto result = perception::demo_rosbag_provider(bag_path); !result) {
-            std::cout << "ROSBAG provider demo failed: " << static_cast<int>(result.error()) << "\n";
+            std::cout << "ROSBAG provider demo failed: " << result.error().message() << "\n";
             return 1;
         }
 
@@ -185,7 +181,7 @@ auto main(int argc, char* argv[]) -> int {
 
         // Run demo with detection
         if (auto result = perception::demo_rosbag_with_detection(bag_path); !result) {
-            std::cout << "ROSBAG + detection demo failed: " << static_cast<int>(result.error()) << "\n";
+            std::cout << "ROSBAG + detection demo failed: " << result.error().message() << "\n";
             return 1;
         }
 

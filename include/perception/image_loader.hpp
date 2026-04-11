@@ -58,6 +58,49 @@ namespace perception {
         Generator(Generator&&) = default;
         Generator& operator=(Generator&&) = default;
 
+        // Iterator class for range-based for loops
+        struct iterator {
+            handle_type h_;
+            bool at_end_ = false;
+
+            explicit iterator(handle_type h) : h_(h) {
+                if (h_ && !h_.done()) {
+                    h_.resume();
+                }
+            }
+
+            iterator& operator++() {
+                if (h_ && !h_.done()) {
+                    h_.resume();
+                }
+                if (h_ && h_.done()) {
+                    at_end_ = true;
+                }
+                return *this;
+            }
+
+            T operator*() const {
+                if (!h_ || h_.done() || at_end_) {
+                    throw std::runtime_error("Generator exhausted");
+                }
+                return h_.promise().value_;
+            }
+
+            bool operator!=(const iterator& other) const {
+                if (at_end_) return false;
+                if (!h_) return other.h_ != nullptr;
+                return h_ != other.h_ && !h_.done();
+            }
+        };
+
+        iterator begin() {
+            return iterator(h_);
+        }
+
+        iterator end() {
+            return iterator(nullptr);
+        }
+
         T operator++() {
             h_.resume();
             if (h_.done()) {

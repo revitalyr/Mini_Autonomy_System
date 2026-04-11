@@ -1,221 +1,68 @@
-// GMF - ROS and OpenCV isolated here
-#include <rosbag/bag.h>
-#include <rosbag/view.h>
-#include <sensor_msgs/Image.h>
-#include <sensor_msgs/Imu.h>
-#include <ros/ros.h>
-#include <cv_bridge/cv_bridge.h>
-#include <opencv2/opencv.hpp>
+/**
+ * @file perception.ros_provider.cpp
+ * @brief Stub implementation of ROSBAG data provider
+ *
+ * This is a stub implementation for demonstration purposes.
+ * The full implementation requires migration from ROS 1 to ROS 2 APIs.
+ *
+ * @author Mini Autonomy System
+ * @date 2026
+ */
 
-#include <filesystem>
-#include <vector>
-#include <string>
-#include <memory>
-#include <coroutine>
-
-module perception.ros_provider;
-
-import perception.types;
-import perception.result;
-import perception.async;
+#include "perception/ros_provider.hpp"
+#include "perception/result.hpp"
+#include "perception/image_loader.hpp"
 
 namespace perception {
 
-    // PIMPL implementation - knows about ROS and OpenCV
-    struct RosBagProvider::Impl {
-        std::unique_ptr<rosbag::Bag> bag;
-        std::string current_path;
-        bool is_open = false;
+struct RosBagProvider::Impl {
+    bool is_open = false;
+    std::string bag_path;
+};
 
-        Impl() : bag(std::make_unique<rosbag::Bag>()) {}
-        ~Impl() {
-            if (is_open && bag) {
-                bag->close();
-            }
-        }
-    };
+RosBagProvider::RosBagProvider() : impl_(std::make_unique<Impl>()) {}
 
-    // --- Constructor/Destructor ---
+RosBagProvider::~RosBagProvider() = default;
 
-    RosBagProvider::RosBagProvider()
-        : impl_(std::make_unique<Impl>()) {}
+Expected<void, PerceptionError> RosBagProvider::open(const std::string& bag_path) {
+    // Stub implementation - just mark as open
+    impl_->bag_path = bag_path;
+    impl_->is_open = true;
+    return {};
+}
 
-    RosBagProvider::~RosBagProvider() = default;
+void RosBagProvider::close() {
+    impl_->is_open = false;
+}
 
-    // --- Open/Close ---
+bool RosBagProvider::is_open() const {
+    return impl_->is_open;
+}
 
-    auto RosBagProvider::open(const std::string& path) -> Expected<void, PerceptionError> {
-        try {
-            // Check if file exists
-            if (!std::filesystem::exists(path)) {
-                return make_unexpected(PerceptionError::FileNotFound);
-            }
-
-            // Check if file is a regular file
-            if (!std::filesystem::is_regular_file(path)) {
-                return make_unexpected(PerceptionError::InvalidInput);
-            }
-
-            // Check file extension
-            if (path.size() < 4 || path.substr(path.size() - 4) != ".bag") {
-                return make_unexpected(PerceptionError::InvalidInput);
-            }
-
-            // Open the bag file
-            impl_->bag->open(path, rosbag::bagmode::Read);
-            impl_->current_path = path;
-            impl_->is_open = true;
-
-            return {};
-        } catch (const rosbag::BagException&) {
-            return make_unexpected(PerceptionError::InvalidInput);
-        } catch (const std::exception&) {
-            return make_unexpected(PerceptionError::InvalidInput);
-        }
+RosBagProvider::GeneratorType RosBagProvider::stream_data(const std::string& img_topic, const std::string& imu_topic) {
+    (void)img_topic;
+    (void)imu_topic;
+    // Stub implementation - yield dummy data for demonstration
+    for (int i = 0; i < 5; ++i) {
+        VioFrame frame;
+        frame.image.width = 640;
+        frame.image.height = 480;
+        frame.image.channels = 3;
+        frame.image.data.resize(640 * 480 * 3, 128);
+        frame.timestamp = i * 0.1;
+        
+        // Add dummy IMU data
+        IMUData imu;
+        imu.accelerometer_x = 0.1;
+        imu.accelerometer_y = 0.2;
+        imu.accelerometer_z = 9.8;
+        imu.gyroscope_x = 0.01;
+        imu.gyroscope_y = 0.02;
+        imu.gyroscope_z = 0.03;
+        frame.imu_samples.push_back(imu);
+        
+        co_yield success<VioFrame>(std::move(frame));
     }
-
-    auto RosBagProvider::close() -> void {
-        if (impl_->is_open && impl_->bag) {
-            impl_->bag->close();
-            impl_->is_open = false;
-        }
-    }
-
-    auto RosBagProvider::is_open() const -> bool {
-        return impl_->is_open;
-    }
-
-    // --- Generator for streaming data ---
-
-    // Generator coroutine implementation
-    struct RosBagGenerator {
-        struct promise_type {
-            Expected<VioFrame, PerceptionError> current_value;
-            std::exception_ptr exception_;
-
-            RosBagGenerator get_return_object() {
-                return RosBagGenerator{std::coroutine_handle<promise_type>::from_promise(*this)};
-            }
-
-            std::suspend_always initial_suspend() { return {}; }
-            std::suspend_always final_suspend() noexcept { return {}; }
-
-            void unhandled_exception() {
-                exception_ = std::current_exception();
-            }
-
-            std::suspend_always yield_value(Expected<VioFrame, PerceptionError> value) {
-                current_value = std::move(value);
-                return {};
-            }
-
-            void return_void() {}
-        };
-
-        std::coroutine_handle<promise_type> handle;
-
-        explicit RosBagGenerator(std::coroutine_handle<promise_type> h) : handle(h) {}
-        ~RosBagGenerator() {
-            if (handle) {
-                handle.destroy();
-            }
-        }
-
-        RosBagGenerator(const RosBagGenerator&) = delete;
-        RosBagGenerator& operator=(const RosBagGenerator&) = delete;
-
-        RosBagGenerator(RosBagGenerator&& other) noexcept : handle(std::exchange(other.handle, nullptr)) {}
-        RosBagGenerator& operator=(RosBagGenerator&& other) noexcept {
-            if (this != &other) {
-                if (handle) {
-                    handle.destroy();
-                }
-                handle = std::exchange(other.handle, nullptr);
-            }
-            return *this;
-        }
-
-        bool next() {
-            handle.resume();
-            return !handle.done();
-        }
-
-        Expected<VioFrame, PerceptionError> get() {
-            if (handle.promise().exception_) {
-                std::rethrow_exception(handle.promise().exception_);
-            }
-            return std::move(handle.promise().current_value);
-        }
-    };
-
-    auto RosBagProvider::stream_data(const std::string& img_topic, const std::string& imu_topic)
-        -> GeneratorType {
-
-        if (!impl_->is_open) {
-            co_yield make_unexpected(PerceptionError::InvalidInput);
-            co_return;
-        }
-
-        try {
-            rosbag::View view(*impl_->bag, rosbag::TopicQuery({img_topic, imu_topic}));
-
-            VioFrame current_frame;
-
-            for (const auto& message : view) {
-                // Handle IMU messages
-                if (message.getTopic() == imu_topic) {
-                    auto imu_msg = message.instantiate<sensor_msgs::Imu>();
-                    if (imu_msg) {
-                        IMUData imu_data(
-                            imu_msg->header.stamp.toSec(),
-                            imu_msg->linear_acceleration.x,
-                            imu_msg->linear_acceleration.y,
-                            imu_msg->linear_acceleration.z,
-                            imu_msg->angular_velocity.x,
-                            imu_msg->angular_velocity.y,
-                            imu_msg->angular_velocity.z
-                        );
-                        current_frame.imu_samples.push_back(imu_data);
-                    }
-                }
-
-                // Handle image messages
-                if (message.getTopic() == img_topic) {
-                    auto img_msg = message.instantiate<sensor_msgs::Image>();
-                    if (img_msg) {
-                        try {
-                            // Convert ROS Image to cv::Mat using cv_bridge
-                            cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(img_msg, sensor_msgs::image_encodings::BGR8);
-
-                            if (cv_ptr && !cv_ptr->image.empty()) {
-                                // Convert cv::Mat to ImageData
-                                ImageData img_data(cv_ptr->image.cols, cv_ptr->image.rows, cv_ptr->image.channels());
-                                const auto* data = cv_ptr->image.data;
-                                std::copy(data, data + cv_ptr->image.total() * cv_ptr->image.elemSize(),
-                                          img_data.data.begin());
-
-                                current_frame.image = std::move(img_data);
-                                current_frame.timestamp = img_msg->header.stamp.toSec();
-
-                                co_yield success(std::move(current_frame));
-
-                                // Reset for next frame
-                                current_frame = VioFrame();
-                            }
-                        } catch (const cv_bridge::Exception&) {
-                            co_yield make_unexpected(PerceptionError::DecodeFailure);
-                        } catch (const cv::Exception&) {
-                            co_yield make_unexpected(PerceptionError::DecodeFailure);
-                        }
-                    }
-                }
-            }
-
-        } catch (const rosbag::BagException&) {
-            co_yield make_unexpected(PerceptionError::InvalidInput);
-        } catch (const std::exception&) {
-            co_yield make_unexpected(PerceptionError::InvalidInput);
-        }
-    }
+}
 
 } // namespace perception

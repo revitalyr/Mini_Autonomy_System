@@ -114,15 +114,20 @@ target_sources(perception_modules PRIVATE
     modules/perception.image_loader.cpp
 )
 
-# Temporarily disabled due to ROS 1 to ROS 2 conversion needed
-# if(ROS_FOUND)
-#     target_sources(perception_modules PRIVATE
-#         modules/perception.ros_provider.cpp
-#     )
-# endif()
+# Stub implementation for demonstration (ROS 1 to ROS 2 migration needed)
+if(ROS_FOUND)
+    target_sources(perception_modules PRIVATE
+        modules/perception.ros_provider.cpp
+    )
+endif()
 
 # Создание исполняемого файла
 add_executable(perception_demo src/main.cpp)
+
+# Создание исполняемого файла для ROSBAG демо только если ROS доступен
+if(ROS_FOUND)
+    add_executable(rosbag_demo src/rosbag_demo.cpp)
+endif()
 
 # Линковка
 target_link_libraries(perception_demo PRIVATE 
@@ -131,10 +136,26 @@ target_link_libraries(perception_demo PRIVATE
     Threads::Threads
 )
 
+if(ROS_FOUND)
+    target_link_libraries(rosbag_demo PRIVATE
+        perception_modules
+        ${OpenCV_LIBS}
+        ${rclcpp_LIBRARIES}
+        ${cv_bridge_LIBRARIES}
+        ${rosbag2_cpp_LIBRARIES}
+        Threads::Threads
+    )
+endif()
+
 # Настройка путей включения
 target_include_directories(perception_demo PRIVATE include)
 if(ROS_FOUND)
     target_include_directories(perception_demo PRIVATE ${rclcpp_INCLUDE_DIRS} ${cv_bridge_INCLUDE_DIRS} ${sensor_msgs_INCLUDE_DIRS} ${std_msgs_INCLUDE_DIRS})
+endif()
+
+if(ROS_FOUND)
+    target_include_directories(rosbag_demo PRIVATE include)
+    target_include_directories(rosbag_demo PRIVATE ${rclcpp_INCLUDE_DIRS} ${cv_bridge_INCLUDE_DIRS} ${sensor_msgs_INCLUDE_DIRS} ${std_msgs_INCLUDE_DIRS})
 endif()
 
 # Современные настройки компилятора
@@ -180,6 +201,15 @@ else()
         $<$<CONFIG:Release>:-O3>
         $<$<CONFIG:Debug>:-g>
     )
+
+    if(ROS_FOUND)
+        target_compile_options(rosbag_demo PRIVATE
+            -Wall -Wextra -Wpedantic
+            -std=c++20
+            $<$<CONFIG:Release>:-O3>
+            $<$<CONFIG:Debug>:-g>
+        )
+    endif()
 endif()
 
 # Добавление современных библиотек и инструментов

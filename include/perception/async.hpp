@@ -144,7 +144,7 @@ namespace perception {
     };
 
     // Глобальный пул потоков
-    ThreadPool& get_global_thread_pool() {
+    inline ThreadPool& get_global_thread_pool() {
         static ThreadPool pool;
         return pool;
     }
@@ -211,7 +211,7 @@ namespace perception {
     // --- Вспомогательные функции (Missing Identifiers) ---
 
     // schedule_on: переключает выполнение корутины на пул потоков
-    auto schedule_on(ThreadPool& pool) {
+    inline auto schedule_on(ThreadPool& pool) {
         struct SchAwaiter {
             ThreadPool& p;
             bool await_ready() { return false; }
@@ -223,7 +223,7 @@ namespace perception {
         return SchAwaiter{pool};
     }
 
-    std::future<void> run_async(Task<void> task) {
+    inline std::future<void> run_async(Task<void> task) {
     std::promise<void> promise;
     auto future = promise.get_future();
 
@@ -246,14 +246,14 @@ namespace perception {
     return future;
 }
     // when_all: ожидает завершения списка задач
-    Task<void> when_all(std::vector<Task<void>> tasks) {
+    inline Task<void> when_all(std::vector<Task<void>> tasks) {
         for (auto& t : tasks) {
             co_await t;
         }
         co_return;
     }
 
-    Task<void> sleep_for(std::chrono::milliseconds ms) {
+    inline Task<void> sleep_for(std::chrono::milliseconds ms) {
         std::this_thread::sleep_for(ms);
         co_return;
     }
