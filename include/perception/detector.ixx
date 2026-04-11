@@ -42,14 +42,14 @@ export namespace perception {
      * Detects moving objects in image sequences and classifies them
      * into person, car, bicycle, or generic object categories
      */
-    class MockDetector {
+    class Detector {
     private:
         struct Impl;
         std::unique_ptr<Impl> impl_;
 
     public:
-        explicit MockDetector();
-        ~MockDetector();
+        explicit Detector();
+        ~Detector();
 
         /**
          * Detect objects in an image frame

@@ -1,6 +1,6 @@
 # Mini Autonomy System
 
-A modern C++20 modules-based perception system for autonomous applications, featuring object detection, tracking, and sensor fusion with full OpenCV integration.
+A modern C++20 modules-based perception system for autonomous applications, featuring object detection, image processing, and async operations with full OpenCV integration.
 
 ## Features
 
@@ -8,27 +8,28 @@ A modern C++20 modules-based perception system for autonomous applications, feat
 - **OpenCV Integration**: Full integration with OpenCV 4.x for computer vision operations
 - **Thread-safe Architecture**: Multi-threaded pipeline with lock-free queues
 - **Performance Metrics**: Real-time FPS and latency monitoring
-- **Async Operations**: Coroutine-based async operations with C++20
-- **Error Handling**: Custom Result<T> type for C++20 compatibility
-- **Object Detection**: Mock detector with OpenCV cv::Mat and cv::Rect support
-- **Thread Pool**: Efficient async task execution
+- **Async Operations**: Coroutine-based async operations
+- **Error Handling**: std::expected-based error handling
+- **Object Detection**: Motion-based object detection with background subtraction
+- **Async Image Loading**: Batch image loading with thread pool
+- **PIMPL Pattern**: OpenCV isolated in implementation, std types in interfaces
 
 ## Architecture
 
 ```
 Camera Input → Image Loader → Detector → Metrics → Output
      ↓              ↓           ↓        ↓       ↓
-   cv::Mat        Async      OpenCV   Stats  Console
+   ImageData       Async     Motion   Stats  Console
 ```
 
 ## Dependencies
 
 - **Required**:
   - C++20 compatible compiler (MSVC 19.30+, GCC 11+, Clang 13+)
-  - OpenCV 4.x (core, imgproc, imgcodecs, highgui)
+  - OpenCV 4.x (core, imgproc, imgcodecs)
   - CMake 3.28+
   - vcpkg package manager
-  - pthreads
+  - Catch2 v3 (for testing)
 
 ## Building with C++20 Modules
 
@@ -109,38 +110,51 @@ Demo completed successfully!
 ```
 Mini_Autonomy_System/
 ├── CMakeLists.txt              # C++20 modules build configuration
-├── modules/                    # C++20 modules (.cppm files)
-│   ├── perception.concepts.cppm    # Core concepts and interfaces
-│   ├── perception.result.cppm      # Result type and error handling
-│   ├── perception.async.cppm       # Async operations and coroutines
-│   ├── perception.queue.cppm        # Thread-safe queue implementation
-│   ├── perception.metrics.cppm     # Performance metrics tracking
-│   ├── perception.detector.simple.cppm  # Mock object detector
-│   ├── perception.image_loader.simple.cppm  # Async image loading
-│   └── perception.pipeline.cppm     # Pipeline orchestration
+├── include/                    # Module interface files (.ixx)
+│   └── perception/
+│       ├── types.ixx               # Common data types
+│       ├── concepts.ixx            # Core concepts
+│       ├── result.ixx              # Error handling
+│       ├── async.ixx               # Async operations
+│       ├── queue.ixx               # Thread-safe queue
+│       ├── metrics.ixx             # Performance metrics
+│       ├── detector.ixx            # Object detector interface
+│       ├── image_loader.ixx        # Image loader interface
+│       └── pipeline.ixx            # Pipeline orchestration
+├── modules/                    # Implementation files (.cpp)
+│   ├── perception.detector.cpp     # Detector implementation
+│   └── perception.image_loader.cpp  # Image loader implementation
 ├── src/
 │   └── main.cpp                # Demo application
+├── tests/                      # Catch2 v3 tests
 ├── build/                      # Build output directory
 └── README.md                   # This file
 ```
 
 ## Module Documentation
 
+### perception.types
+Common data types:
+- `ImageData` - Raw image data with pixel buffer
+- `Rect` - Bounding box coordinates
+- `Config` - Configuration settings
+- `Expected<T, E>` - Error handling wrapper
+- Type aliases for containers and smart pointers
+
 ### perception.concepts
-Defines C++20 concepts for type safety:
+Type safety concepts:
 - `Detector<T>` - Object detection interfaces
 - `Queue<T>` - Thread-safe queue requirements
 - `MetricsProvider<T>` - Performance monitoring interfaces
-- `AsyncOperation<T>` - Async operation requirements
 
 ### perception.result
-Custom error handling for C++20:
-- `Result<T>` - std::expected replacement for C++20
+Error handling:
+- `Result<T>` - Custom result type for error handling
 - `PerceptionError` - Domain-specific error codes
 - `AsyncResult<T>` - Async result wrapper
 
 ### perception.async
-Async operations and coroutines:
+Async operations:
 - `Task<T>` - Coroutine-based async tasks
 - `Generator<T>` - Lazy sequence generation
 - `ThreadPool` - Thread pool for async execution
@@ -155,19 +169,20 @@ Thread-safe data structures:
 Performance monitoring:
 - `PerformanceMetrics` - FPS and latency tracking
 - `MetricsSnapshot` - Current performance state
-- Real-time statistics
 
-### perception.detector.simple
-Mock object detector:
-- OpenCV cv::Mat integration
-- cv::Rect bounding boxes
-- Detection results with confidence scores
+### perception.detector
+Motion-based object detector:
+- Background subtraction for motion detection
+- Contour-based object detection
+- Classification into person, car, bicycle, object
+- PIMPL pattern with OpenCV isolated in implementation
 
-### perception.image_loader.simple
+### perception.image_loader
 Async image loading:
 - Generator-based lazy loading
-- OpenCV imread integration
-- Error handling with Result<T>
+- Batch image loading from directories
+- Support for JPEG, PNG, BMP, TIFF, WebP
+- Thread pool for parallel loading
 
 ## API Examples
 
@@ -196,9 +211,10 @@ std::cout << "FPS: " << snapshot.fps << std::endl;
 ### Using Object Detection
 ```cpp
 import perception.detector;
+import perception.types;
 
-auto detector = std::make_unique<perception::MockDetector>();
-cv::Mat frame = cv::imread("image.jpg");
+auto detector = std::make_unique<perception::Detector>();
+ImageData frame = /* load image */;
 auto detections = detector->detect(frame);
 for (const auto& det : detections) {
     std::cout << "Found: " << det.class_name << std::endl;
@@ -256,20 +272,21 @@ std::cout << "Result: " << future.get() << std::endl;
 ## Extending the System
 
 ### Adding New Modules
-1. Create `.cppm` file in `modules/` directory
+1. Create `.ixx` interface file in `include/perception/`
 2. Export module with `export module perception.newmodule;`
-3. Add to `CMakeLists.txt` module list
-4. Import and use in main application
+3. Create `.cpp` implementation file in `modules/`
+4. Add to `CMakeLists.txt` module list
+5. Import and use in main application
 
-### Real Object Detection
-Replace `MockDetector` with actual implementation:
+### Custom Object Detection
+Extend the detector with custom implementation:
 ```cpp
-// In perception.detector.real.cppm
-export class RealDetector {
-    std::vector<Detection> detect(const cv::Mat& frame) override {
-        // Your real detection implementation
-    }
-};
+// In perception.detector.cpp
+// The current implementation uses background subtraction
+// Replace with your preferred detection algorithm:
+// - YOLO via OpenCV DNN
+// - Haar cascades
+// - Custom deep learning models
 ```
 
 ### Additional Metrics

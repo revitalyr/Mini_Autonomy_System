@@ -16,7 +16,7 @@ import perception.metrics;
 namespace perception {
 
     // PIMPL implementation - knows about OpenCV
-    struct MockDetector::Impl {
+    struct Detector::Impl {
         std::vector<std::string> class_names{"person", "car", "bicycle", "object"};
         cv::Ptr<cv::BackgroundSubtractorMOG2> bg_subtractor;
         cv::Mat prev_frame;
@@ -26,14 +26,14 @@ namespace perception {
 
     // --- Constructor/Destructor ---
 
-    MockDetector::MockDetector()
+    Detector::Detector()
         : impl_(std::make_unique<Impl>()) {}
 
-    MockDetector::~MockDetector() = default;
+    Detector::~Detector() = default;
 
     // --- Detection ---
 
-    std::vector<Detection> MockDetector::detect(const ImageData& frame) {
+    std::vector<Detection> Detector::detect(const ImageData& frame) {
         std::vector<Detection> detections;
 
         // Convert ImageData to cv::Mat for processing
@@ -110,7 +110,7 @@ namespace perception {
         return detections;
     }
 
-    const std::vector<std::string>& MockDetector::get_class_names() const {
+    const std::vector<std::string>& Detector::get_class_names() const {
         return impl_->class_names;
     }
 

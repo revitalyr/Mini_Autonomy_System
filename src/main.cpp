@@ -144,7 +144,7 @@ private:
     UniquePtr<ThreadSafeQueue<Vector<Detection>>> m_result_queue;
     UniquePtr<ThreadPool> m_thread_pool;
     UniquePtr<PerformanceMetrics> m_metrics;
-    UniquePtr<MockDetector> m_detector;
+    UniquePtr<Detector> m_detector;
     Atomic<bool> m_is_running{false};
 
 public:
@@ -153,7 +153,7 @@ public:
         , m_result_queue{make_unique<ThreadSafeQueue<Vector<Detection>>>()}
         , m_thread_pool{make_unique<ThreadPool>(config.thread_pool_size)}
         , m_metrics{make_unique<PerformanceMetrics>()}
-        , m_detector{make_unique<MockDetector>()} {}
+        , m_detector{make_unique<Detector>()} {}
 
     AsyncProcessingPipeline(const AsyncProcessingPipeline&) = delete;
     auto operator=(const AsyncProcessingPipeline&) -> AsyncProcessingPipeline& = delete;
