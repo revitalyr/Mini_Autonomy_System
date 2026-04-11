@@ -15,10 +15,10 @@ module;
 export module perception.types;
 
 /**
- * @brief Type aliases and common types for perception system
+ * @brief Common data types for perception system
  *
- * This module defines all common type aliases used throughout the perception system
- * using standard C++20/23 types.
+ * Defines standard data structures used throughout the perception system
+ * for images, detections, and configuration.
  *
  * @author Mini Autonomy System
  * @date 2026
@@ -30,11 +30,9 @@ export namespace perception {
 // STANDARD TYPE ALIASES
 // ============================================================================
 
-// String types
 using String = std::string;
 using StringView = std::string_view;
 
-// Container types
 export template<typename T>
 using Vector = std::vector<T>;
 
@@ -50,16 +48,13 @@ using Unexpected = std::unexpected<E>;
 export template<typename E>
 auto make_unexpected(E e) { return std::unexpected(e); }
 
-// Time types
 using Milliseconds = std::chrono::milliseconds;
 using Seconds = std::chrono::seconds;
 
-// Helper function to convert duration to milliseconds
 export auto to_milliseconds(auto duration) -> Milliseconds {
     return std::chrono::duration_cast<Milliseconds>(duration);
 }
 
-// Thread types
 using Mutex = std::mutex;
 
 export template<typename T>
@@ -74,10 +69,11 @@ using Atomic = std::atomic<T>;
 // PERCEPTION-SPECIFIC TYPES
 // ============================================================================
 
-// Confidence type (0.0 to 1.0)
 using Confidence = double;
 
-// Rectangle type for bounding boxes
+/**
+ * Rectangle bounding box for object detection
+ */
 struct Rect {
     double x, y, width, height;
 
@@ -88,7 +84,9 @@ struct Rect {
     double area() const { return width * height; }
 };
 
-// Image data structure using only std types
+/**
+ * Raw image data with pixel buffer
+ */
 struct ImageData {
     int width;
     int height;
@@ -103,14 +101,15 @@ struct ImageData {
     bool empty() const { return width == 0 || height == 0; }
 };
 
-// Configuration structure for components
+/**
+ * Configuration settings for perception components
+ */
 struct Config {
     size_t thread_pool_size = 4;
     size_t max_queue_size = 100;
     double confidence_threshold = 0.5;
 };
 
-// Callable type alias
 template<typename T>
 using Callable = T;
 

@@ -13,37 +13,55 @@ import perception.metrics;
 
 export namespace perception {
 
-    // Detection result structure using only std types
+    /**
+     * Detection result containing bounding box, confidence, and class information
+     */
     struct Detection {
-        Rect bbox;              // Bounding box (from perception.types)
-        float confidence;      // Confidence score
-        int class_id;          // Class ID
-        std::string class_name; // Class name
+        Rect bbox;              // Bounding box coordinates
+        float confidence;      // Detection confidence (0.0 to 1.0)
+        int class_id;          // Class identifier
+        std::string class_name; // Human-readable class name
 
         Detection(Rect b, float conf, int id, std::string name)
             : bbox(std::move(b)), confidence(conf), class_id(id), class_name(std::move(name)) {}
     };
 
-    // Helper function for filtering detections by confidence
+    /**
+     * Filter detections by minimum confidence threshold
+     * @param threshold Minimum confidence required (0.0 to 1.0)
+     * @return Predicate function for filtering
+     */
     export auto filter_by_confidence(float threshold) {
         return [threshold](const Detection& det) {
             return det.confidence >= threshold;
         };
     }
 
-    // Mock detector for testing
+    /**
+     * Motion-based object detector using background subtraction
+     * Detects moving objects in image sequences and classifies them
+     * into person, car, bicycle, or generic object categories
+     */
     class MockDetector {
     private:
-        struct Impl; // PIMPL - hides OpenCV implementation
+        struct Impl;
         std::unique_ptr<Impl> impl_;
 
     public:
         explicit MockDetector();
         ~MockDetector();
 
-        // Use ImageData (from perception.types) instead of cv::Mat
+        /**
+         * Detect objects in an image frame
+         * @param frame Image data to analyze
+         * @return List of detected objects with bounding boxes and classifications
+         */
         std::vector<Detection> detect(const ImageData& frame);
 
+        /**
+         * Get supported class names
+         * @return List of class names the detector can identify
+         */
         const std::vector<std::string>& get_class_names() const;
     };
 

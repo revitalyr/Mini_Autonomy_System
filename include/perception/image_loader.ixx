@@ -17,7 +17,10 @@ import perception.result;
 
 export namespace perception {
 
-    // Simple C++20 Generator for lazy sequences
+    /**
+     * Lazy sequence generator for streaming results
+     * @tparam T Type of values in the sequence
+     */
     template<typename T>
     struct Generator {
         struct promise_type;
@@ -70,20 +73,35 @@ export namespace perception {
         }
     };
 
-    // Simple async image loader
+    /**
+     * Asynchronous image loader for batch processing
+     * Loads images from directories or individual files using a thread pool
+     * Supports common image formats: JPEG, PNG, BMP, TIFF, WebP
+     */
     class AsyncImageLoader {
     private:
-        struct Impl; // PIMPL - hides OpenCV implementation
+        struct Impl;
         std::unique_ptr<Impl> impl_;
 
     public:
+        /**
+         * @param num_threads Number of worker threads for parallel loading
+         */
         explicit AsyncImageLoader(size_t num_threads = 2);
         ~AsyncImageLoader();
 
-        // Load images from directory asynchronously
+        /**
+         * Load all images from a directory
+         * @param directory Path to directory containing images
+         * @return Generator yielding image data for each image found
+         */
         Generator<PerceptionResult<ImageData>> load_images(const std::filesystem::path& directory);
 
-        // Load single image asynchronously
+        /**
+         * Load a single image file
+         * @param path Path to image file
+         * @return Future containing image data or error
+         */
         std::future<PerceptionResult<ImageData>> load_image(const std::filesystem::path& path);
     };
 }
