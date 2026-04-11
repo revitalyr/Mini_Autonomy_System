@@ -1,6 +1,13 @@
+module;
+
+// Include required standard library headers for concepts
+#include <concepts>
+#include <type_traits>
+#include <ranges>
+#include <format>
+
 export module perception.concepts;
 
-// Import modern type system
 import perception.types;
 
 /**
@@ -199,13 +206,14 @@ concept ThreadPool = requires(T pool) {
     { pool.shutdown() } -> std::same_as<void>;
     { pool.is_shutdown() } -> std::convertible_to<bool>;
     
-    // Task submission
-    requires requires(T p, Callable<void> task) {
-        { p.submit(task) } -> std::same_as<AsyncOperation<decltype(p.submit(task))>>;
+    // Task submission - check if submit accepts callable objects
+    requires requires(T p) {
+        { p.submit([]{}) } -> std::same_as<AsyncOperation<decltype(p.submit([]{}))>>;
     };
     
-    requires requires(T p, Callable<int> task) {
-        { p.submit(task) } -> std::same_as<AsyncOperation<decltype(p.submit(task))>>;
+    // Alternative: check submit with int-returning task
+    requires requires(T p) {
+        { p.submit([]{ return 0; }) } -> std::same_as<AsyncOperation<decltype(p.submit([]{ return 0; }))>>;
     };
 };
 
@@ -280,7 +288,7 @@ concept Configurable = requires(T component, typename T::ConfigType config) {
  * @brief Concept for observable components (callback support)
  */
 template<typename T>
-concept Observable = requires(T component, Callable<void> callback) {
+concept Observable = requires(T component, auto callback) {
     { component.add_observer(callback) } -> std::same_as<void>;
     { component.remove_observer(callback) } -> std::same_as<void>;
     { component.notify_observers() } -> std::same_as<void>;

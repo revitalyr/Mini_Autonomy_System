@@ -2,6 +2,7 @@ module;
 
 #include <queue>
 #include <mutex>
+#include <semaphore>
 #include <condition_variable>
 #include <optional>
 #include <chrono>
