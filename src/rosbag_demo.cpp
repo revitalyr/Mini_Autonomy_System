@@ -164,11 +164,17 @@ auto main(int argc, char* argv[]) -> int {
         if (argc > 1) {
             bag_path = argv[1];
         } else {
-            // Use dummy path for stub demonstration
-            bag_path = "dummy.bag";
+            // Use default ROS 2 test file
+            bag_path = "demo/data/dataset_ros2";
         }
 
-        std::cout << "Note: Using stub ROS provider (ROS 1 to ROS 2 migration needed)\n";
+        // Check if bag file exists
+        if (!std::filesystem::exists(bag_path)) {
+            std::cout << "Error: Bag file not found: " << bag_path << "\n";
+            std::cout << "Usage: rosbag_demo [path_to_bag_file]\n";
+            return 1;
+        }
+
         std::cout << "Bag file path: " << bag_path << "\n\n";
 
         // Run basic demo

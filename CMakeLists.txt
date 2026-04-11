@@ -69,7 +69,7 @@ target_include_directories(perception_modules PUBLIC
 # Добавляем OpenCV include directories
 target_include_directories(perception_modules PUBLIC ${OpenCV_INCLUDE_DIRS})
 if(ROS_FOUND)
-    target_include_directories(perception_modules PUBLIC ${rclcpp_INCLUDE_DIRS} ${cv_bridge_INCLUDE_DIRS} ${sensor_msgs_INCLUDE_DIRS} ${std_msgs_INCLUDE_DIRS})
+    target_include_directories(perception_modules PUBLIC ${rclcpp_INCLUDE_DIRS} ${cv_bridge_INCLUDE_DIRS} ${sensor_msgs_INCLUDE_DIRS} ${std_msgs_INCLUDE_DIRS} ${rosbag2_cpp_INCLUDE_DIRS} /opt/ros/jazzy/include/cv_bridge)
 endif()
 
 # Линкуем OpenCV и ROS к модулям
