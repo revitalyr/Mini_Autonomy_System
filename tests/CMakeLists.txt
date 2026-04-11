@@ -20,6 +20,7 @@ add_executable(test_vision test_vision.cpp)
 target_link_libraries(test_vision PRIVATE
     GTest::gtest
     GTest::gtest_main
+    perception_modules
     ${OpenCV_LIBS}
     Threads::Threads
 )

@@ -6,8 +6,10 @@ module;
 #include <algorithm>
 #include <numeric>
 #include <ranges>
-#include <format>
-#include <print>
+#include <mutex>
+#include <limits>
+#include <iostream>
+#include <iomanip>
 
 export module perception.metrics;
 
@@ -38,7 +40,7 @@ export namespace perception {
             double p95_latency_ms;
             double p99_latency_ms;
             uint64_t total_frames;
-            std::chrono::milliseconds uptime;
+            double duration_seconds;
         };
 
         void record_frame_latency(double latency_ms) noexcept {
@@ -48,16 +50,18 @@ export namespace perception {
             total_latency_ms_.fetch_add(latency_ms, std::memory_order_relaxed);
             
             // Update min/max with compare_exchange
-            double current_min = min_latency_ms_.load();
+            double current_min = min_latency_ms_.load(std::memory_order_relaxed);
             while (latency_ms < current_min && 
-                   !min_latency_ms_.compare_exchange_weak(current_min, latency_ms)) {
-                current_min = min_latency_ms_.load();
+                   !min_latency_ms_.compare_exchange_weak(current_min, latency_ms, 
+                                                          std::memory_order_relaxed)) {
+                // Retry if compare_exchange failed
             }
             
-            double current_max = max_latency_ms_.load();
+            double current_max = max_latency_ms_.load(std::memory_order_relaxed);
             while (latency_ms > current_max && 
-                   !max_latency_ms_.compare_exchange_weak(current_max, latency_ms)) {
-                current_max = max_latency_ms_.load();
+                   !max_latency_ms_.compare_exchange_weak(current_max, latency_ms, 
+                                                          std::memory_order_relaxed)) {
+                // Retry if compare_exchange failed
             }
             
             // Update sliding window
@@ -70,23 +74,24 @@ export namespace perception {
             }
         }
 
-        MetricsSnapshot get_snapshot() const noexcept {
-            const uint64_t frames = frame_count_.load();
-            const double total_latency = total_latency_ms_.load();
-            const double min_latency = min_latency_ms_.load();
-            const double max_latency = max_latency_ms_.load();
-            
+        [[nodiscard]] MetricsSnapshot get_snapshot() const {
+            const uint64_t frames = frame_count_.load(std::memory_order_relaxed);
             const auto now = std::chrono::steady_clock::now();
             const auto uptime = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_);
+            const double duration_seconds = uptime.count() / 1000.0;
             
-            MetricsSnapshot snapshot;
-            snapshot.total_frames = frames;
-            snapshot.uptime = uptime;
-            snapshot.avg_latency_ms = frames > 0 ? total_latency / frames : 0.0;
-            snapshot.min_latency_ms = min_latency;
-            snapshot.max_latency_ms = max_latency;
+            double fps = 0.0;
+            if (uptime.count() > 0) {
+                fps = (static_cast<double>(frames) * 1000.0) / static_cast<double>(uptime.count());
+            }
+            
+            const double total_latency = total_latency_ms_.load(std::memory_order_relaxed);
+            const double avg_latency = frames > 0 ? total_latency / frames : 0.0;
+            const double min_lat = min_latency_ms_.load(std::memory_order_relaxed);
+            const double max_lat = max_latency_ms_.load(std::memory_order_relaxed);
             
             // Calculate percentiles from sliding window
+            double p95 = 0.0, p99 = 0.0;
             {
                 std::lock_guard<std::mutex> lock(recent_latencies_mutex_);
                 if (!recent_latencies_.empty()) {
@@ -94,32 +99,28 @@ export namespace perception {
                     std::ranges::sort(sorted_latencies);
                     
                     const size_t size = sorted_latencies.size();
-                    const size_t p95_idx = static_cast<size_t>(0.95 * size);
-                    const size_t p99_idx = static_cast<size_t>(0.99 * size);
-                    
-                    snapshot.p95_latency_ms = sorted_latencies[std::min(p95_idx, size - 1)];
-                    snapshot.p99_latency_ms = sorted_latencies[std::min(p99_idx, size - 1)];
-                } else {
-                    snapshot.p95_latency_ms = 0.0;
-                    snapshot.p99_latency_ms = 0.0;
+                    p95 = sorted_latencies[static_cast<size_t>(size * 0.95)];
+                    p99 = sorted_latencies[static_cast<size_t>(size * 0.99)];
                 }
             }
             
-            // Calculate FPS
-            if (uptime.count() > 0) {
-                snapshot.fps = (frames * 1000.0) / uptime.count();
-            } else {
-                snapshot.fps = 0.0;
-            }
-            
-            return snapshot;
+            return {
+                .fps = fps,
+                .avg_latency_ms = avg_latency,
+                .min_latency_ms = min_lat == std::numeric_limits<double>::max() ? 0.0 : min_lat,
+                .max_latency_ms = max_lat,
+                .p95_latency_ms = p95,
+                .p99_latency_ms = p99,
+                .total_frames = frames,
+                .duration_seconds = duration_seconds
+            };
         }
 
         void reset() noexcept {
-            frame_count_.store(0);
-            total_latency_ms_.store(0.0);
-            min_latency_ms_.store(std::numeric_limits<double>::max());
-            max_latency_ms_.store(0.0);
+            frame_count_.store(0, std::memory_order_relaxed);
+            total_latency_ms_.store(0.0, std::memory_order_relaxed);
+            min_latency_ms_.store(std::numeric_limits<double>::max(), std::memory_order_relaxed);
+            max_latency_ms_.store(0.0, std::memory_order_relaxed);
             start_time_ = std::chrono::steady_clock::now();
             
             {
@@ -128,19 +129,42 @@ export namespace perception {
             }
         }
 
-        void print_snapshot() const {
+        // C++23 std::print support (using cout for now)
+        void print_metrics() const {
             const auto snapshot = get_snapshot();
-            
-            std::println("=== Performance Metrics ===");
-            std::println("FPS: {:.2f}", snapshot.fps);
-            std::println("Total Frames: {}", snapshot.total_frames);
-            std::println("Uptime: {}ms", snapshot.uptime.count());
-            std::println("Average Latency: {:.2f}ms", snapshot.avg_latency_ms);
-            std::println("Min Latency: {:.2f}ms", snapshot.min_latency_ms);
-            std::println("Max Latency: {:.2f}ms", snapshot.max_latency_ms);
-            std::println("95th Percentile: {:.2f}ms", snapshot.p95_latency_ms);
-            std::println("99th Percentile: {:.2f}ms", snapshot.p99_latency_ms);
-            std::println("========================");
+            std::cout << "📊 Performance Metrics:\n";
+            std::cout << "   FPS: " << std::fixed << std::setprecision(2) << snapshot.fps << "\n";
+            std::cout << "   Avg Latency: " << std::fixed << std::setprecision(2) << snapshot.avg_latency_ms << "ms\n";
+            std::cout << "   Min/Max Latency: " << std::fixed << std::setprecision(2) << snapshot.min_latency_ms 
+                      << "ms / " << std::fixed << std::setprecision(2) << snapshot.max_latency_ms << "ms\n";
+            std::cout << "   P95/P99 Latency: " << std::fixed << std::setprecision(2) << snapshot.p95_latency_ms 
+                      << "ms / " << std::fixed << std::setprecision(2) << snapshot.p99_latency_ms << "ms\n";
+            std::cout << "   Total Frames: " << snapshot.total_frames << "\n";
+            std::cout << "   Duration: " << std::fixed << std::setprecision(2) << snapshot.duration_seconds << "s\n";
         }
     };
+
+    // RAII timer for automatic latency recording
+    class LatencyTimer {
+    private:
+        PerformanceMetrics& metrics_;
+        std::chrono::steady_clock::time_point start_time_;
+
+    public:
+        explicit LatencyTimer(PerformanceMetrics& metrics) 
+            : metrics_(metrics), start_time_(std::chrono::steady_clock::now()) {}
+
+        ~LatencyTimer() noexcept {
+            const auto end_time = std::chrono::steady_clock::now();
+            const auto latency = std::chrono::duration<double, std::milli>(end_time - start_time_);
+            metrics_.record_frame_latency(latency.count());
+        }
+
+        // Disable copy and move
+        LatencyTimer(const LatencyTimer&) = delete;
+        LatencyTimer& operator=(const LatencyTimer&) = delete;
+        LatencyTimer(LatencyTimer&&) = delete;
+        LatencyTimer& operator=(LatencyTimer&&) = delete;
+    };
+
 }

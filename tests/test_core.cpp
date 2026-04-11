@@ -3,21 +3,7 @@ import perception.queue;
 import perception.metrics;
 #include <thread>
 
-// Test ThreadSafeQueue
-class ThreadSafeQueueTest : public ::testing::Test {
-protected:
-    perception::ThreadSafeQueue<int> queue_;
-
-    void SetUp() override {
-        // Setup if needed
-    }
-    
-    void TearDown() override {
-        // Cleanup if needed
-    }
-};
-
-TEST_F(ThreadSafeQueueTest, BasicOperations) {
+TEST(ThreadSafeQueueTest, BasicOperations) {
     perception::ThreadSafeQueue<int> queue;
 
     // Test empty queue
@@ -36,7 +22,7 @@ TEST_F(ThreadSafeQueueTest, BasicOperations) {
     EXPECT_EQ(queue.size(), 0);
 }
 
-TEST_F(ThreadSafeQueueTest, TimeoutOperations) {
+TEST(ThreadSafeQueueTest, TimeoutOperations) {
     perception::ThreadSafeQueue<int> queue;
 
     // Test timeout on empty queue
@@ -48,7 +34,7 @@ TEST_F(ThreadSafeQueueTest, TimeoutOperations) {
     EXPECT_GE(duration.count(), 40); // Should wait at least 40ms
 }
 
-TEST_F(ThreadSafeQueueTest, ConcurrentOperations) {
+TEST(ThreadSafeQueueTest, ConcurrentOperations) {
     perception::ThreadSafeQueue<int> queue;
     const int num_items = 100;
     const int num_producers = 4;
@@ -86,42 +72,34 @@ TEST_F(ThreadSafeQueueTest, ConcurrentOperations) {
     EXPECT_TRUE(queue.empty());
 }
 
-// Test Metrics
-class MetricsTest : public ::testing::Test {
-protected:
-    perception::PerformanceMetrics metrics_;
-};
+TEST(MetricsTest, BasicMetrics) {
+    perception::PerformanceMetrics metrics;
 
-TEST_F(MetricsTest, BasicMetrics) {
     // Initial state
-    auto snapshot = metrics_.get_snapshot();
+    auto snapshot = metrics.get_snapshot();
     EXPECT_EQ(snapshot.total_frames, 0);
     EXPECT_EQ(snapshot.fps, 0.0);
 
     // Simulate frame processing
-    metrics_.record_frame_latency(33.0);
+    metrics.record_frame_latency(33.0);
 
-    snapshot = metrics_.get_snapshot();
+    snapshot = metrics.get_snapshot();
     EXPECT_EQ(snapshot.total_frames, 1);
     EXPECT_GT(snapshot.avg_latency_ms, 30.0);
 }
 
-TEST_F(MetricsTest, MultipleFrames) {
+TEST(MetricsTest, MultipleFrames) {
+    perception::PerformanceMetrics metrics;
     const int num_frames = 10;
     const double frame_latency_ms = 16.0; // ~60 FPS
 
     for (int i = 0; i < num_frames; ++i) {
-        metrics_.record_frame_latency(frame_latency_ms);
+        metrics.record_frame_latency(frame_latency_ms);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    auto snapshot = metrics_.get_snapshot();
+    auto snapshot = metrics.get_snapshot();
     EXPECT_EQ(snapshot.total_frames, num_frames);
     EXPECT_GT(snapshot.fps, 50.0); // Should be around 60 FPS
     EXPECT_LT(snapshot.avg_latency_ms, 20.0);
-}
-
-int main(int argc, char** argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
 }

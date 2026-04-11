@@ -46,18 +46,24 @@ target_include_directories(perception_modules PUBLIC ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(perception_modules PUBLIC ${OpenCV_LIBS})
 
 target_sources(perception_modules PUBLIC
-    FILE_SET CXX_MODULES TYPE CXX_MODULES 
-    BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/modules"
+    FILE_SET CXX_MODULES TYPE CXX_MODULES
+    BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
     FILES
-        modules/perception.types.cppm
-        modules/perception.concepts.cppm
-        modules/perception.result.cppm
-        modules/perception.async.cppm
-        modules/perception.queue.cppm
-        modules/perception.metrics.cppm
-        modules/perception.image_loader.simple.cppm
-        modules/perception.detector.simple.cppm
-        modules/perception.pipeline.cppm
+        include/perception/types.ixx
+        include/perception/concepts.ixx
+        include/perception/result.ixx
+        include/perception/async.ixx
+        include/perception/queue.ixx
+        include/perception/metrics.ixx
+        include/perception/image_loader.ixx
+        include/perception/detector.ixx
+        include/perception/pipeline.ixx
+)
+
+# Add implementation files for modules with PIMPL pattern
+target_sources(perception_modules PRIVATE
+    modules/perception.detector.cpp
+    modules/perception.image_loader.cpp
 )
 
 # Создание исполняемого файла

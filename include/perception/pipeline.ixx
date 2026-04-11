@@ -9,6 +9,7 @@ module;
 #include <algorithm>
 #include <stop_token>
 #include <future>
+#include <coroutine>
 
 export module perception.pipeline;
 
@@ -49,49 +50,126 @@ export namespace perception {
     // Modern async pipeline with coroutines support
     class AsyncPipeline {
     private:
-        std::vector<std::unique_ptr<PipelineStageWrapperBase>> stages_;
-        std::vector<std::jthread> workers_;
+        struct StageContainer {
+            std::unique_ptr<void, std::function<void(void*)>> instance;
+            std::function<void()> run_fn;
+            std::function<void()> stop_fn;
+        };
+
+        std::vector<StageContainer> stages_;
+        std::future<void> pipeline_task_;
         std::atomic<bool> running_{false};
-        
+
     public:
+        AsyncPipeline() = default;
+        
+        ~AsyncPipeline() {
+            stop();
+        }
+
+        // Add stage with type erasure for any PipelineStage
         template<PipelineStage Stage, typename... Args>
         void add_stage(Args&&... args) {
-            stages_.emplace_back(std::make_unique<PipelineStageWrapper<Stage>>(std::forward<Args>(args)...));
+            auto stage_wrapper = std::make_unique<PipelineStageWrapper<Stage>>(
+                std::forward<Args>(args)...
+            );
+            
+            StageContainer container;
+            
+            // Create run/stop type-erased delegates
+            container.run_fn = [raw = stage_wrapper.get()]() { raw->run(); };
+            container.stop_fn = [raw = stage_wrapper.get()]() { raw->stop(); };
+            
+            // Store ownership
+            container.instance = std::unique_ptr<void, std::function<void(void*)>>(
+                stage_wrapper.release(),
+                [](void* ptr) { delete static_cast<PipelineStageWrapper<Stage>*>(ptr); }
+            );
+            
+            stages_.push_back(std::move(container));
         }
-        
+
         void start() {
+            if (running_) return;
+            
             running_ = true;
             
-            // Create worker threads
-            for (auto& stage : stages_) {
-                workers_.emplace_back([stage = stage.get()]() mutable {
-                    stage.run();
-                });
-            }
+            // Spawn the pipeline supervisor
+            pipeline_task_ = run_async([this]() -> Task<void> {
+                std::vector<Task<void>> tasks;
+                tasks.reserve(stages_.size());
+                
+                for (auto& stage : stages_) {
+                    // Create a task for each stage to run on the thread pool
+                    tasks.emplace_back([&stage]() -> Task<void> {
+                        co_await schedule_on(get_global_thread_pool());
+                        stage.run_fn();
+                    }());
+                }
+                
+                // Wait for all stages to complete (usually when stop() is called)
+                if (!tasks.empty()) {
+                    co_await when_all(std::move(tasks));
+                }
+                
+                co_return; // Explicit return for void coroutine
+            }());
         }
-        
-        void stop() {
+
+        void stop() noexcept {
+            if (!running_) return;
+            
             running_ = false;
             
             // Stop all stages
             for (auto& stage : stages_) {
-                stage.stop();
+                stage.stop_fn();
             }
             
-            // Wait for all threads
-            for (auto& worker : workers_) {
-                if (worker.joinable()) {
-                    worker.join();
-                }
+            // Wait for pipeline supervisor (and all stages) to finish
+            if (pipeline_task_.valid()) {
+                pipeline_task_.wait();
             }
         }
-        
-        bool is_running() const noexcept {
-            return running_.load();
+
+        [[nodiscard]] bool is_running() const noexcept {
+            return running_;
         }
-        
-        size_t stage_count() const noexcept {
+
+        [[nodiscard]] size_t stage_count() const noexcept {
             return stages_.size();
         }
     };
+
+    // Modern functional pipeline with ranges
+    template<typename Input, typename Output>
+    class FunctionalPipeline {
+    private:
+        std::vector<std::function<Output(const Input&)>> stages_;
+        
+    public:
+        template<typename Func>
+        requires std::invocable<Func, Input>
+        void add_stage(Func&& func) {
+            stages_.emplace_back(std::forward<Func>(func));
+        }
+
+        Output process(const Input& input) const {
+            auto result = input;
+            for (const auto& stage : stages_) {
+                // For simplicity, assuming all stages return the same type
+                // In practice, you'd use type composition
+                result = stage(result);
+            }
+            return result;
+        }
+
+        // Process a range of inputs
+        auto process_range(std::ranges::range auto&& inputs) const {
+            return inputs | std::views::transform([this](const auto& input) {
+                return process(input);
+            });
+        }
+    };
+
 }

@@ -5,6 +5,7 @@
 #include <variant>
 #include <chrono>
 #include <mutex>
+#include <cstdint>
 
 export module perception.types;
 
@@ -72,7 +73,7 @@ using Mutex = std::mutex;
 struct PerceptionError {
     String message;
     int code;
-    
+
     PerceptionError() : code(0) {}
     PerceptionError(String msg, int c = 0) : message(std::move(msg)), code(c) {}
 };
@@ -83,23 +84,26 @@ using Confidence = double;
 // Rectangle type for bounding boxes
 struct Rect {
     double x, y, width, height;
-    
+
     Rect() : x(0), y(0), width(0), height(0) {}
-    Rect(double x_, double y_, double w, double h) 
+    Rect(double x_, double y_, double w, double h)
         : x(x_), y(y_), width(w), height(h) {}
-    
+
     double area() const { return width * height; }
 };
 
-// Image placeholder type (would typically use cv::Mat or similar)
-struct Image {
+// Image data structure using only std types
+struct ImageData {
     int width;
     int height;
     int channels;
-    
-    Image() : width(0), height(0), channels(0) {}
-    Image(int w, int h, int c = 3) : width(w), height(h), channels(c) {}
-    
+    std::vector<uint8_t> data;
+
+    ImageData() : width(0), height(0), channels(0) {}
+    ImageData(int w, int h, int c) : width(w), height(h), channels(c) {
+        data.resize(w * h * c);
+    }
+
     bool empty() const { return width == 0 || height == 0; }
 };
 

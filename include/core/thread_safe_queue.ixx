@@ -2,279 +2,195 @@ module;
 
 #include <queue>
 #include <mutex>
+#include <semaphore>
 #include <condition_variable>
 #include <optional>
 #include <chrono>
-#include <concepts>
-#include <ranges>
-#include <algorithm>
-#include <memory>
-
-export module perception_thread_safe_queue;
-
-namespace perception {
-
-// Semantic type aliases
-using QueueSize = size_t;
-using TimeoutMs = std::chrono::milliseconds;
-using LockGuard = std::lock_guard<std::mutex>;
-using UniqueLock = std::unique_lock<std::mutex>;
+#include <stop_token>
 
 /**
- * @brief Concept for thread-safe queue element types
- */
-template<typename T>
-concept QueueElement = requires {
-    typename T;
-    std::is_copy_constructible_v<T>;
-    std::is_move_constructible_v<T>;
-    std::is_copy_assignable_v<T>;
-    std::is_move_assignable_v<T>;
-};
-
-/**
- * @brief Modern thread-safe queue implementation with proper naming conventions
+ * @file perception.queue.cppm
+ * @brief Thread-safe queue implementations for the perception system
  * 
- * This class provides thread-safe queue operations with modern C++20/26 features.
- * Supports timeout, clear operations, RAII resource management, and range-based operations.
+ * This module provides thread-safe queue implementations with timeout support,
+ * shutdown capabilities, and lock-free operations where possible.
+ * 
+ * @author Mini Autonomy System
+ * @date 2026
  */
-template<QueueElement T>
-class ThreadSafeQueue {
-private:
-    std::queue<T> m_queue;
-    mutable std::mutex m_mutex;
-    std::condition_variable m_condition;
-    std::atomic<bool> m_is_shutdown{false};
-    
-public:
+
+export module perception.queue;
+
+import perception.concepts;
+
+export namespace perception {
     /**
-     * @brief Default constructor
+     * @brief Thread-safe queue with timeout and shutdown support
+     * 
+     * This class provides a thread-safe queue that supports:
+     * - Push operations with blocking/non-blocking variants
+     * - Pop operations with timeout support
+     * - Graceful shutdown with stop token support
+     * - Size and empty queries
+     * 
+     * @tparam T Type of elements stored in the queue
      */
-    constexpr ThreadSafeQueue() = default;
-    
-    /**
-     * @brief Deleted copy constructor
-     */
-    ThreadSafeQueue(const ThreadSafeQueue&) = delete;
-    
-    /**
-     * @brief Deleted copy assignment
-     */
-    ThreadSafeQueue& operator=(const ThreadSafeQueue&) = delete;
-    
-    /**
-     * @brief Modern C++20 move constructor
-     */
-    ThreadSafeQueue(ThreadSafeQueue&& other) noexcept
-        : m_queue(std::move(other.m_queue)), 
-          m_mutex(std::move(other.m_mutex)), 
-          m_condition(std::move(other.m_condition)), 
-          m_is_shutdown(other.m_is_shutdown.load()) {}
-    
-    /**
-     * @brief Modern C++20 move assignment
-     */
-    ThreadSafeQueue& operator=(ThreadSafeQueue&& other) noexcept {
-        if (this != &other) {
-            std::lock(m_mutex, other.m_mutex);
-            m_queue = std::move(other.m_queue);
-            m_mutex = std::move(other.m_mutex);
-            m_condition = std::move(other.m_condition);
-            m_is_shutdown.store(other.m_is_shutdown.load());
-        }
-        return *this;
-    }
-    
-    /**
-     * @brief Modern destructor with noexcept
-     */
-    ~ThreadSafeQueue() noexcept {
-        this->shutdown();
-    }
-    
-    /**
-     * @brief Push value to queue (copy)
-     */
-    void push(const T& value) {
-        {
-            LockGuard lock(m_mutex);
-            m_queue.emplace(value);
-        }
-        m_condition.notify_one();
-    }
-    
-    /**
-     * @brief Push value to queue (move)
-     */
-    void push(T&& value) {
-        {
-            LockGuard lock(m_mutex);
-            m_queue.emplace(std::move(value));
-        }
-        m_condition.notify_one();
-    }
-    
-    /**
-     * @brief Push multiple values (C++20 ranges)
-     */
-    template<std::ranges::input_range Range>
-    requires std::convertible_to<std::ranges::range_value_t<Range>, T>
-    void push_range(Range&& values) {
-        {
-            LockGuard lock(m_mutex);
-            for (auto&& value : values) {
-                m_queue.emplace(std::forward<decltype(value)>(value));
+    template<typename T>
+    class ThreadSafeQueue {
+    private:
+        std::queue<T> queue_;
+        mutable std::mutex mutex_;
+        std::condition_variable_any condition_;
+        std::binary_semaphore semaphore_{0};
+        std::atomic<bool> shutdown_{false};
+
+    public:
+        /**
+         * @brief Type alias for value type
+         */
+        using value_type = T;
+
+        /**
+         * @brief Default constructor
+         */
+        constexpr ThreadSafeQueue() = default;
+
+        /**
+         * @brief Destructor
+         */
+        ~ThreadSafeQueue() = default;
+
+        // Modern C++23: Delete copy, enable move by default
+        ThreadSafeQueue(const ThreadSafeQueue&) = delete;
+        ThreadSafeQueue& operator=(const ThreadSafeQueue&) = delete;
+        ThreadSafeQueue(ThreadSafeQueue&&) = default;
+        ThreadSafeQueue& operator=(ThreadSafeQueue&&) = default;
+
+        /**
+         * @brief Push an element to the queue (blocking)
+         * 
+         * @param value Element to push
+         */
+        template<typename U>
+        requires std::convertible_to<U, T>
+        void push(U&& value) {
+            {
+                std::lock_guard<std::mutex> lock(mutex_);
+                queue_.push(std::forward<U>(value));
             }
+            condition_.notify_one();
+            semaphore_.release();
         }
-        m_condition.notify_all();
-    }
-    
-    /**
-     * @brief Wait and pop value with timeout (C++20 improvements)
-     */
-    [[nodiscard]] std::optional<T> wait_and_pop(
-        TimeoutMs timeout = TimeoutMs{100}
-    ) {
-        UniqueLock lock(m_mutex);
-        
-        if (m_is_shutdown.load(std::memory_order_acquire)) [[unlikely]] {
-            return std::nullopt;
-        }
-        
-        // Modern C++20 wait with predicate
-        if (!m_condition.wait_for(lock, timeout, [this] { 
-            return !m_queue.empty() || m_is_shutdown.load(std::memory_order_acquire); 
-        })) {
-            return std::nullopt;
-        }
-        
-        if (m_is_shutdown.load(std::memory_order_acquire) || m_queue.empty()) [[unlikely]] {
-            return std::nullopt;
-        }
-        
-        T result = std::move(m_queue.front());
-        m_queue.pop();
-        m_condition.notify_one();
-        return result;
-    }
-    
-    /**
-     * @brief Try to pop value without blocking
-     */
-    [[nodiscard]] std::optional<T> try_pop() {
-        LockGuard lock(m_mutex);
-        if (m_queue.empty() || m_is_shutdown.load(std::memory_order_acquire)) {
-            return std::nullopt;
-        }
-        
-        T result = std::move(m_queue.front());
-        m_queue.pop();
-        return result;
-    }
-    
-    /**
-     * @brief Try to pop multiple values (C++20 ranges)
-     */
-    template<std::output_iterator<T> OutputIt>
-    [[nodiscard]] QueueSize try_pop_range(OutputIt out, QueueSize max_count = SIZE_MAX) {
-        LockGuard lock(m_mutex);
-        if (m_queue.empty() || m_is_shutdown.load(std::memory_order_acquire)) {
-            return 0;
-        }
-        
-        QueueSize popped = 0;
-        while (!m_queue.empty() && popped < max_count) {
-            *out++ = std::move(m_queue.front());
-            m_queue.pop();
-            ++popped;
-        }
-        
-        return popped;
-    }
-    
-    /**
-     * @brief Check if queue is empty
-     */
-    [[nodiscard]] bool empty() const {
-        LockGuard lock(m_mutex);
-        return m_queue.empty();
-    }
-    
-    /**
-     * @brief Get queue size
-     */
-    [[nodiscard]] QueueSize size() const {
-        LockGuard lock(m_mutex);
-        return m_queue.size();
-    }
-    
-    /**
-     * @brief Clear queue
-     */
-    void clear() {
-        LockGuard lock(m_mutex);
-        std::queue<T> empty;
-        m_queue.swap(empty);
-    }
-    
-    /**
-     * @brief Shutdown queue
-     */
-    void shutdown() {
-        {
-            LockGuard lock(m_mutex);
-            m_is_shutdown.store(true, std::memory_order_release);
-        }
-        m_condition.notify_all();
-    }
-    
-    /**
-     * @brief Check if queue is shutdown
-     */
-    [[nodiscard]] bool is_shutdown() const noexcept {
-        return m_is_shutdown.load(std::memory_order_acquire);
-    }
-    
-    /**
-     * @brief Reset queue to operational state
-     */
-    void reset() noexcept {
-        {
-            LockGuard lock(m_mutex);
-            clear();
-            m_is_shutdown.store(false, std::memory_order_release);
-        }
-    }
-    
-    /**
-     * @brief Get capacity hint (for future C++26 implementation)
-     */
-    [[nodiscard]] constexpr QueueSize capacity() const noexcept {
-        return SIZE_MAX; // No capacity limit for std::queue
-    }
-    
-    /**
-     * @brief Reserve capacity (no-op for std::queue, but kept for API compatibility)
-     */
-    void reserve(QueueSize) const noexcept {
-        // std::queue doesn't have reserve, but we keep this for API compatibility
-    }
-};
 
-/**
- * @brief Factory function for creating thread-safe queues
- */
-template<QueueElement T>
-[[nodiscard]] auto make_thread_safe_queue() {
-    return std::make_unique<ThreadSafeQueue<T>>();
+        /**
+         * @brief Pop an element from the queue (blocking until available)
+         * 
+         * @param st Stop token for cancellation
+         * @return std::optional<T> containing the element if available, empty if cancelled
+         */
+        std::optional<T> pop(std::stop_token st = {}) {
+            std::unique_lock<std::mutex> lock(mutex_);
+            
+            // Wait with stop token support
+            if (!condition_.wait(lock, st, [this] { 
+                return !queue_.empty() || shutdown_; 
+            })) {
+                return std::nullopt; // Stopped
+            }
+            
+            if (queue_.empty() || shutdown_) {
+                return std::nullopt; // Shutdown
+            }
+            
+            T result = std::move(queue_.front());
+            queue_.pop();
+            return result;
+        }
+
+        /**
+         * @brief Pop an element from the queue with timeout
+         * 
+         * @param timeout Maximum time to wait
+         * @return std::optional<T> containing the element if available, empty if timeout
+         */
+        std::optional<T> pop_timeout(std::chrono::milliseconds timeout) {
+            std::unique_lock<std::mutex> lock(mutex_);
+            
+            if (condition_.wait_for(lock, timeout, [this] { 
+                return !queue_.empty() || shutdown_; 
+            })) {
+                if (shutdown_) return std::nullopt;
+                
+                T result = std::move(queue_.front());
+                queue_.pop();
+                return result;
+            }
+            
+            return std::nullopt; // Timeout
+        }
+
+        /**
+         * @brief Try to pop an element from the queue (non-blocking)
+         * 
+         * @return std::optional<T> containing the element if available, empty otherwise
+         */
+        std::optional<T> try_pop() {
+            if (!semaphore_.try_acquire()) {
+                return std::nullopt; // Empty
+            }
+            
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (queue_.empty() || shutdown_) {
+                return std::nullopt; // Empty or shutdown
+            }
+            T result = std::move(queue_.front());
+            queue_.pop();
+            return result;
+        }
+
+        /**
+         * @brief Shut down the queue
+         */
+        void shutdown() noexcept {
+            {
+                std::lock_guard<std::mutex> lock(mutex_);
+                shutdown_ = true;
+            }
+            condition_.notify_all();
+        }
+
+        /**
+         * @brief Check if the queue is empty
+         * 
+         * @return true if empty, false otherwise
+         */
+        [[nodiscard]] bool empty() const noexcept {
+            std::lock_guard<std::mutex> lock(mutex_);
+            return queue_.empty();
+        }
+
+        /**
+         * @brief Get the number of elements in the queue
+         * 
+         * @return size_t Number of elements
+         */
+        [[nodiscard]] size_t size() const noexcept {
+            std::lock_guard<std::mutex> lock(mutex_);
+            return queue_.size();
+        }
+
+        /**
+         * @brief Check if the queue is shut down
+         * 
+         * @return true if shut down, false otherwise
+         */
+        [[nodiscard]] bool is_shutdown() const noexcept {
+            return shutdown_.load();
+        }
+    };
+
+    // Type alias for convenience
+    template<typename T>
+    using queue_t = ThreadSafeQueue<T>;
+
 }
-
-/**
- * @brief Factory function with initial capacity hint
- */
-template<QueueElement T>
-[[nodiscard]] auto make_thread_safe_queue(QueueSize /*capacity*/) {
-    return std::make_unique<ThreadSafeQueue<T>>();
-}
-
-} // namespace perception

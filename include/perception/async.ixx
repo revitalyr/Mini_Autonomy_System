@@ -2,26 +2,48 @@ module;
 
 #include <coroutine>
 #include <exception>
-#include <variant>
 #include <utility>
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
 #include <optional>
-#include <future>
-#include <tuple>
 #include <vector>
 #include <queue>
 #include <thread>
 #include <functional>
 #include <stop_token>
+#include <memory>
+#include <future>
+
+/**
+ * @file perception.async.cppm
+ * @brief Async operations and coroutine support for the perception system
+ * 
+ * This module provides coroutine-based async operations including Task<T> for
+ * awaitable operations and Generator<T> for lazy sequences. It also includes
+ * a thread pool for efficient async task execution.
+ * 
+ * @author Mini Autonomy System
+ * @date 2026
+ */
 
 export module perception.async;
 
 export namespace perception {
 
+    /**
+     * @brief Thread pool for async task execution
+     * 
+     * This class provides a thread pool for executing tasks asynchronously.
+     * It supports task submission with futures for result retrieval.
+     */
     class ThreadPool {
     public:
+        /**
+         * @brief Constructs a thread pool with the specified number of threads
+         * 
+         * @param num_threads Number of threads to use in the pool
+         */
         explicit ThreadPool(size_t num_threads = std::thread::hardware_concurrency()) {
             for (size_t i = 0; i < num_threads; ++i) {
                 workers_.emplace_back([this](std::stop_token st) {
@@ -29,10 +51,8 @@ export namespace perception {
                         std::function<void()> task;
                         {
                             std::unique_lock lock(mutex_);
-                            // Wait for task or stop request
-                            if (!condition_.wait(lock, st, [this] { return !tasks_.empty(); })) {
-                                return; // Stop requested
-                            }
+                            condition_.wait(lock, st, [this] { return !tasks_.empty(); });
+                            if (st.stop_requested() && tasks_.empty()) return;
                             
                             task = std::move(tasks_.front());
                             tasks_.pop();
@@ -43,56 +63,37 @@ export namespace perception {
             }
         }
 
-        ~ThreadPool() = default; // jthreads automatically join and request stop
-
-        // Disable copy/move to prevent logic errors with pool
-        ThreadPool(const ThreadPool&) = delete;
-        ThreadPool& operator=(const ThreadPool&) = delete;
-        ThreadPool(ThreadPool&&) = delete;
-        ThreadPool& operator=(ThreadPool&&) = delete;
-
-        // Modern async task submission with C++23 features
-        template<typename Func, typename... Args>
-        requires std::invocable<Func, Args...>
-        auto submit(Func&& func, Args&&... args) -> std::future<std::invoke_result_t<Func, Args...>> {
-            using ReturnType = std::invoke_result_t<Func, Args...>;
-            
-            auto task = [f = std::forward<Func>(func), ... a = std::forward<Args>(args)]() mutable -> ReturnType {
-                return std::invoke(f, a...);
-            };
-            
-            auto promise = std::make_shared<std::promise<ReturnType>>();
-            auto future = promise->get_future();
-            
+        /**
+         * @brief Enqueues a task for execution in the thread pool
+         * 
+         * @param f Task to execute
+         */
+        void enqueue(std::function<void()> f) {
             {
-                std::lock_guard<std::mutex> lock(mutex_);
-                tasks_.emplace([promise, task = std::move(task)]() mutable {
-                    try {
-                        if constexpr (std::is_void_v<ReturnType>) {
-                            task();
-                            promise->set_value();
-                        } else {
-                            promise->set_value(task());
-                        }
-                    } catch (...) {
-                        promise->set_exception(std::current_exception());
-                    }
-                });
-                condition_.notify_one();
+                std::unique_lock lock(mutex_);
+                tasks_.push(std::move(f));
             }
-            
-            return future;
+            condition_.notify_one();
         }
 
-        // Wait for all tasks to complete
-        void wait_for_all() {
-            // Implementation would wait for all pending tasks
-            // This is a simplified version
-        }
-
-        size_t get_pending_count() const {
-            std::lock_guard<std::mutex> lock(mutex_);
-            return tasks_.size();
+        /**
+         * @brief Submits a task for execution in the thread pool and returns a future
+         * 
+         * @tparam F Type of task to submit
+         * @param f Task to submit
+         * @return Future representing the result of the task
+         */
+        template<typename F>
+        auto submit(F&& f) -> std::future<std::invoke_result_t<F>> {
+            using RetType = std::invoke_result_t<F>;
+            auto task = std::make_shared<std::packaged_task<RetType()>>(std::forward<F>(f));
+            auto fut = task->get_future();
+            {
+                std::unique_lock lock(mutex_);
+                tasks_.emplace([task]() { (*task)(); });
+            }
+            condition_.notify_one();
+            return fut;
         }
 
     private:
@@ -102,33 +103,118 @@ export namespace perception {
         std::condition_variable_any condition_;
     };
 
-    // Modern async utilities with C++23
-    template<typename T>
-    class AsyncValue {
-    private:
-        std::future<T> future_;
-        
-    public:
-        template<typename... Args>
-        explicit AsyncValue(Args&&... args) 
-            : future_(std::async(std::launch::async, 
-                std::forward<Args>(args)...)) {}
-        
-        // C++23: awaitable interface
-        bool await_ready() const noexcept {
-            return future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
-        }
-        
-        void await_suspend(std::coroutine_handle<> handle) const {
-            // Simple implementation - in real code would be more complex
-            while (!await_ready()) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    // Глобальный пул потоков
+    export ThreadPool& get_global_thread_pool() {
+        static ThreadPool pool;
+        return pool;
+    }
+
+    // --- Task и Promise ---
+    struct PromiseBase {
+        std::suspend_always initial_suspend() noexcept { return {}; }
+        std::suspend_always final_suspend() noexcept { return {}; }
+        void unhandled_exception() { exception = std::current_exception(); }
+        std::exception_ptr exception;
+    };
+
+    template <typename T>
+    struct [[nodiscard]] Task {
+        struct promise_type : PromiseBase {
+            std::optional<T> result;
+            Task<T> get_return_object() { return Task<T>{std::coroutine_handle<promise_type>::from_promise(*this)}; }
+            void return_value(T value) { result = std::move(value); }
+        };
+
+        std::coroutine_handle<promise_type> handle;
+        explicit Task(std::coroutine_handle<promise_type> h) : handle(h) {}
+        Task(Task&& s) noexcept : handle(std::exchange(s.handle, nullptr)) {}
+        ~Task() { if (handle) handle.destroy(); }
+
+        struct Awaiter {
+            std::coroutine_handle<promise_type> h;
+            bool await_ready() { return h.done(); }
+            void await_suspend(std::coroutine_handle<> cont) { 
+                h.resume(); 
+                cont.resume(); 
             }
-            handle.resume();
-        }
-        
-        T await_resume() {
-            return future_.get();
+            T await_resume() {
+                if (h.promise().exception) std::rethrow_exception(h.promise().exception);
+                return std::move(*h.promise().result);
+            }
+        };
+        auto operator co_await() { return Awaiter{handle}; }
+    };
+
+    template <>
+    struct [[nodiscard]] Task<void> {
+        struct promise_type : PromiseBase {
+            Task<void> get_return_object() { return Task<void>{std::coroutine_handle<promise_type>::from_promise(*this)}; }
+            void return_void() noexcept {}
+        };
+
+        std::coroutine_handle<promise_type> handle;
+        explicit Task(std::coroutine_handle<promise_type> h) : handle(h) {}
+        Task(Task&& s) noexcept : handle(std::exchange(s.handle, nullptr)) {}
+        ~Task() { if (handle) handle.destroy(); }
+
+        struct Awaiter {
+            std::coroutine_handle<promise_type> h;
+            bool await_ready() { return h.done(); }
+            void await_suspend(std::coroutine_handle<> cont) { h.resume(); cont.resume(); }
+            void await_resume() {
+                if (h.promise().exception) std::rethrow_exception(h.promise().exception);
+            }
+        };
+        auto operator co_await() { return Awaiter{handle}; }
+    };
+
+    // --- Вспомогательные функции (Missing Identifiers) ---
+
+    // schedule_on: переключает выполнение корутины на пул потоков
+    export auto schedule_on(ThreadPool& pool) {
+        struct SchAwaiter {
+            ThreadPool& p;
+            bool await_ready() { return false; }
+            void await_suspend(std::coroutine_handle<> h) {
+                p.enqueue([h] { h.resume(); });
+            }
+            void await_resume() {}
+        };
+        return SchAwaiter{pool};
+    }
+
+    export std::future<void> run_async(Task<void> task) {
+    std::promise<void> promise;
+    auto future = promise.get_future();
+    
+    // Лямбда-обертка для выполнения корутины и установки promise
+    auto runner = [](Task<void> t, std::promise<void> p) -> Task<void> {
+        try {
+            co_await t;
+            p.set_value();
+        } catch (...) {
+            p.set_exception(std::current_exception());
         }
     };
+
+    // Запускаем обертку
+    auto h = runner(std::move(task), std::move(promise)).handle;
+    h.resume(); 
+    // Внимание: здесь нужно управление временем жизни handle, 
+    // если runner не завершился синхронно.
+    
+    return future;
+}
+    // when_all: ожидает завершения списка задач
+    export Task<void> when_all(std::vector<Task<void>> tasks) {
+        for (auto& t : tasks) {
+            co_await t;
+        }
+        co_return;
+    }
+
+    export Task<void> sleep_for(std::chrono::milliseconds ms) {
+        std::this_thread::sleep_for(ms);
+        co_return;
+    }
 }
