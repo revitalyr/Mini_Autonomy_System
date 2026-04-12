@@ -24,7 +24,7 @@ namespace perception {
 /**
  * @brief Visualize ROSBAG data with OpenCV
  */
-Expected<void, PerceptionError> demo_rosbag_visualization(const std::string& bag_path) {
+Result<void> demo_rosbag_visualization(const std::string& bag_path) {
     std::cout << "=== ROSBAG Visualization Demo ===\n";
     std::cout << "Bag file: " << bag_path << "\n\n";
     
@@ -33,7 +33,7 @@ Expected<void, PerceptionError> demo_rosbag_visualization(const std::string& bag
     // Open bag file
     if (auto result = provider.open(bag_path); !result) {
         std::cout << "Failed to open bag file: " << result.error().message() << "\n";
-        return error<void>(PerceptionError::InvalidInput);
+        return Result<void>(std::error_code(static_cast<int>(PerceptionError::InvalidInput), std::generic_category()));
     }
     
     std::cout << "Bag file opened successfully\n\n";

@@ -28,19 +28,22 @@ namespace perception {
     // Type aliases for convenience
     export using String = std::string;
     export using StringView = std::string_view;
-    
-    template<typename T>
+
+    export template<typename T>
     using Vector = std::vector<T>;
-    
-    template<typename T>
+
+    export template<typename T>
     using Optional = std::optional<T>;
-    
-    template<typename T>
+
+    export template<typename T>
     using UniquePtr = std::unique_ptr<T>;
-    
-    template<typename T>
+
+    export template<typename T>
     using SharedPtr = std::shared_ptr<T>;
-    
+
+    export template<typename T>
+    using Atomic = std::atomic<T>;
+
     export using AtomicBool = std::atomic<bool>;
     
     export using Mutex = std::mutex;
@@ -52,6 +55,16 @@ namespace perception {
     export using TimePoint = std::chrono::high_resolution_clock::time_point;
     export using Clock = std::chrono::high_resolution_clock;
 
+    // Utility functions
+    export template<typename T, typename... Args>
+    auto make_unique(Args&&... args) -> UniquePtr<T> {
+        return std::make_unique<T>(std::forward<Args>(args)...);
+    }
+
+    export auto to_milliseconds(std::chrono::nanoseconds duration) -> Milliseconds {
+        return std::chrono::duration_cast<Milliseconds>(duration);
+    }
+
     /**
      * @brief Rectangle for bounding boxes
      */
@@ -61,6 +74,19 @@ namespace perception {
 
         Rect() : x(0), y(0), width(0), height(0) {}
         Rect(int x_, int y_, int w, int h) : x(x_), y(y_), width(w), height(h) {}
+    };
+
+    /**
+     * @brief Detection result containing bounding box, confidence, and class information
+     */
+    export struct Detection {
+        Rect bbox;              // Bounding box coordinates
+        float confidence;      // Detection confidence (0.0 to 1.0)
+        int class_id;          // Class identifier
+        std::string class_name; // Human-readable class name
+
+        Detection(Rect b, float conf, int id, std::string name)
+            : bbox(std::move(b)), confidence(conf), class_id(id), class_name(std::move(name)) {}
     };
 
     /**

@@ -7,6 +7,7 @@ module;
 #include <algorithm>
 #include <chrono>
 #include <memory>
+#include <future>
 
 export module perception.image_loader;
 import perception.types;
@@ -136,13 +137,13 @@ namespace perception {
          * @param directory Path to directory containing images
          * @return Generator yielding image data for each image found
          */
-        Generator<PerceptionResult<ImageData>> load_images(const std::filesystem::path& directory);
+        Generator<perception::Result<ImageData>> load_images(const std::filesystem::path& directory);
 
         /**
          * Load a single image file
          * @param path Path to image file
          * @return Future containing image data or error
          */
-        std::future<PerceptionResult<ImageData>> load_image(const std::filesystem::path& path);
+        std::future<perception::Result<ImageData>> load_image(const std::filesystem::path& path);
     };
 }

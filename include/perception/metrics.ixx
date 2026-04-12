@@ -12,6 +12,7 @@ module;
 
 export module perception.metrics;
 import perception.concepts;
+import perception.types;
 
 /**
  * @file perception.metrics.ixx
@@ -42,7 +43,7 @@ namespace perception {
         /**
          * @brief Snapshot of current metrics
          */
-        export struct Snapshot {
+        struct Snapshot {
             double fps;
             double avg_latency_ms;
             double min_latency_ms;

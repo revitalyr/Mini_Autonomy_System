@@ -103,6 +103,7 @@ namespace perception {
         std::variant<T, std::error_code> data_;
 
     public:
+        Result() : data_(std::error_code()) {}
         Result(T value) : data_(std::move(value)) {}
         Result(std::error_code ec) : data_(ec) {}
 
@@ -172,13 +173,13 @@ namespace perception {
     /**
      * @brief Alias for Result<T> for backward compatibility
      */
-    template<typename T>
+    export template<typename T>
     using PerceptionResult = Result<T>;
 
     /**
-     * @brief Alias for Expected<T, PerceptionError> (using custom Result for C++20 compatibility)
+     * @brief Alias for Expected<T, PerceptionError> (using custom Result for C++23 compatibility)
      */
-    template<typename T>
+    export template<typename T>
     using Expected = Result<T>;
 
     /**

@@ -89,13 +89,13 @@ namespace perception {
 
         void start() {
             if (running_) return;
-            
+
             running_ = true;
-            
+
             // Spawn the pipeline supervisor
             pipeline_task_ = std::async(std::launch::async, [this]() {
                 for (auto& stage : stages_) {
-                    std::thread([stage]() {
+                    std::thread([&stage]() {
                         stage.run_fn();
                     }).detach();
                 }

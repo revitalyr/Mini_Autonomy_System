@@ -15,6 +15,8 @@
 #include <chrono>
 #include <thread>
 #include <format>
+#include <utility>
+#include <memory>
 import perception.concepts;
 import perception.queue;
 import perception.pipeline;
@@ -165,7 +167,7 @@ public:
     /**
      * Start the processing pipeline
      */
-    auto start() noexcept -> Expected<void, PerceptionError> {
+    auto start() noexcept -> Result<void> {
         try {
             m_is_running.store(true, std::memory_order_release);
 
@@ -177,7 +179,7 @@ public:
 
             return {};
         } catch (const std::exception&) {
-            return make_unexpected(PerceptionError::ThreadError);
+            return Result<void>(std::error_code(static_cast<int>(PerceptionError::ThreadError), std::generic_category()));
         }
     }
 
@@ -194,16 +196,16 @@ public:
      * Submit an image for processing
      * @param image Image data to process
      */
-    auto process_image(ImageData image) noexcept -> Expected<void, PerceptionError> {
+    auto process_image(ImageData image) noexcept -> Result<void> {
         if (!m_is_running.load(std::memory_order_acquire)) {
-            return make_unexpected(PerceptionError::QueueShutdown);
+            return Result<void>(std::error_code(static_cast<int>(PerceptionError::QueueShutdown), std::generic_category()));
         }
 
         try {
             m_image_queue->push(std::move(image));
             return {};
         } catch (const std::exception&) {
-            return make_unexpected(PerceptionError::QueueEmpty);
+            return Result<void>(std::error_code(static_cast<int>(PerceptionError::QueueEmpty), std::generic_category()));
         }
     }
 
@@ -213,7 +215,7 @@ public:
      * @return Detected objects or error
      */
     auto get_results(Milliseconds timeout = Milliseconds{1000}) noexcept
-        -> Expected<Vector<Detection>, PerceptionError> {
+        -> Result<Vector<Detection>> {
 
         if (auto result = m_result_queue->try_pop()) {
             return std::move(*result);
@@ -223,7 +225,7 @@ public:
             return std::move(*result);
         }
 
-        return make_unexpected_typed<Vector<Detection>>(PerceptionError::QueueEmpty);
+        return Result<Vector<Detection>>(std::error_code(static_cast<int>(PerceptionError::QueueEmpty), std::generic_category()));
     }
 
     /**
@@ -261,7 +263,7 @@ private:
 /**
  * Demo: Filter detections by confidence threshold
  */
-auto demo_ranges_and_concepts() noexcept -> Expected<void, PerceptionError> {
+auto demo_ranges_and_concepts() noexcept -> Result<void> {
     try {
         perception::Vector<Detection> test_detections{
             Detection{Rect{10, 10, 50, 50}, 0.9f, 1, "person"},
@@ -285,14 +287,14 @@ auto demo_ranges_and_concepts() noexcept -> Expected<void, PerceptionError> {
 
         return {};
     } catch (const std::exception&) {
-        return make_unexpected(PerceptionError::InvalidInput);
+        return Result<void>(std::error_code(static_cast<int>(PerceptionError::InvalidInput), std::generic_category()));
     }
 }
 
 /**
  * Demo: Generate test image frames
  */
-auto demo_coroutines() noexcept -> Expected<void, PerceptionError> {
+auto demo_coroutines() noexcept -> Result<void> {
     try {
         std::cout << "=== Frame Generation Demo ===\n";
 
@@ -307,14 +309,14 @@ auto demo_coroutines() noexcept -> Expected<void, PerceptionError> {
 
         return {};
     } catch (const std::exception&) {
-        return make_unexpected(PerceptionError::InvalidInput);
+        return Result<void>(std::error_code(static_cast<int>(PerceptionError::InvalidInput), std::generic_category()));
     }
 }
 
 /**
  * Demo: Async object detection pipeline
  */
-auto demo_async_processing() noexcept -> Expected<void, PerceptionError> {
+auto demo_async_processing() noexcept -> Result<void> {
     try {
         std::cout << "=== Async Detection Pipeline Demo ===\n";
 
@@ -348,7 +350,7 @@ auto demo_async_processing() noexcept -> Expected<void, PerceptionError> {
 
         return {};
     } catch (const std::exception&) {
-        return make_unexpected(PerceptionError::ThreadError);
+        return Result<void>(std::error_code(static_cast<int>(PerceptionError::ThreadError), std::generic_category()));
     }
 }
 

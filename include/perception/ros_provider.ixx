@@ -19,7 +19,7 @@ namespace perception {
     export class RosBagProvider {
     public:
         using FrameType = VioFrame;
-        using GeneratorType = Generator<Expected<VioFrame, PerceptionError>>;
+        using GeneratorType = Generator<Result<VioFrame>>;
 
         /**
          * @brief Constructor
@@ -35,7 +35,7 @@ namespace perception {
          * Open a ROSBAG file
          * @param path Path to the .bag file
          */
-        auto open(const std::string& path) -> Expected<void, PerceptionError>;
+        auto open(const std::string& path) -> Result<void>;
 
         /**
          * Close the ROSBAG file
@@ -57,8 +57,36 @@ namespace perception {
             -> GeneratorType;
 
     private:
-        struct Impl;
-        std::unique_ptr<Impl> impl_;
+        bool is_open_ = false;
     };
+
+    // Implementations
+    RosBagProvider::RosBagProvider() = default;
+
+    RosBagProvider::~RosBagProvider() = default;
+
+    auto RosBagProvider::open(const std::string& path) -> Result<void> {
+        (void)path;
+        // TODO: Implement actual ROSBAG opening logic
+        is_open_ = true;
+        return {};
+    }
+
+    auto RosBagProvider::close() -> void {
+        // TODO: Implement actual ROSBAG closing logic
+        is_open_ = false;
+    }
+
+    auto RosBagProvider::is_open() const -> bool {
+        return is_open_;
+    }
+
+    auto RosBagProvider::stream_data(const std::string& img_topic, const std::string& imu_topic)
+        -> GeneratorType {
+        (void)img_topic;
+        (void)imu_topic;
+        // TODO: Implement actual ROSBAG streaming logic
+        co_return;
+    }
 
 } // namespace perception

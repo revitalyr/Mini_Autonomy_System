@@ -4,9 +4,12 @@ module;
 #include <ranges>
 #include <format>
 #include <functional>
+#include <filesystem>
+#include <future>
 
 export module perception.concepts;
 import perception.types;
+import perception.result;
 
 /**
  * @brief Modern C++26 concepts for perception system
@@ -38,8 +41,8 @@ namespace perception {
     concept Container = requires(T t) {
         typename T::value_type;
         { t.size() } -> std::convertible_to<std::size_t>;
-        { t.begin() } -> std::input_or_output_iterator<typename T::iterator>;
-        { t.end() } -> std::input_or_output_iterator<typename T::iterator>;
+        { t.begin() } -> std::input_or_output_iterator;
+        { t.end() } -> std::input_or_output_iterator;
     };
 
     // ============================================================================
@@ -60,8 +63,8 @@ namespace perception {
      */
     export template<typename T>
     concept DetectorConcept = requires(T detector, const ImageData& image) {
-        { detector.detect(image) } -> std::convertible_to<Vector<Detection>>;
-        { detector.get_class_names() } -> std::convertible_to<const Vector<std::string>&>;
+        { detector.detect(image) } -> std::convertible_to<std::vector<Detection>>;
+        { detector.get_class_names() } -> std::convertible_to<const std::vector<std::string>&>;
     };
 
     // ============================================================================
@@ -122,7 +125,7 @@ namespace perception {
      */
     export template<typename T>
     concept ImageLoader = requires(T loader, const std::filesystem::path& path) {
-        { loader.load_image(path) } -> std::same_as<std::future<PerceptionResult<ImageData>>>;
+        { loader.load_image(path) } -> std::same_as<std::future<perception::Result<ImageData>>>;
     };
 
     /**
@@ -130,7 +133,7 @@ namespace perception {
      */
     export template<typename T>
     concept DataProvider = requires(T provider, const std::string& path) {
-        { provider.open(path) } -> std::same_as<Expected<void, PerceptionError>>;
+        { provider.open(path) } -> std::same_as<perception::Result<void>>;
         { provider.close() } -> std::same_as<void>;
         { provider.is_open() } -> std::convertible_to<bool>;
     };

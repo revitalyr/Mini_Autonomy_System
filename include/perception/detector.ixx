@@ -12,19 +12,6 @@ import perception.metrics;
 namespace perception {
 
     /**
-     * Detection result containing bounding box, confidence, and class information
-     */
-    export struct Detection {
-        Rect bbox;              // Bounding box coordinates
-        float confidence;      // Detection confidence (0.0 to 1.0)
-        int class_id;          // Class identifier
-        std::string class_name; // Human-readable class name
-
-        Detection(Rect b, float conf, int id, std::string name)
-            : bbox(std::move(b)), confidence(conf), class_id(id), class_name(std::move(name)) {}
-    };
-
-    /**
      * Filter detections by minimum confidence threshold
      * @param threshold Minimum confidence required (0.0 to 1.0)
      * @return Predicate function for filtering
@@ -41,13 +28,9 @@ namespace perception {
      * into person, car, bicycle, or generic object categories
      */
     export class Detector {
-    private:
-        struct Impl;
-        std::unique_ptr<Impl> impl_;
-
     public:
-        explicit Detector();
-        ~Detector();
+        Detector() = default;
+        ~Detector() = default;
 
         /**
          * Detect objects in an image frame
@@ -62,5 +45,19 @@ namespace perception {
          */
         const std::vector<std::string>& get_class_names() const;
     };
+
+    // Implementations
+    std::vector<Detection> Detector::detect(const ImageData& frame) {
+        (void)frame;
+        // TODO: Implement actual detection logic
+        return {};
+    }
+
+    const std::vector<std::string>& Detector::get_class_names() const {
+        static const std::vector<std::string> class_names = {
+            "person", "car", "bicycle", "generic"
+        };
+        return class_names;
+    }
 
 } // namespace perception

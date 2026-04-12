@@ -22,7 +22,7 @@ namespace perception {
 /**
  * @brief Visualize ROSBAG data and save frames to disk
  */
-Expected<void, PerceptionError> demo_rosbag_visualization_headless(const std::string& bag_path, const std::string& output_dir) {
+Result<void> demo_rosbag_visualization_headless(const std::string& bag_path, const std::string& output_dir) {
     std::cout << "=== ROSBAG Visualization Demo (Headless) ===\n";
     std::cout << "Bag file: " << bag_path << "\n";
     std::cout << "Output directory: " << output_dir << "\n\n";
@@ -37,7 +37,7 @@ Expected<void, PerceptionError> demo_rosbag_visualization_headless(const std::st
     // Open bag file
     if (auto result = provider.open(bag_path); !result) {
         std::cout << "Failed to open bag file: " << result.error().message() << "\n";
-        return error<void>(PerceptionError::InvalidInput);
+        return Result<void>(std::error_code(static_cast<int>(PerceptionError::InvalidInput), std::generic_category()));
     }
     
     std::cout << "Bag file opened successfully\n\n";

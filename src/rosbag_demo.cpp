@@ -15,10 +15,11 @@
 import perception.ros_provider;
 import perception.detector;
 import perception.types;
+import perception.result;
 
 namespace perception {
 
-auto demo_rosbag_provider(const std::string& bag_path) -> Expected<void, PerceptionError> {
+auto demo_rosbag_provider(const std::string& bag_path) -> Result<void> {
     try {
         std::cout << "=== ROSBAG Provider Demo ===\n";
         std::cout << "Bag file: " << bag_path << "\n";
@@ -90,11 +91,11 @@ auto demo_rosbag_provider(const std::string& bag_path) -> Expected<void, Percept
         return {};
     } catch (const std::exception& e) {
         std::cout << "Exception: " << e.what() << "\n";
-        return make_unexpected(PerceptionError::InvalidInput);
+        return Result<void>(std::error_code(static_cast<int>(PerceptionError::InvalidInput), std::generic_category()));
     }
 }
 
-auto demo_rosbag_with_detection(const std::string& bag_path) -> Expected<void, PerceptionError> {
+auto demo_rosbag_with_detection(const std::string& bag_path) -> Result<void> {
     try {
         std::cout << "=== ROSBAG + Detection Demo ===\n";
         std::cout << "Bag file: " << bag_path << "\n";
@@ -150,7 +151,7 @@ auto demo_rosbag_with_detection(const std::string& bag_path) -> Expected<void, P
         return {};
     } catch (const std::exception& e) {
         std::cout << "Exception: " << e.what() << "\n";
-        return make_unexpected(PerceptionError::InvalidInput);
+        return Result<void>(std::error_code(static_cast<int>(PerceptionError::InvalidInput), std::generic_category()));
     }
 }
 

@@ -8,6 +8,7 @@ module;
 #include <stop_token>
 
 export module perception.queue;
+import perception.types;
 import perception.concepts;
 
 /**
