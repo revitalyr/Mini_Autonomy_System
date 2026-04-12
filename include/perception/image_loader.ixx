@@ -1,5 +1,4 @@
-#pragma once
-
+module;
 #include <coroutine>
 #include <filesystem>
 #include <string>
@@ -9,9 +8,10 @@
 #include <chrono>
 #include <memory>
 
-#include "perception/types.hpp"
-#include "perception/async.hpp"
-#include "perception/result.hpp"
+export module perception.image_loader;
+import perception.types;
+import perception.async;
+import perception.result;
 
 namespace perception {
 
@@ -19,7 +19,7 @@ namespace perception {
      * Lazy sequence generator for streaming results
      * @tparam T Type of values in the sequence
      */
-    template<typename T>
+    export template<typename T>
     struct Generator {
         struct promise_type;
         using handle_type = std::coroutine_handle<promise_type>;
@@ -119,7 +119,7 @@ namespace perception {
      * Loads images from directories or individual files using a thread pool
      * Supports common image formats: JPEG, PNG, BMP, TIFF, WebP
      */
-    class AsyncImageLoader {
+    export class AsyncImageLoader {
     private:
         struct Impl;
         std::unique_ptr<Impl> impl_;

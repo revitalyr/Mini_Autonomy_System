@@ -5,12 +5,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Включаем экспериментальную поддержку модулей C++20/23
-# Temporarily disabled due to libc++ availability issues
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
     set(CMAKE_CXX_STANDARD 20)
-    set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
-    set(MODULES_SUPPORT OFF)
-    message(STATUS "C++20 modules disabled - using traditional includes")
+    set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+    set(MODULES_SUPPORT ON)
+    message(STATUS "C++20 modules enabled")
 else()
     set(CMAKE_CXX_STANDARD 20)
     set(MODULES_SUPPORT OFF)
@@ -83,15 +82,15 @@ if(MODULES_SUPPORT)
         FILE_SET CXX_MODULES TYPE CXX_MODULES
         BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
         FILES
-            include/perception/types.hpp
-            include/perception/concepts.hpp
-            include/perception/result.hpp
-            include/perception/async.hpp
-            include/perception/queue.hpp
-            include/perception/metrics.hpp
-            include/perception/image_loader.hpp
-            include/perception/detector.hpp
-            include/perception/pipeline.hpp
+            include/perception/types.ixx
+            include/perception/concepts.ixx
+            include/perception/result.ixx
+            include/perception/async.ixx
+            include/perception/queue.ixx
+            include/perception/metrics.ixx
+            include/perception/image_loader.ixx
+            include/perception/detector.ixx
+            include/perception/pipeline.ixx
     )
 
     # Add ROS module only if ROS is available
@@ -100,25 +99,12 @@ if(MODULES_SUPPORT)
             FILE_SET CXX_MODULES TYPE CXX_MODULES
             BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
             FILES
-                include/perception/ros_provider.hpp
+                include/perception/ros_provider.ixx
         )
     endif()
 else()
-    # When modules are disabled, .hpp files are treated as headers
+    # When modules are disabled, .ixx files are treated as headers
     # No need to add them as source files - they're included by implementation files
-endif()
-
-# Add implementation files for modules with PIMPL pattern
-target_sources(perception_modules PRIVATE
-    modules/perception.detector.cpp
-    modules/perception.image_loader.cpp
-)
-
-# Stub implementation for demonstration (ROS 1 to ROS 2 migration needed)
-if(ROS_FOUND)
-    target_sources(perception_modules PRIVATE
-        modules/perception.ros_provider.cpp
-    )
 endif()
 
 # Создание исполняемого файла

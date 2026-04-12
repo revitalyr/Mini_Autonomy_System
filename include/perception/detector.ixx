@@ -1,20 +1,20 @@
-#pragma once
-
+module;
 #include <vector>
 #include <string>
 #include <memory>
 
-#include "perception/types.hpp"
-#include "perception/concepts.hpp"
-#include "perception/result.hpp"
-#include "perception/metrics.hpp"
+export module perception.detector;
+import perception.types;
+import perception.concepts;
+import perception.result;
+import perception.metrics;
 
 namespace perception {
 
     /**
      * Detection result containing bounding box, confidence, and class information
      */
-    struct Detection {
+    export struct Detection {
         Rect bbox;              // Bounding box coordinates
         float confidence;      // Detection confidence (0.0 to 1.0)
         int class_id;          // Class identifier
@@ -29,7 +29,7 @@ namespace perception {
      * @param threshold Minimum confidence required (0.0 to 1.0)
      * @return Predicate function for filtering
      */
-    inline auto filter_by_confidence(float threshold) {
+    export inline auto filter_by_confidence(float threshold) {
         return [threshold](const Detection& det) {
             return det.confidence >= threshold;
         };
@@ -40,7 +40,7 @@ namespace perception {
      * Detects moving objects in image sequences and classifies them
      * into person, car, bicycle, or generic object categories
      */
-    class Detector {
+    export class Detector {
     private:
         struct Impl;
         std::unique_ptr<Impl> impl_;

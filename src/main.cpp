@@ -15,15 +15,14 @@
 #include <chrono>
 #include <thread>
 #include <format>
-
-#include "perception/concepts.hpp"
-#include "perception/queue.hpp"
-#include "perception/pipeline.hpp"
-#include "perception/metrics.hpp"
-#include "perception/detector.hpp"
-#include "perception/async.hpp"
-#include "perception/result.hpp"
-#include "perception/types.hpp"
+import perception.concepts;
+import perception.queue;
+import perception.pipeline;
+import perception.metrics;
+import perception.detector;
+import perception.async;
+import perception.result;
+import perception.types;
 
 namespace perception {
 

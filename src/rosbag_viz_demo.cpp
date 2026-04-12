@@ -9,17 +9,15 @@
  * @date 2026
  */
 
-#include "perception/ros_provider.hpp"
-#include "perception/result.hpp"
-
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
-
 #include <filesystem>
 #include <iostream>
 #include <string>
 #include <chrono>
 #include <thread>
+import perception.ros_provider;
+import perception.result;
 
 namespace perception {
 

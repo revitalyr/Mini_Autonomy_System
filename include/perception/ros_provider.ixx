@@ -1,14 +1,14 @@
-#pragma once
-
+module;
 #include <coroutine>
 #include <filesystem>
 #include <string>
 #include <vector>
 
-#include "perception/types.hpp"
-#include "perception/result.hpp"
-#include "perception/async.hpp"
-#include "perception/image_loader.hpp"
+export module perception.ros_provider;
+import perception.types;
+import perception.result;
+import perception.async;
+import perception.image_loader;
 
 namespace perception {
 
@@ -16,7 +16,7 @@ namespace perception {
      * ROSBAG data provider for reading ROS bag files
      * Supports synchronized image and IMU data streaming
      */
-    class RosBagProvider {
+    export class RosBagProvider {
     public:
         using FrameType = VioFrame;
         using GeneratorType = Generator<Expected<VioFrame, PerceptionError>>;

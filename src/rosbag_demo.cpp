@@ -12,10 +12,9 @@
 #include <iostream>
 #include <format>
 #include <filesystem>
-
-#include "perception/ros_provider.hpp"
-#include "perception/detector.hpp"
-#include "perception/types.hpp"
+import perception.ros_provider;
+import perception.detector;
+import perception.types;
 
 namespace perception {
 
