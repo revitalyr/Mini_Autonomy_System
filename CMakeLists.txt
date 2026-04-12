@@ -387,13 +387,13 @@ if(MSVC)
 
 else()
 
-    # GCC/Clang настройки с C++20
+    # GCC/Clang настройки с C++23
 
     target_compile_options(perception_modules PRIVATE
 
         -Wall -Wextra -Wpedantic -Werror
 
-        -std=c++20
+        -std=c++23
 
         $<$<CONFIG:Release>:-O3 -march=native -flto>
 
