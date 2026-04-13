@@ -1,4 +1,5 @@
 module;
+
 #include <concepts>
 #include <type_traits>
 #include <ranges>
@@ -9,6 +10,7 @@ module;
 
 export module perception.concepts;
 import perception.types;
+import perception.geom;
 import perception.result;
 
 /**
@@ -62,8 +64,8 @@ namespace perception {
      * @brief Concept for detector
      */
     export template<typename T>
-    concept DetectorConcept = requires(T detector, const ImageData& image) {
-        { detector.detect(image) } -> std::convertible_to<std::vector<Detection>>;
+    concept DetectorConcept = requires(T detector, const geom::ImageData& image) {
+        { detector.detect(image) } -> std::convertible_to<std::vector<geom::Detection>>;
         { detector.get_class_names() } -> std::convertible_to<const std::vector<std::string>&>;
     };
 
@@ -125,7 +127,7 @@ namespace perception {
      */
     export template<typename T>
     concept ImageLoader = requires(T loader, const std::filesystem::path& path) {
-        { loader.load_image(path) } -> std::same_as<std::future<perception::Result<ImageData>>>;
+        { loader.load_image(path) } -> std::same_as<std::future<perception::Result<geom::ImageData>>>;
     };
 
     /**

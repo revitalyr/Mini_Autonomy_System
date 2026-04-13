@@ -1,206 +1,87 @@
 module;
 #include <coroutine>
-#include <exception>
 #include <utility>
+#include <iterator>
+#include <exception>
+#include <vector>
+#include <thread>
+#include <queue>
 #include <mutex>
 #include <condition_variable>
-#include <atomic>
-#include <optional>
-#include <vector>
-#include <queue>
-#include <thread>
 #include <functional>
-#include <stop_token>
-#include <memory>
-#include <future>
-#include <chrono>
 
 export module perception.async;
+import perception.types;
 
-/**
- * @file perception.async.ixx
- * @brief Async operations and coroutine support for the perception system
- *
- * This module provides coroutine-based async operations including Task<T> for
- * awaitable operations and Generator<T> for lazy sequences. It also includes
- * a thread pool for efficient async task execution.
- *
- * @author Mini Autonomy System
- * @date 2026
- */
-
-namespace perception {
-
-    // ============================================================================
-    // TASK<T> - COROUTINE AWAITABLE
-    // ============================================================================
+export namespace perception {
 
     /**
-     * @brief Task type for coroutine-based async operations
-     * @tparam T Return type of the coroutine
+     * @brief Coroutine generator for lazy sequence streaming
      */
-    export template<typename T>
-    class Task {
-    public:
-        struct promise_type;
-        using handle_type = std::coroutine_handle<promise_type>;
-
-    private:
-        handle_type handle_;
-
-    public:
-        explicit Task(handle_type h) : handle_(h) {}
-        ~Task() { if (handle_) handle_.destroy(); }
-
-        Task(const Task&) = delete;
-        Task& operator=(const Task&) = delete;
-        Task(Task&& other) noexcept : handle_(std::exchange(other.handle_, {})) {}
-        Task& operator=(Task&& other) noexcept {
-            if (this != &other) {
-                if (handle_) handle_.destroy();
-                handle_ = std::exchange(other.handle_, {});
-            }
-            return *this;
-        }
-
-        T get() {
-            if (!handle_) {
-                throw std::runtime_error("Task handle is null");
-            }
-            handle_.resume();
-            if (handle_.done()) {
-                return handle_.promise().get_result();
-            }
-            throw std::runtime_error("Task not complete");
-        }
-
-        bool is_ready() const {
-            return handle_ && handle_.done();
-        }
-    };
-
     template<typename T>
-    struct Task<T>::promise_type {
-        std::optional<T> result_;
-        std::exception_ptr exception_;
-
-        Task get_return_object() {
-            return Task(handle_type::from_promise(*this));
-        }
-
-        std::suspend_never initial_suspend() { return {}; }
-        std::suspend_always final_suspend() noexcept { return {}; }
-
-        void return_value(T value) {
-            result_ = std::move(value);
-        }
-
-        void unhandled_exception() {
-            exception_ = std::current_exception();
-        }
-
-        T get_result() {
-            if (exception_) {
-                std::rethrow_exception(exception_);
-            }
-            return std::move(*result_);
-        }
-    };
-
-    // Specialization for Task<void>
-    export template<>
-    class Task<void> {
-    public:
+    struct Generator {
         struct promise_type {
-            std::exception_ptr exception_;
-
-            Task<void> get_return_object() {
-                return Task<void>(handle_type::from_promise(*this));
+            T m_value{};
+            auto get_return_object() -> Generator {
+                return Generator{std::coroutine_handle<promise_type>::from_promise(*this)};
             }
-
-            std::suspend_never initial_suspend() { return {}; }
-            std::suspend_always final_suspend() noexcept { return {}; }
-
+            static auto initial_suspend() -> std::suspend_always { return {}; }
+            static auto final_suspend() noexcept -> std::suspend_always { return {}; }
+            auto yield_value(T value) -> std::suspend_always {
+                m_value = std::move(value);
+                return {};
+            }
             void return_void() {}
-
-            void unhandled_exception() {
-                exception_ = std::current_exception();
-            }
-
-            void get_result() {
-                if (exception_) {
-                    std::rethrow_exception(exception_);
-                }
-            }
+            void unhandled_exception() { std::terminate(); }
         };
 
-        using handle_type = std::coroutine_handle<promise_type>;
+        std::coroutine_handle<promise_type> m_handle;
 
-    private:
-        handle_type handle_;
-
-    public:
-        explicit Task(handle_type h) : handle_(h) {}
-        ~Task() { if (handle_) handle_.destroy(); }
-
-        Task(const Task&) = delete;
-        Task& operator=(const Task&) = delete;
-        Task(Task&& other) noexcept : handle_(std::exchange(other.handle_, {})) {}
-        Task& operator=(Task&& other) noexcept {
+        explicit Generator(std::coroutine_handle<promise_type> handle) : m_handle{handle} {}
+        ~Generator() { if (m_handle) m_handle.destroy(); }
+        
+        Generator(const Generator&) = delete;
+        auto operator=(const Generator&) -> Generator& = delete;
+        
+        Generator(Generator&& other) noexcept : m_handle{std::exchange(other.m_handle, nullptr)} {}
+        auto operator=(Generator&& other) noexcept -> Generator& {
             if (this != &other) {
-                if (handle_) handle_.destroy();
-                handle_ = std::exchange(other.handle_, {});
+                if (m_handle) m_handle.destroy();
+                m_handle = std::exchange(other.m_handle, nullptr);
             }
             return *this;
         }
 
-        void get() {
-            if (!handle_) {
-                throw std::runtime_error("Task handle is null");
-            }
-            handle_.resume();
-            if (handle_.done()) {
-                return;
-            }
-            throw std::runtime_error("Task not complete");
-        }
+        struct Iterator {
+            std::coroutine_handle<promise_type> m_handle;
+            bool operator==(std::default_sentinel_t) const { return !m_handle || m_handle.done(); }
+            auto operator++() -> void { if (m_handle) m_handle.resume(); }
+            auto operator*() const -> const T& { return m_handle.promise().m_value; }
+        };
 
-        bool is_ready() const {
-            return handle_ && handle_.done();
+        auto begin() -> Iterator {
+            if (m_handle && !m_handle.done()) m_handle.resume();
+            return Iterator{m_handle};
         }
+        auto end() -> std::default_sentinel_t { return {}; }
     };
 
-    // ============================================================================
-    // THREAD POOL
-    // ============================================================================
-
     /**
-     * @brief Simple thread pool for async task execution
+     * @brief Simple thread pool for asynchronous task execution
      */
     export class ThreadPool {
-    private:
-        std::vector<std::thread> workers_;
-        std::queue<std::function<void()>> tasks_;
-        std::mutex queue_mutex_;
-        std::condition_variable condition_;
-        std::atomic<bool> stop_{false};
-
     public:
-        explicit ThreadPool(size_t num_threads = std::thread::hardware_concurrency()) {
-            for (size_t i = 0; i < num_threads; ++i) {
-                workers_.emplace_back([this] {
+        explicit ThreadPool(Count thread_count) {
+            for (Count i = 0; i < thread_count; ++i) {
+                m_threads.emplace_back([this] {
                     while (true) {
                         std::function<void()> task;
                         {
-                            std::unique_lock<std::mutex> lock(queue_mutex_);
-                            condition_.wait(lock, [this] {
-                                return stop_.load() || !tasks_.empty();
-                            });
-                            if (stop_.load() && tasks_.empty()) {
-                                return;
-                            }
-                            task = std::move(tasks_.front());
-                            tasks_.pop();
+                            std::unique_lock lock(m_mutex);
+                            m_cv.wait(lock, [this] { return m_stop || !m_tasks.empty(); });
+                            if (m_stop && m_tasks.empty()) return;
+                            task = std::move(m_tasks.front());
+                            m_tasks.pop();
                         }
                         task();
                     }
@@ -209,81 +90,31 @@ namespace perception {
         }
 
         ~ThreadPool() {
-            stop_.store(true);
-            condition_.notify_all();
-            for (auto& worker : workers_) {
-                if (worker.joinable()) {
-                    worker.join();
-                }
+            {
+                std::lock_guard lock(m_mutex);
+                m_stop = true;
+            }
+            m_cv.notify_all();
+            for (auto& t : m_threads) {
+                if (t.joinable()) t.join();
             }
         }
 
         void submit(std::function<void()> task) {
             {
-                std::lock_guard<std::mutex> lock(queue_mutex_);
-                if (stop_.load()) {
-                    throw std::runtime_error("ThreadPool is stopped");
-                }
-                tasks_.emplace(std::move(task));
+                std::lock_guard lock(m_mutex);
+                m_tasks.push(std::move(task));
             }
-            condition_.notify_one();
+            m_cv.notify_one();
         }
 
-        size_t get_thread_count() const {
-            return workers_.size();
-        }
+        auto get_thread_count() const noexcept -> Count { return m_threads.size(); }
 
-        static ThreadPool& get_global_thread_pool() {
-            static ThreadPool pool;
-            return pool;
-        }
+    private:
+        std::vector<std::thread> m_threads;
+        std::queue<std::function<void()>> m_tasks;
+        std::mutex m_mutex;
+        std::condition_variable m_cv;
+        bool m_stop{false};
     };
-
-    // ============================================================================
-    // ASYNC HELPERS
-    // ============================================================================
-
-    /**
-     * @brief Schedule a coroutine on the thread pool
-     */
-    export struct schedule_on {
-        ThreadPool& pool;
-
-        explicit schedule_on(ThreadPool& p) : pool(p) {}
-
-        bool await_ready() const noexcept { return false; }
-
-        void await_suspend(std::coroutine_handle<> h) {
-            pool.submit([h]() { h.resume(); });
-        }
-
-        void await_resume() const noexcept {}
-    };
-
-    /**
-     * @brief Run a function as a coroutine task
-     */
-    export template<typename F>
-    auto run_async(F&& func) -> Task<decltype(func())> {
-        co_return func();
-    }
-
-    /**
-     * @brief Sleep for a duration
-     */
-    export inline auto sleep_for(std::chrono::milliseconds duration) -> Task<void> {
-        std::this_thread::sleep_for(duration);
-        co_return;
-    }
-
-    /**
-     * @brief Wait for all tasks to complete
-     */
-    export inline auto when_all(std::vector<Task<void>> tasks) -> Task<void> {
-        for (auto& task : tasks) {
-            task.get();
-        }
-        co_return;
-    }
-
-} // namespace perception
+}

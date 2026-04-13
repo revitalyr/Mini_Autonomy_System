@@ -14,6 +14,7 @@
 #include <filesystem>
 import perception.ros_provider;
 import perception.detector;
+import perception.geom;
 import perception.types;
 import perception.result;
 
@@ -110,7 +111,7 @@ auto demo_rosbag_with_detection(const std::string& bag_path) -> Result<void> {
         }
 
         // Create detector
-        Detector detector;
+        vision::Detector detector;
 
         // Stream data from the bag
         std::string img_topic = "/cam0/image_raw";
