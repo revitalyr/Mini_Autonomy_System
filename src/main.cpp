@@ -281,8 +281,30 @@ auto demo_ranges_and_concepts() noexcept -> Result<void> {
         std::cout << "High confidence detections (>= 0.5):\n";
 
         for (const auto& detection : high_confidence_detections) {
+            float aspect_ratio = static_cast<float>(detection.bbox.width) / detection.bbox.height;
+            float area = detection.bbox.width * detection.bbox.height;
+
             std::cout << "  - " << detection.class_name << ": confidence=" 
                       << std::format("{:.2f}", detection.confidence) << "\n";
+            std::cout << "    Bounding box: (" << detection.bbox.x << ", " << detection.bbox.y 
+                      << ", " << detection.bbox.width << "x" << detection.bbox.height << ")\n";
+            std::cout << "    Aspect ratio: " << std::format("{:.2f}", aspect_ratio) << "\n";
+            std::cout << "    Area: " << std::format("{:.0f}", area) << " pixels\n";
+            
+            // Explain classification reasoning
+            std::cout << "    Classification reasoning: ";
+            if (detection.class_name == "person") {
+                std::cout << "Tall narrow object (aspect ratio " << std::format("{:.2f}", aspect_ratio) 
+                          << ", area " << std::format("{:.0f}", area) << ")\n";
+            } else if (detection.class_name == "car") {
+                std::cout << "Wide object with large area (aspect ratio " << std::format("{:.2f}", aspect_ratio) 
+                          << ", area " << std::format("{:.0f}", area) << ")\n";
+            } else if (detection.class_name == "bicycle") {
+                std::cout << "Medium-sized object (aspect ratio " << std::format("{:.2f}", aspect_ratio) 
+                          << ", area " << std::format("{:.0f}", area) << ")\n";
+            } else {
+                std::cout << "Generic object (doesn't match specific categories)\n";
+            }
         }
 
         return {};
@@ -336,7 +358,38 @@ auto demo_async_processing() noexcept -> Result<void> {
 
         for (int i = 0; i < 3; ++i) {
             if (auto results = pipeline.get_results(); results) {
-                std::cout << "Got " << results.value().size() << " detections\n";
+                const auto& detections = results.value();
+                std::cout << "Frame " << (i + 1) << ": " << detections.size() << " detections\n";
+                
+                for (const auto& detection : detections) {
+                    float aspect_ratio = static_cast<float>(detection.bbox.width) / detection.bbox.height;
+                    float area = detection.bbox.width * detection.bbox.height;
+
+                    std::cout << "  - " << detection.class_name << ": confidence=" 
+                              << std::format("{:.2f}", detection.confidence) << "\n";
+                    std::cout << "    Bounding box: (" << detection.bbox.x << ", " << detection.bbox.y 
+                              << ", " << detection.bbox.width << "x" << detection.bbox.height << ")\n";
+                    std::cout << "    Aspect ratio: " << std::format("{:.2f}", aspect_ratio) << "\n";
+                    std::cout << "    Area: " << std::format("{:.0f}", area) << " pixels\n";
+                    
+                    // Explain classification reasoning
+                    std::cout << "    Classification reasoning: ";
+                    if (detection.class_name == "person") {
+                        std::cout << "Tall narrow object (aspect ratio " << std::format("{:.2f}", aspect_ratio) 
+                                  << ", area " << std::format("{:.0f}", area) << ")\n";
+                    } else if (detection.class_name == "car") {
+                        std::cout << "Wide object with large area (aspect ratio " << std::format("{:.2f}", aspect_ratio) 
+                                  << ", area " << std::format("{:.0f}", area) << ")\n";
+                    } else if (detection.class_name == "bicycle") {
+                        std::cout << "Medium-sized object (aspect ratio " << std::format("{:.2f}", aspect_ratio) 
+                                  << ", area " << std::format("{:.0f}", area) << ")\n";
+                    } else if (detection.class_name == "generic") {
+                        std::cout << "Generic object (doesn't match specific categories)\n";
+                    } else {
+                        std::cout << "Motion detected (background subtraction)\n";
+                    }
+                }
+                std::cout << "\n";
             } else {
                 break;
             }
