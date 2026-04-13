@@ -150,7 +150,7 @@ auto main(int argc, char* argv[]) -> int {
             bag_path = argv[1];
         } else {
             // Use default ROS 2 test file
-            bag_path = "demo/data/dataset_ros2";
+            bag_path = "demo/data/rosbag-001.db3";
         }
         
         if (argc > 2) {

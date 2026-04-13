@@ -407,7 +407,7 @@ else()
 
         -Wall -Wextra -Wpedantic
 
-        -std=c++20
+        -std=c++23
 
         $<$<CONFIG:Release>:-O3>
 
@@ -423,7 +423,7 @@ else()
 
             -Wall -Wextra -Wpedantic
 
-            -std=c++20
+            -std=c++23
 
             $<$<CONFIG:Release>:-O3>
 
@@ -435,7 +435,7 @@ else()
 
             -Wall -Wextra -Wpedantic
 
-            -std=c++20
+            -std=c++23
 
             $<$<CONFIG:Release>:-O3>
 
@@ -447,7 +447,7 @@ else()
 
             -Wall -Wextra -Wpedantic
 
-            -std=c++20
+            -std=c++23
 
             $<$<CONFIG:Release>:-O3>
 
