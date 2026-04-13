@@ -11,7 +11,6 @@ module;
 #include <atomic>
 
 export module perception.types;
-import perception.result;
 
 /**
  * @brief Common data types for perception system
@@ -23,52 +22,52 @@ import perception.result;
  * @date 2026
  */
 
-namespace perception {
+export namespace perception {
 
     // Type aliases for convenience
-    export using String = std::string;
-    export using StringView = std::string_view;
+    using String = std::string;
+    using StringView = std::string_view;
 
-    export template<typename T>
+    template<typename T>
     using Vector = std::vector<T>;
 
-    export template<typename T>
+    template<typename T>
     using Optional = std::optional<T>;
 
-    export template<typename T>
+    template<typename T>
     using UniquePtr = std::unique_ptr<T>;
 
-    export template<typename T>
+    template<typename T>
     using SharedPtr = std::shared_ptr<T>;
 
-    export template<typename T>
+    template<typename T>
     using Atomic = std::atomic<T>;
 
-    export using AtomicBool = std::atomic<bool>;
+    using AtomicBool = std::atomic<bool>;
     
-    export using Mutex = std::mutex;
-    export using LockGuard = std::lock_guard<std::mutex>;
-    export using UniqueLock = std::unique_lock<std::mutex>;
+    using Mutex = std::mutex;
+    using LockGuard = std::lock_guard<std::mutex>;
+    using UniqueLock = std::unique_lock<std::mutex>;
     
-    export using Milliseconds = std::chrono::milliseconds;
-    export using Seconds = std::chrono::seconds;
-    export using TimePoint = std::chrono::high_resolution_clock::time_point;
-    export using Clock = std::chrono::high_resolution_clock;
+    using Milliseconds = std::chrono::milliseconds;
+    using Seconds = std::chrono::seconds;
+    using TimePoint = std::chrono::high_resolution_clock::time_point;
+    using Clock = std::chrono::high_resolution_clock;
 
     // Utility functions
-    export template<typename T, typename... Args>
+    template<typename T, typename... Args>
     auto make_unique(Args&&... args) -> UniquePtr<T> {
         return std::make_unique<T>(std::forward<Args>(args)...);
     }
 
-    export auto to_milliseconds(std::chrono::nanoseconds duration) -> Milliseconds {
+    auto to_milliseconds(std::chrono::nanoseconds duration) -> Milliseconds {
         return std::chrono::duration_cast<Milliseconds>(duration);
     }
 
     /**
      * @brief Rectangle for bounding boxes
      */
-    export struct Rect {
+    struct Rect {
         int x, y;
         int width, height;
 
@@ -79,7 +78,7 @@ namespace perception {
     /**
      * @brief Detection result containing bounding box, confidence, and class information
      */
-    export struct Detection {
+    struct Detection {
         Rect bbox;              // Bounding box coordinates
         float confidence;      // Detection confidence (0.0 to 1.0)
         int class_id;          // Class identifier
@@ -92,7 +91,7 @@ namespace perception {
     /**
      * @brief Image data structure
      */
-    export struct ImageData {
+    struct ImageData {
         int width;
         int height;
         int channels;
@@ -106,7 +105,7 @@ namespace perception {
     /**
      * @brief Configuration parameters
      */
-    export struct Config {
+    struct Config {
         size_t thread_pool_size = 4;
         int max_detections = 100;
         float confidence_threshold = 0.5f;
@@ -116,7 +115,7 @@ namespace perception {
     /**
      * @brief IMU data structure
      */
-    export struct IMUData {
+    struct IMUData {
         double timestamp;
         double accelerometer_x;
         double accelerometer_y;
@@ -132,7 +131,7 @@ namespace perception {
     /**
      * @brief VIO frame with image and IMU data
      */
-    export struct VioFrame {
+    struct VioFrame {
         double timestamp;
         ImageData image;
         std::vector<IMUData> imu_samples;

@@ -9,6 +9,7 @@
  * @date 2026
  */
 
+#include <opencv2/opencv.hpp>
 #include <iostream>
 #include <ranges>
 #include <coroutine>
@@ -17,6 +18,10 @@
 #include <format>
 #include <utility>
 #include <memory>
+#include <filesystem>
+#include <vector>
+#include <algorithm>
+
 import perception.concepts;
 import perception.queue;
 import perception.pipeline;
@@ -29,52 +34,39 @@ import perception.types;
 namespace perception {
 
 // ============================================================================
-// IMAGE FRAME GENERATOR
+// IMAGE LOADING AND GENERATION
 // ============================================================================
 
 /**
- * Generator for streaming image frames
+ * Coroutine generator for lazy sequence streaming
  */
 template<typename T>
 struct Generator {
     struct promise_type {
         T m_value{};
-
-        auto get_return_object() noexcept -> Generator {
+        auto get_return_object() -> Generator {
             return Generator{std::coroutine_handle<promise_type>::from_promise(*this)};
         }
-
-        static constexpr auto initial_suspend() noexcept -> std::suspend_always { return {}; }
-        static constexpr auto final_suspend() noexcept -> std::suspend_always { return {}; }
-
-        auto yield_value(T value) noexcept -> std::suspend_always {
+        static auto initial_suspend() -> std::suspend_always { return {}; }
+        static auto final_suspend() noexcept -> std::suspend_always { return {}; }
+        auto yield_value(T value) -> std::suspend_always {
             m_value = std::move(value);
             return {};
         }
-
-        constexpr auto return_void() noexcept -> void {}
-        constexpr auto unhandled_exception() noexcept -> void { std::terminate(); }
+        void return_void() {}
+        void unhandled_exception() { std::terminate(); }
     };
 
     std::coroutine_handle<promise_type> m_handle;
 
-    explicit Generator(std::coroutine_handle<promise_type> handle) noexcept : m_handle{handle} {}
-
-    ~Generator() noexcept {
-        if (m_handle) {
-            m_handle.destroy();
-        }
-    }
-
+    explicit Generator(std::coroutine_handle<promise_type> handle) : m_handle{handle} {}
+    ~Generator() { if (m_handle) m_handle.destroy(); }
     Generator(const Generator&) = delete;
-    auto operator=(const Generator&) -> Generator& = delete;
-
+    Generator& operator=(const Generator&) = delete;
     Generator(Generator&& other) noexcept : m_handle{std::exchange(other.m_handle, nullptr)} {}
-    auto operator=(Generator&& other) noexcept -> Generator& {
+    Generator& operator=(Generator&& other) noexcept {
         if (this != &other) {
-            if (m_handle) {
-                m_handle.destroy();
-            }
+            if (m_handle) m_handle.destroy();
             m_handle = std::exchange(other.m_handle, nullptr);
         }
         return *this;
@@ -82,31 +74,71 @@ struct Generator {
 
     struct Iterator {
         std::coroutine_handle<promise_type> m_handle;
-
-        auto operator==(std::default_sentinel_t) const noexcept -> bool {
-            return !m_handle || m_handle.done();
-        }
-
-        auto operator++() noexcept -> void {
-            m_handle.resume();
-        }
-
-        auto operator*() const noexcept -> const T& {
-            return m_handle.promise().m_value;
-        }
+        bool operator==(std::default_sentinel_t) const { return !m_handle || m_handle.done(); }
+        auto operator++() -> void { if (m_handle) m_handle.resume(); }
+        auto operator*() const -> const T& { return m_handle.promise().m_value; }
     };
 
-    auto begin() const noexcept -> Iterator {
-        if (m_handle && !m_handle.done()) {
-            m_handle.resume();
-        }
+    auto begin() -> Iterator {
+        if (m_handle && !m_handle.done()) m_handle.resume();
         return Iterator{m_handle};
     }
-
-    auto end() const noexcept -> std::default_sentinel_t {
-        return {};
-    }
+    auto end() -> std::default_sentinel_t { return {}; }
 };
+
+/**
+ * Simple image loader using OpenCV
+ * @param path Path to image file
+ * @return ImageData or nullopt if loading failed
+ */
+inline auto load_image_file(const std::filesystem::path& path) -> std::optional<ImageData> {
+    cv::Mat img = cv::imread(path.string(), cv::IMREAD_COLOR);
+    if (img.empty()) {
+        return std::nullopt;
+    }
+    
+    // Convert BGR to RGB
+    cv::Mat rgb;
+    cv::cvtColor(img, rgb, cv::COLOR_BGR2RGB);
+    
+    ImageData data;
+    data.width = rgb.cols;
+    data.height = rgb.rows;
+    data.channels = rgb.channels();
+    data.data.assign(rgb.data, rgb.data + (rgb.total() * rgb.channels()));
+    
+    return data;
+}
+
+/**
+ * Generator for streaming image frames from directory
+ * @param directory Path to directory containing images
+ * @return Generator yielding loaded image data
+ */
+auto load_images_from_directory(const std::filesystem::path& directory) -> Generator<ImageData> {
+    if (!std::filesystem::exists(directory)) {
+        co_return;
+    }
+    
+    std::vector<std::filesystem::path> image_files;
+    for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+        if (entry.is_regular_file()) {
+            auto ext = entry.path().extension().string();
+            std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+            if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".bmp") {
+                image_files.push_back(entry.path());
+            }
+        }
+    }
+    
+    std::sort(image_files.begin(), image_files.end());
+    
+    for (const auto& path : image_files) {
+        if (auto img = load_image_file(path)) {
+            co_yield std::move(*img);
+        }
+    }
+}
 
 /**
  * Generate test image frames with gradient pattern
@@ -314,20 +346,57 @@ auto demo_ranges_and_concepts() noexcept -> Result<void> {
 }
 
 /**
- * Demo: Generate test image frames
+ * Find demo data directory from various possible locations
+ */
+auto find_demo_data_directory() -> std::filesystem::path {
+    std::vector<std::filesystem::path> possible_paths = {
+        "demo/data",                    // From project root
+        "../demo/data",                 // From build directory
+        "../../demo/data",              // From nested build directory
+    };
+    
+    for (const auto& path : possible_paths) {
+        if (std::filesystem::exists(path) && std::filesystem::is_directory(path)) {
+            return path;
+        }
+    }
+    
+    return {};  // Empty path if not found
+}
+
+/**
+ * Demo: Load and process actual JPG images from demo/data
  */
 auto demo_coroutines() noexcept -> Result<void> {
     try {
-        std::cout << "=== Frame Generation Demo ===\n";
+        std::cout << "=== Image Loading Demo ===\n";
+        std::cout << "Loading images from demo/data/...\n";
 
-        auto frame_generator = generate_test_frames(5);
-        size_t frame_count = 0;
-
-        for (const auto& frame : frame_generator) {
-            ++frame_count;
-            std::cout << "Generated frame " << frame_count << " (" 
-                      << frame.width << "x" << frame.height << ")\n";
+        auto image_path = find_demo_data_directory();
+        
+        if (image_path.empty()) {
+            std::cout << "Demo data directory not found, falling back to generated frames\n";
+            auto frame_generator = generate_test_frames(5);
+            size_t frame_count = 0;
+            for (const auto& frame : frame_generator) {
+                ++frame_count;
+                std::cout << "Generated frame " << frame_count << " (" 
+                          << frame.width << "x" << frame.height << ")\n";
+            }
+            return {};
         }
+
+        auto image_generator = load_images_from_directory(image_path);
+        
+        size_t frame_count = 0;
+        for (const auto& frame : image_generator) {
+            ++frame_count;
+            std::cout << "Loaded image " << frame_count << " (" 
+                      << frame.width << "x" << frame.height << ", "
+                      << frame.channels << " channels)\n";
+        }
+        
+        std::cout << "Total images loaded: " << frame_count << "\n";
 
         return {};
     } catch (const std::exception&) {
@@ -336,11 +405,11 @@ auto demo_coroutines() noexcept -> Result<void> {
 }
 
 /**
- * Demo: Async object detection pipeline
+ * Demo: Async object detection pipeline with real images
  */
 auto demo_async_processing() noexcept -> Result<void> {
     try {
-        std::cout << "=== Async Detection Pipeline Demo ===\n";
+        std::cout << "=== Async Detection Pipeline Demo (Real Images) ===\n";
 
         auto pipeline = AsyncProcessingPipeline{};
 
@@ -348,13 +417,38 @@ auto demo_async_processing() noexcept -> Result<void> {
             return result;
         }
 
-        for (const auto& frame : generate_test_frames(3)) {
-            ImageData frame_copy = frame;
-            if (auto result = pipeline.process_image(std::move(frame_copy)); !result) {
-                pipeline.stop();
-                return result;
+        // Try to load real images from demo/data
+        auto image_path = find_demo_data_directory();
+        size_t frames_processed = 0;
+        
+        if (!image_path.empty()) {
+            auto image_generator = load_images_from_directory(image_path);
+            
+            for (const auto& frame : image_generator) {
+                ImageData frame_copy = frame;
+                if (auto process_result = pipeline.process_image(std::move(frame_copy)); !process_result) {
+                    pipeline.stop();
+                    return process_result;
+                }
+                ++frames_processed;
+                if (frames_processed >= 6) break; // Process up to 6 images
             }
         }
+        
+        // Fall back to generated frames if no real images were loaded
+        if (frames_processed == 0) {
+            std::cout << "No real images found, using generated test frames\n";
+            for (const auto& frame : generate_test_frames(3)) {
+                ImageData frame_copy = frame;
+                if (auto result = pipeline.process_image(std::move(frame_copy)); !result) {
+                    pipeline.stop();
+                    return result;
+                }
+                ++frames_processed;
+            }
+        }
+        
+        std::cout << "Processing " << frames_processed << " frames...\n";
 
         for (int i = 0; i < 3; ++i) {
             if (auto results = pipeline.get_results(); results) {

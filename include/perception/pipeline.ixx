@@ -11,6 +11,7 @@ module;
 #include <coroutine>
 
 export module perception.pipeline;
+export import perception.types;
 import perception.concepts;
 import perception.queue;
 import perception.async;

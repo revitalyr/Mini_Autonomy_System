@@ -100,56 +100,12 @@ else()
 endif()
 
 
-
 # Создание библиотеки модулей
 
-add_library(perception_modules)
+add_library(perception_modules src/modules_dummy.cpp)
 
-
-
-set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
-
-
-
-# Add C++20 compile feature for module support
-
-target_compile_features(perception_modules PUBLIC cxx_std_20)
-
-
-
-# Add include directory for header files
-
-target_include_directories(perception_modules PUBLIC 
-
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-
-)
-
-
-
-# Добавляем OpenCV include directories
-
+# Add include directories for OpenCV (needed for C++ modules)
 target_include_directories(perception_modules PUBLIC ${OpenCV_INCLUDE_DIRS})
-
-if(ROS_FOUND)
-
-    target_include_directories(perception_modules PUBLIC ${rclcpp_INCLUDE_DIRS} ${cv_bridge_INCLUDE_DIRS} ${sensor_msgs_INCLUDE_DIRS} ${std_msgs_INCLUDE_DIRS} ${rosbag2_cpp_INCLUDE_DIRS} /opt/ros/jazzy/include/cv_bridge)
-
-endif()
-
-
-
-# Линкуем OpenCV и ROS к модулям
-
-target_link_libraries(perception_modules PUBLIC ${OpenCV_LIBS})
-
-if(ROS_FOUND)
-
-    target_link_libraries(perception_modules PUBLIC ${rclcpp_LIBRARIES} ${cv_bridge_LIBRARIES} ${rosbag2_cpp_LIBRARIES})
-
-endif()
-
-
 
 if(MODULES_SUPPORT)
 
@@ -394,6 +350,12 @@ else()
         -Wall -Wextra -Wpedantic -Werror
 
         -std=c++23
+
+        # Suppress warnings from OpenCV headers with C++23
+
+        -Wno-deprecated-anon-enum-enum-conversion
+
+        -Wno-c11-extensions
 
         $<$<CONFIG:Release>:-O3 -march=native -flto>
 

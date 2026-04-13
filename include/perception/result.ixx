@@ -182,6 +182,16 @@ namespace perception {
     export template<typename T>
     using Expected = Result<T>;
 
+    export template<typename E>
+    auto make_unexpected(E err) {
+        return Result<void>(make_error_code(err));
+    }
+    
+    export template<typename T = void>
+    auto make_unexpected(PerceptionError err) -> Result<T> {
+        return Result<T>(make_error_code(err));
+    }    
+
     /**
      * @brief Async result type for coroutine operations
      */
