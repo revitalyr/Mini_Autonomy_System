@@ -55,7 +55,7 @@ struct Detector::Impl {
 };
 
 Detector::Detector(double threshold, const String& dnn_model_path, const String& dnn_names_path, float dnn_conf_thresh, float dnn_nms_thresh)
-    : m_pimpl(make_unique<Impl>(threshold, dnn_model_path, dnn_names_path, dnn_conf_thresh, dnn_nms_thresh)) {}
+    : m_pimpl(perception::make_unique<Impl>(threshold, dnn_model_path, dnn_names_path, dnn_conf_thresh, dnn_nms_thresh)) {}
 
 Detector::~Detector() = default;
 

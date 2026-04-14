@@ -78,6 +78,10 @@ export namespace perception {
         float tracker_iou_threshold = 0.3f;
         int tracker_max_age = 10;
         bool enable_gpu = false;
+        String dnn_model_path = "";
+        String dnn_names_path = "";
+        float dnn_confidence_threshold = 0.5f;
+        float dnn_nms_threshold = 0.4f;
     };
 
 } // namespace perception

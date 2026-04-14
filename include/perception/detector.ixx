@@ -19,7 +19,7 @@ export namespace perception::vision {
          * @brief Construct a new Detector object
          * @param threshold Sensitivity threshold for background subtraction
          */
-        explicit Detector(double threshold = 16.0);
+        explicit Detector(double threshold, const String& dnn_model_path, const String& dnn_names_path, float dnn_conf_thresh, float dnn_nms_thresh);
 
         /**
          * @brief Destroy the Detector object

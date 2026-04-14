@@ -16,7 +16,8 @@ namespace perception {
 /**
  * @brief RAII helper to automatically record processing latency
  */
-struct LatencyTimer {
+class LatencyTimer {
+public:
     PerformanceMetrics* metrics;
     Clock::time_point start_time;
 
@@ -41,32 +42,23 @@ struct AsyncProcessingPipeline::Impl {
     AtomicBool is_running{false};
 
     Impl(const Config& config)
-        : image_queue(make_unique<ThreadSafeQueue<geom::ImageData>>())
-        , result_queue(make_unique<ThreadSafeQueue<OutputFrame>>())
-        , thread_pool(make_unique<ThreadPool>(config.thread_pool_size))
-        , metrics(make_unique<PerformanceMetrics>())
-        , detector(make_unique<vision::Detector>(config.detector_sensitivity))
-        , tracker(make_unique<tracking::Tracker>(config.tracker_iou_threshold, config.tracker_max_age))
-    {}
-
-    Impl(const Config& config)
-        : image_queue(make_unique<ThreadSafeQueue<geom::ImageData>>())
-        , result_queue(make_unique<ThreadSafeQueue<OutputFrame>>())
-        , thread_pool(make_unique<ThreadPool>(config.thread_pool_size))
-        , metrics(make_unique<PerformanceMetrics>())
-        , detector(make_unique<vision::Detector>(
+        : image_queue(perception::make_unique<ThreadSafeQueue<geom::ImageData>>())
+        , result_queue(perception::make_unique<ThreadSafeQueue<OutputFrame>>())
+        , thread_pool(perception::make_unique<ThreadPool>(config.thread_pool_size))
+        , metrics(perception::make_unique<PerformanceMetrics>())
+        , detector(perception::make_unique<vision::Detector>(
             config.detector_sensitivity,
             config.dnn_model_path,
             config.dnn_names_path,
             config.dnn_confidence_threshold,
             config.dnn_nms_threshold
         ))
-        , tracker(make_unique<tracking::Tracker>(config.tracker_iou_threshold, config.tracker_max_age))
+        , tracker(perception::make_unique<tracking::Tracker>(config.tracker_iou_threshold, config.tracker_max_age))
     {}
 };
 
 AsyncProcessingPipeline::AsyncProcessingPipeline(const Config& config)
-    : m_pimpl(make_unique<Impl>(config)) {}
+    : m_pimpl(perception::make_unique<Impl>(config)) {}
 
 AsyncProcessingPipeline::~AsyncProcessingPipeline() {
     stop();
