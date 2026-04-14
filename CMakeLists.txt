@@ -46,9 +46,14 @@ else()
 
 endif()
 
+# Force CMake to look at vcpkg directories first to avoid version mismatch
+if(DEFINED VCPKG_INSTALLED_PATH)
+    set(OpenCV_DIR "${VCPKG_INSTALLED_PATH}/share/opencv")
+    message(STATUS "Prioritizing OpenCV from vcpkg: ${OpenCV_DIR}")
+endif()
 
-# Поиск необходимых пакетов (OpenCV, ROS, потоки)
-find_package(OpenCV REQUIRED CONFIG)
+# Search for packages
+find_package(OpenCV REQUIRED CONFIG HINTS "${OpenCV_DIR}")
 find_package(Threads REQUIRED)
 
 # Поиск ROS 2 (опционально)
@@ -77,6 +82,7 @@ add_library(perception_modules src/modules_dummy.cpp)
 
 # Add include directories for OpenCV (needed for C++ modules)
 target_include_directories(perception_modules PUBLIC ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(perception_modules PUBLIC ${OpenCV_LIBS})
 
 if(MODULES_SUPPORT)
     target_sources(perception_modules PUBLIC

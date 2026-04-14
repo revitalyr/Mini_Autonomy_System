@@ -1,9 +1,11 @@
 module;
 
+#include <opencv2/core/version.hpp>
 #include <opencv2/opencv.hpp>
-#include <algorithm>
-#include <vector>
 #include <filesystem>
+#include <ranges>
+#include <algorithm>
+#include <cctype>
 #include <coroutine>
 
 module perception.image_loader;

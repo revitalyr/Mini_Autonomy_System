@@ -1,10 +1,17 @@
 module;
 
+#include <opencv2/core/version.hpp>
+#include <opencv2/core.hpp>
 #include <opencv2/video/tracking.hpp>
 #include <algorithm>
 #include <set>
 
 module perception.tracking;
+
+// Prevent mixing OpenCV 5 headers with OpenCV 4 libraries
+#if CV_VERSION_MAJOR != 4
+#error "OpenCV version mismatch: Tracking module requires OpenCV 4 headers."
+#endif
 
 namespace perception::tracking {
 
