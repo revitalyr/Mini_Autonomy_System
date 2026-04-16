@@ -46,15 +46,37 @@ else()
 
 endif()
 
-# Force CMake to look at vcpkg directories first to avoid version mismatch
-if(DEFINED VCPKG_INSTALLED_PATH)
-    set(OpenCV_DIR "${VCPKG_INSTALLED_PATH}/share/opencv")
-    message(STATUS "Prioritizing OpenCV from vcpkg: ${OpenCV_DIR}")
+# Check for downloaded OpenCV first (faster than building from vcpkg)
+if(EXISTS "D:/opencv/opencv/build/x64/vc16/lib/OpenCVConfig.cmake")
+    set(OpenCV_DIR "D:/opencv/opencv/build/x64/vc16/lib")
+    message(STATUS "Using downloaded OpenCV: ${OpenCV_DIR}")
+elseif(EXISTS "D:/opencv/build/x64/vc16/lib/OpenCVConfig.cmake")
+    set(OpenCV_DIR "D:/opencv/build/x64/vc16/lib")
+    message(STATUS "Using downloaded OpenCV: ${OpenCV_DIR}")
+elseif(DEFINED VCPKG_INSTALLED_PATH AND EXISTS "${VCPKG_INSTALLED_PATH}/share/opencv4/OpenCVConfig.cmake")
+    # Fallback to vcpkg if available
+    set(OpenCV_DIR "${VCPKG_INSTALLED_PATH}/share/opencv4")
+    message(STATUS "Using OpenCV from vcpkg: ${OpenCV_DIR}")
+else()
+    message(STATUS "Searching for OpenCV in standard locations")
 endif()
 
-# Search for packages
-find_package(OpenCV REQUIRED CONFIG HINTS "${OpenCV_DIR}")
+# Search for packages - use world if available
+find_package(OpenCV REQUIRED CONFIG HINTS "${OpenCV_DIR}" COMPONENTS world)
 find_package(Threads REQUIRED)
+
+# Create executable
+add_executable(perception_demo src/main.cpp)
+
+# Copy OpenCV world DLL to build directory
+if(OpenCV_FOUND)
+    add_custom_command(TARGET perception_demo POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "D:/opencv/opencv/build/x64/vc16/bin/opencv_world4100.dll"
+        $<TARGET_FILE_DIR:perception_demo>
+        COMMENT "Copying OpenCV world DLL to build directory"
+    )
+endif()
 
 # Поиск ROS 2 (опционально)
 find_package(ament_cmake QUIET)
@@ -80,8 +102,9 @@ endif()
 # Создание библиотеки модулей
 add_library(perception_modules src/modules_dummy.cpp)
 
-# Add include directories for OpenCV (needed for C++ modules)
+# Add include directories for OpenCV and project headers (needed for C++ modules)
 target_include_directories(perception_modules PUBLIC ${OpenCV_INCLUDE_DIRS})
+target_include_directories(perception_modules PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(perception_modules PUBLIC ${OpenCV_LIBS})
 
 if(MODULES_SUPPORT)
@@ -101,6 +124,8 @@ if(MODULES_SUPPORT)
             include/perception/image_loader.ixx
             include/perception/detector.ixx
             include/perception/tracking.ixx
+            include/perception/calibration.ixx
+            include/perception/stereo_matching.ixx
             include/perception/viz.ixx
             include/perception/pipeline.ixx
     )
@@ -130,7 +155,10 @@ endif()
 if(MODULES_SUPPORT)
     # For MSVC and Clang with module support, implementation files are added separately
     target_sources(perception_modules PRIVATE
+        modules/perception.types.cpp
         modules/perception.detector.cpp
+        modules/perception.calibration.cpp
+        modules/perception.stereo_matching.cpp
         modules/perception.tracking.cpp
         modules/perception.image_loader.cpp
         modules/perception.pipeline.cpp
@@ -146,9 +174,6 @@ else()
         modules/perception.viz.cpp
     )
 endif()
-
-# Создание исполняемого файла
-add_executable(perception_demo src/main.cpp)
 
 # Создание исполняемого файла для ROSBAG демо только если ROS доступен
 if(ROS_FOUND)
