@@ -1,6 +1,6 @@
-﻿1.jpg машина и часть дома
-2.jpg на фоне дома семья и багажник машины
-3.jpg городская улица с людьми и машинами
-4.jpg семья с рисованным домиком и машиной
-5.jpg старинная улица с людьми и машинами
-6.jpg машины на фоне дома
+﻿1.jpg car and part of a house
+2.jpg family and car trunk against house background
+3.jpg city street with people and cars
+4.jpg family with drawn house and car
+5.jpg old street with people and cars
+6.jpg cars against house background
