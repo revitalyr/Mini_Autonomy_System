@@ -1,3 +1,8 @@
+/**
+ * @file perception.image_loader.cpp
+ * @brief Implementation of image loading functions
+ */
+
 module;
 
 #include <opencv2/core/version.hpp>
@@ -7,30 +12,39 @@ module;
 #include <algorithm>
 #include <cctype>
 #include <coroutine>
+#include <perception/constants.h>
 
 module perception.image_loader;
 
+import perception.types;
+
 namespace perception::io {
 
-auto loadImageFile(const std::filesystem::path& path) -> Optional<geom::ImageData> {
+using namespace perception::constants;
+
+/**
+ * @brief Load a single image file
+ * @param path Path to image file
+ * @return Optional containing ImageData or nullopt if loading fails
+ */
+auto loadImageFile(const std::filesystem::path& path) -> Optional<ImageData> {
     cv::Mat img = cv::imread(path.string(), cv::IMREAD_COLOR);
     if (img.empty()) return std::nullopt;
     
-    cv::Mat rgb;
-    cv::cvtColor(img, rgb, cv::COLOR_BGR2RGB);
-
-    geom::ImageData data;
-    data.width = rgb.cols;
-    data.height = rgb.rows;
-    data.channels = rgb.channels();
-    data.data.assign(rgb.data, rgb.data + (static_cast<size_t>(rgb.total()) * rgb.channels()));
-    
-    return data;
+    return ImageData::fromRaw(
+        reinterpret_cast<const uint8_t*>(img.data), img.cols, img.rows, PixelFormat::Bgr, true
+    );
 }
 
-auto loadImagesFromDirectory(const std::filesystem::path& directory) -> Generator<geom::ImageData> {
+/**
+ * @brief Load all images from a directory as a generator
+ * @param directory Path to directory containing images
+ * @return Generator yielding ImageData objects
+ * @details Supports jpg, jpeg, png, and bmp formats
+ */
+auto loadImagesFromDirectory(const std::filesystem::path& directory) -> Generator<ImageData> {
     if (!std::filesystem::exists(directory)) co_return;
-    
+
     Vector<std::filesystem::path> files;
     for (const auto& entry : std::filesystem::directory_iterator(directory)) {
         if (entry.is_regular_file()) {
@@ -41,9 +55,9 @@ auto loadImagesFromDirectory(const std::filesystem::path& directory) -> Generato
             }
         }
     }
-    
+
     std::ranges::sort(files);
-    
+
     for (const auto& path : files) {
         if (auto img = loadImageFile(path)) {
             co_yield std::move(*img);
@@ -51,24 +65,34 @@ auto loadImagesFromDirectory(const std::filesystem::path& directory) -> Generato
     }
 }
 
-auto generateTestFrames(Count count) -> Generator<geom::ImageData> {
+/**
+ * @brief Generate synthetic test frames
+ * @param count Number of frames to generate
+ * @return Generator yielding synthetic ImageData objects
+ * @details Creates grayscale gradient patterns for testing
+ */
+auto generateTestFrames(Count count) -> Generator<ImageData> {
     for (Count i = 0; i < count; ++i) {
-        geom::ImageData frame{480, 640, 3};
-        frame.data.resize(frame.width * frame.height * frame.channels);
-        
-        for (int y = 0; y < frame.height; ++y) {
-            for (int x = 0; x < frame.width; ++x) {
-                int idx = (y * frame.width + x) * frame.channels;
+        int width = 640;
+        int height = 480;
+        cv::Mat test_mat(height, width, CV_8UC3);
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
                 uint8_t value = static_cast<uint8_t>((x + y + i * 10) % 256);
-                frame.data[idx] = value;
-                frame.data[idx + 1] = value;
-                frame.data[idx + 2] = value;
+                test_mat.at<cv::Vec3b>(y, x) = cv::Vec3b(value, value, value);
             }
         }
-        co_yield frame;
+
+        co_yield ImageData::fromRaw(test_mat.data, width, height, PixelFormat::Bgr, true);
     }
 }
 
+/**
+ * @brief Find the demo data directory
+ * @return Path to demo data directory or empty path if not found
+ * @details Searches common relative paths for demo data
+ */
 auto findDemoDataDirectory() -> std::filesystem::path {
     const std::vector<std::filesystem::path> paths = {
         "demo/data", "../demo/data", "../../demo/data"

@@ -1,10 +1,15 @@
+/**
+ * @file perception.pipeline.ixx
+ * @brief Asynchronous processing pipeline
+ */
+
 module;
 #include <utility>
 
 export module perception.pipeline;
 import perception.types;
 import perception.geom;
-import perception.tracking; // Необходимо для псевдонима OutputFrame
+import perception.tracking; // Required for OutputFrame alias
 import perception.metrics;
 import perception.result;
 
@@ -24,9 +29,9 @@ export namespace perception {
         auto start() noexcept -> Result<void>;
         auto stop() noexcept -> void;
 
-        auto processImage(geom::ImageData image) noexcept -> Result<void>;
-        
-        using OutputFrame = std::pair<geom::ImageData, Vector<tracking::Track>>;
+        auto processImage(UniquePtr<ImageData> image) noexcept -> Result<void>;
+
+        using OutputFrame = std::pair<UniquePtr<ImageData>, Vector<tracking::Track>>;
         auto getResults(Milliseconds timeout = Milliseconds{1000}) noexcept -> Result<OutputFrame>;
 
         auto getMetrics() const noexcept -> PerformanceMetrics::Snapshot;

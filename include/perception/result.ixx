@@ -6,6 +6,7 @@ module;
 #include <optional>
 #include <chrono>
 #include <stdexcept>
+#include "constants.h"
 
 export module perception.result;
 
@@ -35,7 +36,10 @@ namespace perception {
         QueueShutdown,
         ResourceUnavailable,
         Timeout,
-        UnknownError
+        UnknownError,
+        FileNotFound,
+        InvalidCalibrationData,
+        IOError
     };
 
     /**
@@ -44,30 +48,36 @@ namespace perception {
     export class PerceptionErrorCategory : public std::error_category {
     public:
         const char* name() const noexcept override {
-            return "perception_error";
+            return std::string(constants::errors::ERROR_CATEGORY_NAME).c_str();
         }
 
         std::string message(int ev) const override {
             switch (static_cast<PerceptionError>(ev)) {
                 case PerceptionError::Success:
-                    return "Success";
+                    return std::string(constants::errors::MSG_SUCCESS);
                 case PerceptionError::InvalidInput:
-                    return "Invalid input provided";
+                    return std::string(constants::errors::MSG_INVALID_INPUT);
                 case PerceptionError::ProcessingError:
-                    return "Processing error occurred";
+                    return std::string(constants::errors::MSG_PROCESSING_ERROR);
                 case PerceptionError::ThreadError:
-                    return "Thread operation error";
+                    return std::string(constants::errors::MSG_THREAD_ERROR);
                 case PerceptionError::QueueEmpty:
-                    return "Queue is empty";
+                    return std::string(constants::errors::MSG_QUEUE_EMPTY);
                 case PerceptionError::QueueShutdown:
-                    return "Queue has been shut down";
+                    return std::string(constants::errors::MSG_QUEUE_SHUTDOWN);
                 case PerceptionError::ResourceUnavailable:
-                    return "Resource unavailable";
+                    return std::string(constants::errors::MSG_RESOURCE_UNAVAILABLE);
                 case PerceptionError::Timeout:
-                    return "Operation timed out";
+                    return std::string(constants::errors::MSG_TIMEOUT);
+                case PerceptionError::FileNotFound:
+                    return std::string(constants::errors::MSG_FILE_NOT_FOUND);
+                case PerceptionError::InvalidCalibrationData:
+                    return std::string(constants::errors::MSG_INVALID_CALIBRATION_DATA);
+                case PerceptionError::IOError:
+                    return std::string(constants::errors::MSG_IO_ERROR);
                 case PerceptionError::UnknownError:
                 default:
-                    return "Unknown error";
+                    return std::string(constants::errors::MSG_UNKNOWN_ERROR);
             }
         }
 

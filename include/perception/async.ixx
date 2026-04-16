@@ -1,3 +1,8 @@
+/**
+ * @file perception.async.ixx
+ * @brief Asynchronous operations and utilities
+ */
+
 module;
 #include <coroutine>
 #include <utility>

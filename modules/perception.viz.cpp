@@ -1,25 +1,45 @@
+/**
+ * @file perception.viz.cpp
+ * @brief Implementation of visualization functions for tracking results
+ */
+
 module;
 
 #include <opencv2/core/version.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
 #include <format>
+#include <perception/constants.h>
 
 module perception.viz;
 
-// Prevent mixing OpenCV 5 headers with OpenCV 4 libraries
+import perception.types;
+import perception.geom;
+import perception.tracking;
+
+/**
+ * @def CV_VERSION_MAJOR
+ * @brief Ensures OpenCV version compatibility
+ * @details Prevents mixing OpenCV 5 headers with OpenCV 4 libraries
+ */
 #if CV_VERSION_MAJOR != 4
 #error "OpenCV version mismatch: Visualization module requires OpenCV 4 headers."
 #endif
 
 namespace perception::viz {
 
-auto drawTracks(const geom::ImageData& image, const Vector<tracking::Track>& tracks) -> void {
-    if (image.data.empty()) return;
+using namespace perception::constants;
 
-    cv::Mat rgb(image.height, image.width, CV_8UC3, const_cast<uint8_t*>(image.data.data()));
-    cv::Mat bgr;
-    cv::cvtColor(rgb, bgr, cv::COLOR_RGB2BGR);
+/**
+ * @brief Draw tracking results on an image
+ * @param image Input image to draw on
+ * @param tracks Vector of tracking results to visualize
+ * @details Draws colored bounding boxes with track IDs, class names, and confidence scores
+ */
+auto drawTracks(const ImageData& image, const Vector<tracking::Track>& tracks) -> void {
+    if (image.m_impl->mat.empty()) return;
+
+    cv::Mat bgr = image.m_impl->mat;
 
     for (const auto& track : tracks) {
         cv::Rect rect(track.bbox.x, track.bbox.y, track.bbox.width, track.bbox.height);
@@ -53,6 +73,9 @@ auto drawTracks(const geom::ImageData& image, const Vector<tracking::Track>& tra
     cv::waitKey(1);
 }
 
+/**
+ * @brief Close all OpenCV visualization windows
+ */
 auto terminateWindows() -> void {
     cv::destroyAllWindows();
 }

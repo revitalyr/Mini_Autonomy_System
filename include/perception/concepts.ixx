@@ -64,9 +64,9 @@ namespace perception {
      * @brief Concept for detector
      */
     export template<typename T>
-    concept DetectorConcept = requires(T detector, const geom::ImageData& image) {
+    concept DetectorConcept = requires(T detector, const ImageData& image) {
         { detector.detect(image) } -> std::convertible_to<std::vector<geom::Detection>>;
-        { detector.get_class_names() } -> std::convertible_to<const std::vector<std::string>&>;
+        { detector.get_class_names() } -> std::convertible_to<const std::vector<String>&>;
     };
 
     // ============================================================================
@@ -127,7 +127,7 @@ namespace perception {
      */
     export template<typename T>
     concept ImageLoader = requires(T loader, const std::filesystem::path& path) {
-        { loader.load_image(path) } -> std::same_as<std::future<perception::Result<geom::ImageData>>>;
+        { loader.load_image(path) } -> std::same_as<std::future<perception::Result<ImageData>>>;
     };
 
     /**

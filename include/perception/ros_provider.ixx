@@ -1,3 +1,8 @@
+/**
+ * @file perception.ros_provider.ixx
+ * @brief ROS bag file provider for data streaming
+ */
+
 module;
 #include <coroutine>
 #include <filesystem>

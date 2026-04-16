@@ -9,6 +9,7 @@ module;
 #include <limits>
 #include <iostream>
 #include <iomanip>
+#include "constants.h"
 
 export module perception.metrics;
 import perception.concepts;
@@ -81,7 +82,7 @@ namespace perception {
             {
                 std::lock_guard<std::mutex> lock(samples_mutex_);
                 latency_samples_.push_back(latency_ms);
-                if (latency_samples_.size() > 10000) {
+                if (latency_samples_.size() > constants::metrics::MAX_LATENCY_SAMPLES) {
                     latency_samples_.erase(latency_samples_.begin());
                 }
             }
@@ -113,8 +114,8 @@ namespace perception {
                     std::vector<double> sorted = latency_samples_;
                     std::sort(sorted.begin(), sorted.end());
                     
-                    size_t p95_idx = static_cast<size_t>(sorted.size() * 0.95);
-                    size_t p99_idx = static_cast<size_t>(sorted.size() * 0.99);
+                    size_t p95_idx = static_cast<size_t>(sorted.size() * constants::metrics::P95_PERCENTILE);
+                    size_t p99_idx = static_cast<size_t>(sorted.size() * constants::metrics::P99_PERCENTILE);
                     
                     p95_idx = std::min(p95_idx, sorted.size() - 1);
                     p99_idx = std::min(p99_idx, sorted.size() - 1);
@@ -154,7 +155,8 @@ namespace perception {
             auto snapshot = get_snapshot();
             
             std::cout << "=== Performance Metrics ===\n";
-            std::cout << "FPS: " << std::fixed << std::setprecision(2) << snapshot.fps << "\n";
+            std::cout << "FPS: " << std::fixed
+                      << std::setprecision(constants::metrics::FPS_PRECISION) << snapshot.fps << "\n";
             std::cout << "Total frames: " << snapshot.total_frames << "\n";
             std::cout << "Average latency: " << snapshot.avg_latency_ms << " ms\n";
             std::cout << "Min latency: " << snapshot.min_latency_ms << " ms\n";

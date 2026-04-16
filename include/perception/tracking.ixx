@@ -1,3 +1,8 @@
+/**
+ * @file perception.tracking.ixx
+ * @brief Object tracking algorithms
+ */
+
 export module perception.tracking;
 import perception.types;
 import perception.geom;

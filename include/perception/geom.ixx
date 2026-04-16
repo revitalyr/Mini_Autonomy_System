@@ -1,77 +1,51 @@
+/**
+ * @file perception.geom.ixx
+ * @brief Geometric primitives for perception
+ */
+
 module;
-#include <vector>
+
 #include <string>
-#include <cstdint>
+#include <vector>
 
 export module perception.geom;
+
 import perception.types;
 
-/**
- * @brief Geometric and sensor data types for the perception system
- */
 export namespace perception::geom {
 
     /**
-     * @brief Rectangle for bounding boxes
+     * @brief Represents a 2D bounding box.
      */
     struct Rect {
-        int x, y;
-        int width, height;
-
-        Rect() : x(0), y(0), width(0), height(0) {}
-        Rect(int x_, int y_, int w, int h) : x(x_), y(y_), width(w), height(h) {}
+        int x, y, width, height;
     };
 
     /**
-     * @brief Detection result containing bounding box, confidence, and class information
+     * @brief Represents a 3D point in Cartesian coordinates.
+     */
+    struct Point3D {
+        double x, y, z;
+    };
+
+    /**
+     * @brief Represents an object detection
      */
     struct Detection {
-        Rect bbox;              // Bounding box coordinates
-        float confidence;       // Detection confidence (0.0 to 1.0)
-        int class_id;           // Class identifier
-        perception::String class_name; // Human-readable class name
-
-        Detection(Rect b, float conf, int id, perception::String name)
-            : bbox(std::move(b)), confidence(conf), class_id(id), class_name(std::move(name)) {}
+        Rect bbox;
+        float confidence;
+        int class_id;
+        String class_name;
     };
 
     /**
-     * @brief Image data structure
+     * @brief Represents a 3D object detection.
      */
-    struct ImageData {
-        int width;
-        int height;
-        int channels;
-        perception::Vector<uint8_t> data;
-
-        ImageData() : width(0), height(0), channels(0) {}
-        ImageData(int w, int h, int c) 
-            : width(w), height(h), channels(c), data(w * h * c) {}
-    };
-
-    /**
-     * @brief IMU data structure
-     */
-    struct IMUData {
-        double timestamp;
-        double accelerometer_x;
-        double accelerometer_y;
-        double accelerometer_z;
-        double gyroscope_x;
-        double gyroscope_y;
-        double gyroscope_z;
-
-        IMUData() : timestamp(0), accelerometer_x(0), accelerometer_y(0), accelerometer_z(0),
-                    gyroscope_x(0), gyroscope_y(0), gyroscope_z(0) {}
-    };
-
-    /**
-     * @brief VIO frame with image and IMU data
-     */
-    struct VioFrame {
-        double timestamp;
-        ImageData image;
-        perception::Vector<IMUData> imu_samples;
+    struct Detection3D {
+        Rect bbox_2d;
+        Point3D position_3d;
+        float confidence;
+        String class_name;
     };
 
 } // namespace perception::geom

@@ -1,3 +1,8 @@
+/**
+ * @file perception.tracking.cpp
+ * @brief Implementation of object tracking algorithms
+ */
+
 module;
 
 #include <opencv2/core/version.hpp>
@@ -8,7 +13,11 @@ module;
 
 module perception.tracking;
 
-// Prevent mixing OpenCV 5 headers with OpenCV 4 libraries
+/**
+ * @def CV_VERSION_MAJOR
+ * @brief Ensures OpenCV version compatibility
+ * @details Prevents mixing OpenCV 5 headers with OpenCV 4 libraries
+ */
 #if CV_VERSION_MAJOR != 4
 #error "OpenCV version mismatch: Tracking module requires OpenCV 4 headers."
 #endif
@@ -16,20 +25,29 @@ module perception.tracking;
 namespace perception::tracking {
 
 /**
- * @brief Internal state for a single tracked object using cv::KalmanFilter
+ * @struct TrackInternal
+ * @brief Internal state for a single tracked object using Kalman filter
+ * @details Implements constant velocity model for predicting object motion
  */
 struct TrackInternal {
-    int id;
-    cv::KalmanFilter kf;
-    perception::String class_name;
-    float confidence;
-    int age{0};
-    int missed_frames{0};
+    int id;                              ///< Unique track identifier
+    cv::KalmanFilter kf;                  ///< Kalman filter for motion prediction
+    perception::String class_name;        ///< Object class label
+    float confidence;                     ///< Detection confidence score
+    int age{0};                          ///< Track age in frames
+    int missed_frames{0};                 ///< Consecutive frames without detection
 
+    /**
+     * @brief Constructor
+     * @param track_id Unique identifier for this track
+     * @param initial_rect Initial bounding box
+     * @param label Class name for the tracked object
+     * @param conf Initial confidence score
+     * @details Initializes Kalman filter with constant velocity model
+     */
     TrackInternal(int track_id, const geom::Rect& initial_rect, const perception::String& label, float conf)
         : id(track_id), kf(8, 4, 0), class_name(label), confidence(conf) {
         
-        // Constant Velocity Model: State is [x, y, w, h, vx, vy, vw, vh]
         kf.transitionMatrix = (cv::Mat_<float>(8, 8) << 
             1,0,0,0,1,0,0,0,
             0,1,0,0,0,1,0,0,
@@ -51,6 +69,10 @@ struct TrackInternal {
         kf.statePost.at<float>(3) = static_cast<float>(initial_rect.height);
     }
 
+    /**
+     * @brief Predict next bounding box position
+     * @return Predicted bounding box
+     */
     auto predict() -> geom::Rect {
         cv::Mat prediction = kf.predict();
         return geom::Rect{
@@ -61,6 +83,10 @@ struct TrackInternal {
         };
     }
 
+    /**
+     * @brief Update filter with new measurement
+     * @param measurement New bounding box measurement
+     */
     void update(const geom::Rect& measurement) {
         cv::Mat measure_mat = (cv::Mat_<float>(4, 1) << 
             static_cast<float>(measurement.x),
@@ -72,15 +98,33 @@ struct TrackInternal {
     }
 };
 
+/**
+ * @struct Tracker::Impl
+ * @brief Private implementation details for Tracker class
+ */
 struct Tracker::Impl {
-    Vector<TrackInternal> tracks;
+    Vector<TrackInternal> tracks; ///< Active tracks
 };
 
+/**
+ * @brief Constructor
+ * @param iou_threshold IoU threshold for track association
+ * @param max_age Maximum frames before track deletion
+ */
 Tracker::Tracker(float iou_threshold, int max_age) 
     : m_pimpl(make_unique<Impl>()), m_iou_threshold(iou_threshold), m_max_age(max_age) {}
 
+/**
+ * @brief Destructor
+ */
 Tracker::~Tracker() = default;
 
+/**
+ * @brief Calculate Intersection over Union (IoU) between two rectangles
+ * @param a First rectangle
+ * @param b Second rectangle
+ * @return IoU value between 0 and 1
+ */
 auto Tracker::calculate_iou(const geom::Rect& a, const geom::Rect& b) -> float {
     int x1 = std::max(a.x, b.x);
     int y1 = std::max(a.y, b.y);
@@ -95,18 +139,19 @@ auto Tracker::calculate_iou(const geom::Rect& a, const geom::Rect& b) -> float {
     return intersection / (area_a + area_b - intersection);
 }
 
+/**
+ * @brief Update tracker with new detections
+ * @param detections Vector of new detections
+ * @return Vector of updated tracks
+ * @details Implements prediction, data association, track initialization, and cleanup
+ */
 auto Tracker::update(const Vector<geom::Detection>& detections) -> Vector<Track> {
-    // 1. Prediction step
     for (auto& track : m_pimpl->tracks) {
         track.predict();
         track.age++;
         track.missed_frames++;
     }
 
-    // 2. Data Association (Greedy IoU Matching)
-    // This is a "greedy assignment with global view" which is more sophisticated than simple greedy
-    // but not a full Munkres/Hungarian algorithm. It aims to find the best overall matches.
-    // For a true Hungarian algorithm, a dedicated library or a more complex implementation would be needed.
     std::set<size_t> matched_detections_indices;
     std::set<Count> matched_tracks_indices;
 
@@ -114,7 +159,6 @@ auto Tracker::update(const Vector<geom::Detection>& detections) -> Vector<Track>
         float max_iou = -1.0f;
         int best_det_idx = -1;
 
-        // Get predicted bbox from Kalman filter
         cv::Mat state = m_pimpl->tracks[i].kf.statePre;
         geom::Rect predicted_rect{
             static_cast<int>(state.at<float>(0)), static_cast<int>(state.at<float>(1)),
@@ -134,29 +178,25 @@ auto Tracker::update(const Vector<geom::Detection>& detections) -> Vector<Track>
         if (best_det_idx != -1) {
             m_pimpl->tracks[i].update(detections[best_det_idx].bbox);
             m_pimpl->tracks[i].confidence = detections[best_det_idx].confidence;
-            m_pimpl->tracks[i].class_name = detections[best_det_idx].class_name; // Update class name if it changes
+            m_pimpl->tracks[i].class_name = detections[best_det_idx].class_name;
             
             matched_tracks_indices.insert(i);
             matched_detections_indices.insert(best_det_idx);
         }
     }
 
-    // 3. Initialize new tracks for unmatched detections
     for (Count i = 0; i < detections.size(); ++i) {
         if (!matched_detections_indices.contains(i)) {
             m_pimpl->tracks.emplace_back(m_next_id++, detections[i].bbox, detections[i].class_name, detections[i].confidence);
         }
     }
 
-    // 4. Cleanup old tracks
     std::erase_if(m_pimpl->tracks, [this](const auto& t) {
         return t.missed_frames > m_max_age;
     });
 
-    // 5. Convert to public Track structures
     Vector<Track> results;
     for (const auto& t : m_pimpl->tracks) {
-        // Only return tracks that were either matched in this frame or are still active (not too many missed frames)
         if (t.missed_frames <= m_max_age) { 
             cv::Mat state = t.kf.statePost;
             results.push_back({
