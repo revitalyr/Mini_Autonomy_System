@@ -12,6 +12,7 @@
 #include <iostream>
 #include <format>
 #include <filesystem>
+#include "perception/constants.h"
 import perception.ros_provider;
 import perception.detector;
 import perception.geom;
@@ -22,8 +23,8 @@ namespace perception {
 
 auto demo_rosbag_provider(const std::string& bag_path) -> Result<void> {
     try {
-        std::cout << "=== ROSBAG Provider Demo ===\n";
-        std::cout << "Bag file: " << bag_path << "\n";
+        std::cout << constants::demo::HEADER_ROSBAG << "\n";
+        std::cout << constants::demo::LABEL_BAG_FILE << bag_path << "\n";
 
         // Create ROSBAG provider
         RosBagProvider provider;
@@ -37,16 +38,15 @@ auto demo_rosbag_provider(const std::string& bag_path) -> Result<void> {
         std::cout << "Bag file opened successfully\n";
 
         // Stream data from the bag
-        // Note: Topic names depend on the specific bag file
-        std::string img_topic = "/cam0/image_raw";  // Adjust based on your bag
-        std::string imu_topic = "/imu0";             // Adjust based on your bag
+        std::string img_topic = std::string(constants::rosbag::DEFAULT_IMAGE_TOPIC);
+        std::string imu_topic = std::string(constants::rosbag::DEFAULT_IMU_TOPIC);
 
-        std::cout << "Streaming from topics:\n";
-        std::cout << "  Image: " << img_topic << "\n";
-        std::cout << "  IMU: " << imu_topic << "\n";
+        std::cout << constants::demo::LABEL_STREAMING_TOPICS << "\n";
+        std::cout << constants::demo::LABEL_IMAGE_TOPIC << img_topic << "\n";
+        std::cout << constants::demo::LABEL_IMU_TOPIC << imu_topic << "\n";
 
         size_t frame_count = 0;
-        size_t max_frames = 10;  // Limit for demo
+        size_t max_frames = constants::rosbag::DEMO_MAX_FRAMES;
 
         auto data_stream = provider.stream_data(img_topic, imu_topic);
 
@@ -60,10 +60,10 @@ auto demo_rosbag_provider(const std::string& bag_path) -> Result<void> {
             const VioFrame& frame = result.value();
             frame_count++;
 
-            std::cout << "Frame " << frame_count << ":\n";
+            std::cout << constants::demo::LABEL_FRAME << frame_count << ":\n";
             std::cout << "  Image size: " << frame.image.width << "x" << frame.image.height << "\n";
             std::cout << "  IMU samples: " << frame.imu_samples.size() << "\n";
-            std::cout << "  Timestamp: " << std::format("{:.6f}", frame.timestamp) << "\n";
+            std::cout << "  Timestamp: " << std::format(std::string(constants::demo::FORMAT_TIMESTAMP), frame.timestamp) << "\n";
 
             if (frame.imu_samples.size() > 0) {
                 const IMUData& imu = frame.imu_samples.back();
@@ -78,7 +78,7 @@ auto demo_rosbag_provider(const std::string& bag_path) -> Result<void> {
             }
 
             if (frame_count >= max_frames) {
-                std::cout << "Reached max frames limit (" << max_frames << ")\n";
+                std::cout << "Reached max frames limit (" << constants::rosbag::DEMO_MAX_FRAMES << ")\n";
                 break;
             }
         }
@@ -98,8 +98,8 @@ auto demo_rosbag_provider(const std::string& bag_path) -> Result<void> {
 
 auto demo_rosbag_with_detection(const std::string& bag_path) -> Result<void> {
     try {
-        std::cout << "=== ROSBAG + Detection Demo ===\n";
-        std::cout << "Bag file: " << bag_path << "\n";
+        std::cout << constants::demo::HEADER_ROSBAG_DETECTION << "\n";
+        std::cout << constants::demo::LABEL_BAG_FILE << bag_path << "\n";
 
         // Create ROSBAG provider
         RosBagProvider provider;
@@ -114,13 +114,13 @@ auto demo_rosbag_with_detection(const std::string& bag_path) -> Result<void> {
         vision::Detector detector;
 
         // Stream data from the bag
-        std::string img_topic = "/cam0/image_raw";
-        std::string imu_topic = "/imu0";
+        std::string img_topic = std::string(constants::rosbag::DEFAULT_IMAGE_TOPIC);
+        std::string imu_topic = std::string(constants::rosbag::DEFAULT_IMU_TOPIC);
 
         auto data_stream = provider.stream_data(img_topic, imu_topic);
 
         size_t frame_count = 0;
-        size_t max_frames = 10;
+        size_t max_frames = constants::rosbag::DEMO_MAX_FRAMES;
 
         for (auto&& result : data_stream) {
             if (!result) {
@@ -133,10 +133,11 @@ auto demo_rosbag_with_detection(const std::string& bag_path) -> Result<void> {
             // Run detection on the image
             auto detections = detector.detect(frame.image);
 
-            std::cout << "Frame " << frame_count << ": " << detections.size() << " detections\n";
+            std::cout << constants::demo::LABEL_FRAME << frame_count << ": " << detections.size()
+                      << constants::demo::LABEL_DETECTIONS << "\n";
             for (const auto& det : detections) {
                 std::cout << "  - " << det.class_name << ": confidence="
-                          << std::format("{:.2f}", det.confidence)
+                          << std::format(std::string(constants::demo::FORMAT_CONFIDENCE), det.confidence)
                           << ", bbox=(" << det.bbox.x << ", " << det.bbox.y << ", "
                           << det.bbox.width << "x" << det.bbox.height << ")\n";
             }
@@ -165,8 +166,7 @@ auto main(int argc, char* argv[]) -> int {
         if (argc > 1) {
             bag_path = argv[1];
         } else {
-            // Use default ROS 2 test file
-            bag_path = "demo/data/rosbag-001.db3";
+            bag_path = std::string(constants::paths::DEFAULT_BAG_FILE);
         }
 
         // Check if bag file exists
@@ -192,7 +192,7 @@ auto main(int argc, char* argv[]) -> int {
             return 1;
         }
 
-        std::cout << "\nAll ROSBAG demos completed successfully!\n";
+        std::cout << "\n" << constants::demo::MSG_ALL_DEMOS_COMPLETED << "\n";
         return 0;
 
     } catch (const std::exception& e) {

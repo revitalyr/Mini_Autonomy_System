@@ -131,10 +131,10 @@ INPUT_ENCODING         = UTF-8
 # Configuration options related to input files
 #---------------------------------------------------------------------------
 
-INPUT                  = modules src
+INPUT                  = include modules src
 INPUT_ENCODING         = UTF-8
-FILE_PATTERNS          = *.cpp \
-                         *.cppm \
+FILE_PATTERNS          = *.ixx \
+                         *.cpp \
                          *.hpp \
                          *.h
 RECURSIVE              = YES

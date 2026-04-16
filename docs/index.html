@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Autonomy System - Technical Documentation</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .nav-tab {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover {
+            background: #e9ecef;
+            color: #495057;
+            transform: translateY(-2px);
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: #4a90e2;
+            border-bottom: 3px solid #4a90e2;
+            margin-bottom: -2px;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+        }
+
+        .tab-content {
+            padding: 30px;
+            min-height: 600px;
+        }
+
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .diagram-container {
+            background: #fafbfc;
+            border: 1px solid #e1e4e8;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow: auto;
+            overflow-x: auto;
+            overflow-y: auto;
+            position: relative;
+            min-height: 400px;
+            min-width: 100%;
+        }
+
+        .diagram-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #4a90e2;
+            margin-bottom: 15px;
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            transition: transform 0.2s ease;
+        }
+
+        .scale-controls {
+            position: sticky;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid #e1e4e8;
+        }
+
+        .scale-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #4a90e2;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scale-btn:hover {
+            background: #357abd;
+            transform: scale(1.1);
+        }
+
+        .scale-display {
+            padding: 0 12px;
+            font-weight: 600;
+            color: #4a90e2;
+            min-width: 60px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .feature-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid #4a90e2;
+        }
+
+        .feature-section h3 {
+            color: #4a90e2;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: '✅';
+            position: absolute;
+            left: 0;
+            color: #28a745;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        th {
+            background: #4a90e2;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        tr:hover {
+            background: #e9ecef;
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs {
+                flex-direction: column;
+            }
+
+            .nav-tab {
+                padding: 12px 20px;
+            }
+
+            .diagram-container {
+                min-width: 100%;
+            }
+
+            .scale-controls {
+                top: 5px;
+                right: 5px;
+                padding: 6px 10px;
+            }
+
+            .scale-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Mini Autonomy System</h1>
+            <p>C++20 Modules-based Perception System for Autonomous Applications</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="overview">📊 Overview</button>
+            <button class="nav-tab" data-tab="architecture">🏗️ Architecture</button>
+            <button class="nav-tab" data-tab="modules">📦 Modules</button>
+            <button class="nav-tab" data-tab="pipeline">🔄 Pipeline</button>
+            <button class="nav-tab" data-tab="api">🔌 API</button>
+            <button class="nav-tab" data-tab="build">🚀 Build</button>
+        </div>
+
+        <div class="tab-content">
+            <!-- Overview Tab -->
+            <div class="tab-pane active" id="overview">
+                <h2 class="diagram-title">System Overview</h2>
+                <div class="diagram-container" id="overview-diagram">
+                    <div class="scale-controls">
+                        <button class="scale-btn" data-scale-delta="-10">−</button>
+                        <span class="scale-display">100%</span>
+                        <button class="scale-btn" data-scale-delta="10">+</button>
+                        <button class="scale-btn" data-reset-scale>⟲</button>
+                    </div>
+                    <div class="mermaid">
+graph TD
+    Input[Camera Input] --> Loader[Image Loader]
+    Loader --> Pipeline[Async Pipeline]
+    Pipeline --> Detector[Object Detector]
+    Detector --> Tracker[Object Tracker]
+    Tracker --> Metrics[Performance Metrics]
+    Metrics --> Output[Visualization Output]
+    
+    Input --> Calib[Camera Calibration]
+    Calib --> Pipeline
+    
+    Input --> Stereo[Stereo Matching]
+    Stereo --> Pipeline
+    
+    classDef main fill:#667eea,stroke:#4a90e2,stroke-width:2px,color:#fff
+    classDef process fill:#28a745,stroke:#218838,stroke-width:2px,color:#fff
+    classDef data fill:#ffc107,stroke:#e0a800,stroke-width:2px,color:#333
+    classDef output fill:#dc3545,stroke:#c82333,stroke-width:2px,color:#fff
+    
+    class Input,Output main
+    class Pipeline,Detector,Tracker process
+    class Loader,Metrics data
+    class Calib,Stereo data
+                    </div>
+                </div>
+
+                <div class="feature-section">
+                    <h3>Key Features</h3>
+                    <ul class="feature-list">
+                        <li>C++20 modules for faster compilation and better encapsulation</li>
+                        <li>OpenCV 4.x integration for computer vision operations</li>
+                        <li>Thread-safe asynchronous processing pipeline</li>
+                        <li>Real-time performance metrics (FPS, latency tracking)</li>
+                        <li>Multiple object detection algorithms (Motion, HOG, DNN)</li>
+                        <li>Kalman filter-based multi-object tracking</li>
+                        <li>Stereo vision with depth estimation</li>
+                        <li>Camera calibration and rectification</li>
+                    </ul>
+                </div>
+
+                <div class="feature-section">
+                    <h3>Technology Stack</h3>
+                    <table>
+                        <tr>
+                            <th>Technology</th>
+                            <th>Version</th>
+                            <th>Purpose</th>
+                        </tr>
+                        <tr>
+                            <td>C++ Standard</td>
+                            <td>C++20</td>
+                            <td>Modules, coroutines, concepts</td>
+                        </tr>
+                        <tr>
+                            <td>OpenCV</td>
+                            <td>4.x</td>
+                            <td>Computer vision operations</td>
+                        </tr>
+                        <tr>
+                            <td>CMake</td>
+                            <td>3.28+</td>
+                            <td>Build system</td>
+                        </tr>
+                        <tr>
+                            <td>vcpkg</td>
+                            <td>Latest</td>
+                            <td>Package manager</td>
+                        </tr>
+                        <tr>
+                            <td>Catch2</td>
+                            <td>v3</td>
+                            <td>Testing framework</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Architecture Tab -->
+            <div class="tab-pane" id="architecture">
+                <h2 class="diagram-title">Component Architecture</h2>
+                <div class="diagram-container" id="architecture-diagram">
+                    <div class="scale-controls">
+                        <button class="scale-btn" data-scale-delta="-10">−</button>
+                        <span class="scale-display">100%</span>
+                        <button class="scale-btn" data-scale-delta="10">+</button>
+                        <button class="scale-btn" data-reset-scale>⟲</button>
+                    </div>
+                    <div class="mermaid">
+sequenceDiagram
+    participant Main as Main Thread
+    participant Loader as Image Loader
+    participant Queue as Thread-Safe Queue
+    participant Pool as Thread Pool
+    participant Detector as Detector
+    participant Tracker as Tracker
+    participant Metrics as Metrics
+    participant Viz as Visualization
+    
+    Main->>Loader: loadImagesFromDirectory()
+    Loader-->>Main: Generator ImageData
+    
+    loop For each frame
+        Main->>Queue: push image
+        Queue->>Pool: notify worker
+        Pool->>Detector: detect image
+        Detector-->>Pool: Vector Detection
+        Pool->>Tracker: update detections
+        Tracker-->>Pool: Vector Track
+        Pool->>Queue: push result
+        Pool->>Metrics: record latency
+        Queue-->>Main: pop result
+        Main->>Viz: drawTracks image tracks
+    end
+                    </div>
+                </div>
+
+                <div class="feature-section">
+                    <h3>Component Interactions</h3>
+                    <ul class="feature-list">
+                        <li>Main thread orchestrates the processing pipeline</li>
+                        <li>Image loader uses generators for lazy loading</li>
+                        <li>Thread-safe queue handles inter-thread communication</li>
+                        <li>Thread pool manages parallel processing</li>
+                        <li>Detector and Tracker operate on separate worker threads</li>
+                        <li>Performance metrics track latency in real-time</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Modules Tab -->
+            <div class="tab-pane" id="modules">
+                <h2 class="diagram-title">C++20 Modules Structure</h2>
+                <div class="diagram-container" id="modules-diagram">
+                    <div class="scale-controls">
+                        <button class="scale-btn" data-scale-delta="-10">−</button>
+                        <span class="scale-display">100%</span>
+                        <button class="scale-btn" data-scale-delta="10">+</button>
+                        <button class="scale-btn" data-reset-scale>⟲</button>
+                    </div>
+                    <div class="mermaid">
+graph TD
+    Main[main.cpp] --> Types[perception.types]
+    Main --> Async[perception.async]
+    Main --> Pipeline[perception.pipeline]
+    Main --> Viz[perception.viz]
+    
+    Pipeline --> Queue[perception.queue]
+    Pipeline --> Metrics[perception.metrics]
+    Pipeline --> Detector[perception.detector]
+    Pipeline --> Tracker[perception.tracking]
+    Pipeline --> Loader[perception.image_loader]
+    
+    Detector --> Geom[perception.geom]
+    Detector --> Calib[perception.calibration]
+    
+    Tracker --> Geom
+    Tracker --> Types
+    
+    Calib --> Types
+    Calib --> Result[perception.result]
+    
+    Stereo[perception.stereo_matching] --> Calib
+    Stereo --> Geom
+    
+    Types --> Concepts[perception.concepts]
+    
+    classDef interface fill:#667eea,stroke:#4a90e2,stroke-width:2px,color:#fff
+    classDef core fill:#28a745,stroke:#218838,stroke-width:2px,color:#fff
+    classDef vision fill:#ffc107,stroke:#e0a800,stroke-width:2px,color:#333
+    classDef util fill:#6c757d,stroke:#5a6268,stroke-width:2px,color:#fff
+    
+    class Types,Result,Concepts,Async,Queue,Metrics interface
+    class Pipeline,Loader core
+    class Detector,Tracker,Stereo,Calib,Geom,Viz vision
+    class Main util
+                    </div>
+                </div>
+
+                <div class="feature-section">
+                    <h3>Module Categories</h3>
+                    <table>
+                        <tr>
+                            <th>Category</th>
+                            <th>Modules</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>Core Types</td>
+                            <td>types, result, concepts</td>
+                            <td>Fundamental data structures and error handling</td>
+                        </tr>
+                        <tr>
+                            <td>Utilities</td>
+                            <td>async, queue, metrics</td>
+                            <td>Async operations, thread-safe queue, performance tracking</td>
+                        </tr>
+                        <tr>
+                            <td>Vision</td>
+                            <td>detector, tracker, stereo_matching</td>
+                            <td>Object detection, tracking, stereo vision</td>
+                        </tr>
+                        <tr>
+                            <td>Calibration</td>
+                            <td>calibration</td>
+                            <td>Camera calibration and rectification</td>
+                        </tr>
+                        <tr>
+                            <td>Pipeline</td>
+                            <td>pipeline, image_loader</td>
+                            <td>Async processing pipeline and image I/O</td>
+                        </tr>
+                        <tr>
+                            <td>Visualization</td>
+                            <td>viz, geom</td>
+                            <td>Visualization and geometric primitives</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pipeline Tab -->
+            <div class="tab-pane" id="pipeline">
+                <h2 class="diagram-title">Processing Pipeline Flow</h2>
+                <div class="diagram-container" id="pipeline-diagram">
+                    <div class="scale-controls">
+                        <button class="scale-btn" data-scale-delta="-10">−</button>
+                        <span class="scale-display">100%</span>
+                        <button class="scale-btn" data-scale-delta="10">+</button>
+                        <button class="scale-btn" data-reset-scale>⟲</button>
+                    </div>
+                    <div class="mermaid">
+flowchart TD
+    A([Start Pipeline]) --> B[Initialize Components]
+    B --> C[Load Images]
+    C --> D[Push to Image Queue]
+    D --> E{Worker Thread}
+    E --> F[Detect Objects]
+    F --> G{Detections}
+    G -->|Yes| H[Update Tracks]
+    G -->|No| I[Skip Tracking]
+    H --> J[Push to Result Queue]
+    I --> J
+    J --> K[Main Thread]
+    K --> L[Visualize Results]
+    L --> M[Update Metrics]
+    M --> N{More Frames}
+    N -->|Yes| C
+    N -->|No| O([Stop Pipeline])
+    
+    classDef start fill:#28a745,stroke:#218838,stroke-width:2px,color:#fff
+    classDef process fill:#667eea,stroke:#4a90e2,stroke-width:2px,color:#fff
+    classDef decision fill:#ffc107,stroke:#e0a800,stroke-width:2px,color:#333
+    classDef end fill:#dc3545,stroke:#c82333,stroke-width:2px,color:#fff
+    
+    class A,O start
+    class B,C,F,H,J,K,L,M process
+    class E,G,N decision
+                    </div>
+                </div>
+
+                <div class="feature-section">
+                    <h3>Pipeline Stages</h3>
+                    <ul class="feature-list">
+                        <li>Initialization: Setup detector, tracker, and thread pool</li>
+                        <li>Image Loading: Load images from directory or generate synthetic frames</li>
+                        <li>Queue Processing: Thread-safe queue for inter-thread communication</li>
+                        <li>Object Detection: Motion-based, HOG, or DNN detection</li>
+                        <li>Object Tracking: Kalman filter-based multi-object tracking</li>
+                        <li>Visualization: Draw bounding boxes and track information</li>
+                        <li>Metrics Collection: Track FPS and latency in real-time</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- API Tab -->
+            <div class="tab-pane" id="api">
+                <h2 class="diagram-title">Public API Overview</h2>
+                <div class="diagram-container" id="api-diagram">
+                    <div class="scale-controls">
+                        <button class="scale-btn" data-scale-delta="-10">−</button>
+                        <span class="scale-display">100%</span>
+                        <button class="scale-btn" data-scale-delta="10">+</button>
+                        <button class="scale-btn" data-reset-scale>⟲</button>
+                    </div>
+                    <div class="mermaid">
+flowchart TD
+    API[Public API] --> DetectorAPI[Detector API]
+    API --> TrackerAPI[Tracker API]
+    API --> CalibAPI[Calibration API]
+    API --> StereoAPI[Stereo API]
+    API --> PipelineAPI[Pipeline API]
+    API --> LoaderAPI[Image Loader API]
+    
+    DetectorAPI --> D1[detect]
+    DetectorAPI --> D2[detectStereo]
+    DetectorAPI --> D3[get_class_names]
+    
+    TrackerAPI --> T1[update]
+    TrackerAPI --> T2[constructor]
+    
+    CalibAPI --> C1[setParameters]
+    CalibAPI --> C2[undistort]
+    CalibAPI --> C3[fromYamlFile]
+    CalibAPI --> C4[saveToYamlFile]
+    
+    StereoAPI --> S1[computeDisparity]
+    StereoAPI --> S2[computeDepth]
+    
+    PipelineAPI --> P1[start]
+    PipelineAPI --> P2[stop]
+    PipelineAPI --> P3[processImage]
+    PipelineAPI --> P4[getResults]
+    
+    LoaderAPI --> L1[loadImageFile]
+    LoaderAPI --> L2[loadImagesFromDirectory]
+    LoaderAPI --> L3[generateTestFrames]
+    
+    classDef api fill:#667eea,stroke:#4a90e2,stroke-width:2px,color:#fff
+    classDef methods fill:#28a745,stroke:#218838,stroke-width:2px,color:#fff
+    
+    class API api
+    class DetectorAPI,TrackerAPI,CalibAPI,StereoAPI,PipelineAPI,LoaderAPI api
+    class D1,D2,D3,T1,T2,C1,C2,C3,C4,S1,S2,P1,P2,P3,P4,L1,L2,L3 methods
+                    </div>
+                </div>
+
+                <div class="feature-section">
+                    <h3>Key API Classes</h3>
+                    <table>
+                        <tr>
+                            <th>Class</th>
+                            <th>Key Methods</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>Detector</td>
+                            <td>detect(), detectStereo()</td>
+                            <td>Object detection in 2D and 3D</td>
+                        </tr>
+                        <tr>
+                            <td>Tracker</td>
+                            <td>update(detections)</td>
+                            <td>Multi-object tracking with Kalman filters</td>
+                        </tr>
+                        <tr>
+                            <td>CameraCalibration</td>
+                            <td>undistort(), fromYamlFile()</td>
+                            <td>Camera calibration and rectification</td>
+                        </tr>
+                        <tr>
+                            <td>StereoMatching</td>
+                            <td>computeDisparity(), computeDepth()</td>
+                            <td>Stereo vision and depth estimation</td>
+                        </tr>
+                        <tr>
+                            <td>AsyncProcessingPipeline</td>
+                            <td>start(), processImage(), getResults()</td>
+                            <td>Async processing pipeline</td>
+                        </tr>
+                        <tr>
+                            <td>ImageData</td>
+                            <td>fromRaw(), clone(), data()</td>
+                            <td>Image data container with PIMPL</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Build Tab -->
+            <div class="tab-pane" id="build">
+                <h2 class="diagram-title">Build and Deployment</h2>
+                <div class="diagram-container" id="build-diagram">
+                    <div class="scale-controls">
+                        <button class="scale-btn" data-scale-delta="-10">−</button>
+                        <span class="scale-display">100%</span>
+                        <button class="scale-btn" data-scale-delta="10">+</button>
+                        <button class="scale-btn" data-reset-scale>⟲</button>
+                    </div>
+                    <div class="mermaid">
+flowchart TD
+    Start([Start Build]) --> Install[Install vcpkg]
+    Install --> Deps[Install OpenCV via vcpkg]
+    Deps --> Config[Configure CMake]
+    Config --> Check{Check Dependencies}
+    Check -->|Missing| Error[Error: Dependencies Missing]
+    Check -->|Found| Build[Build Project]
+    Build --> Debug{Debug Build?}
+    Debug -->|Yes| DebugBuild[Build Debug]
+    Debug -->|No| ReleaseBuild[Build Release]
+    DebugBuild --> CopyDLL[Copy OpenCV DLLs]
+    ReleaseBuild --> CopyDLL
+    CopyDLL --> Run[Run Demo]
+    Run --> Success([Success])
+    Error --> Fail([Build Failed])
+    
+    classDef start fill:#28a745,stroke:#218838,stroke-width:2px,color:#fff
+    classDef process fill:#667eea,stroke:#4a90e2,stroke-width:2px,color:#fff
+    classDef decision fill:#ffc107,stroke:#e0a800,stroke-width:2px,color:#333
+    classDef error fill:#dc3545,stroke:#c82333,stroke-width:2px,color:#fff
+    
+    class Start,Success start
+    class Install,Deps,Config,Build,DebugBuild,ReleaseBuild,CopyDLL,Run process
+    class Check,Debug decision
+    class Error,Fail error
+                    </div>
+                </div>
+
+                <div class="feature-section">
+                    <h3>Build Requirements</h3>
+                    <table>
+                        <tr>
+                            <th>Requirement</th>
+                            <th>Version</th>
+                            <th>Notes</th>
+                        </tr>
+                        <tr>
+                            <td>Compiler</td>
+                            <td>MSVC 19.30+, GCC 11+, Clang 13+</td>
+                            <td>C++20 modules support required</td>
+                        </tr>
+                        <tr>
+                            <td>CMake</td>
+                            <td>3.28+</td>
+                            <td>C++20 modules support</td>
+                        </tr>
+                        <tr>
+                            <td>OpenCV</td>
+                            <td>4.x</td>
+                            <td>Install via vcpkg</td>
+                        </tr>
+                        <tr>
+                            <td>vcpkg</td>
+                            <td>Latest</td>
+                            <td>Package manager</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="feature-section">
+                    <h3>Build Commands</h3>
+                    <ul class="feature-list">
+                        <li>Install vcpkg and OpenCV: <code>./vcpkg install opencv4[contrib]:x64-windows</code></li>
+                        <li>Configure: <code>cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=path/to/vcpkg.cmake</code></li>
+                        <li>Build: <code>cmake --build build --config Release</code></li>
+                        <li>Copy DLLs: Copy OpenCV DLLs to build directory (Windows only)</li>
+                        <li>Run: <code>./build/perception_demo.exe</code></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="mermaid-height-util.js"></script>
+</body>
+</html>
